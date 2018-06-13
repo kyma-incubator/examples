@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:    
+     app: personservice
+     version: "0.0.2"
+  name: personservice
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: personservice
+    version: "0.0.2"
+  sessionAffinity: None
+  type: NodePort
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+   annotations:
+      deployment.kubernetes.io/revision: "1"
+   labels:
+      run: personservice
+   name: personservice   
+spec:
+   replicas: 2
+   selector:
+      matchLabels:
+         run: personservice
+   template:
+      metadata:
+         labels:    
+            app: personservice
+            run: personservice
+            version: "0.0.2"
+      spec:          
+         containers:
+           - name: personservice
+             image: "andy008/mongokubernetes:0.0.2"
+             ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+             env:
+              - name: spring_data_mongodb_host
+                value: mongodb-service 
+              - name: spring_data_mongodb_database
+                value: kubernetes-dummy
+              - name: spring_data_mongodb_authentication_database
+                value: admin
+              - name: spring_data_mongodb_password
+                value: test1234
+              - name: spring_data_mongodb_username
+                value: main_admin                              
+             
