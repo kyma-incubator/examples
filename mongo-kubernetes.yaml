@@ -17,11 +17,11 @@ spec:
   type: NodePort
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
    annotations:
-      deployment.kubernetes.io/revision: "1"
+      deployment.kubernetes.io/revision: "2"
    labels:
       run: personservice
    name: personservice   
@@ -44,15 +44,45 @@ spec:
               - containerPort: 8080
                 name: http
                 protocol: TCP
+             livenessProbe:
+                httpGet:
+                   path: /api/v1/environment
+                   port: 8080
+                initialDelaySeconds: 10
+                timeoutSeconds: 3
+                periodSeconds: 60
+                failureThreshold: 3
+             readinessProbe:
+                httpGet:
+                   path: /api/v1/environment
+                   port: 8080
+                periodSeconds: 5
+                initialDelaySeconds: 20
+                failureThreshold: 3
+                successThreshold: 2
              env:
               - name: spring_data_mongodb_host
-                value: mongodb-service 
+                valueFrom: 
+                   configMapKeyRef:
+                      name: mongo-kubernetes-config
+                      key: mongodb_host 
               - name: spring_data_mongodb_database
-                value: kubernetes-dummy
+                valueFrom: 
+                   configMapKeyRef:
+                      name: mongo-kubernetes-config
+                      key: mongodb_database 
               - name: spring_data_mongodb_authentication_database
-                value: admin
+                valueFrom: 
+                   configMapKeyRef:
+                      name: mongo-kubernetes-config
+                      key: authentication_database 
               - name: spring_data_mongodb_password
-                value: test1234
+                valueFrom: 
+                   secretKeyRef:
+                      name: first-mongo-mongodb
+                      key: mongodb-root-password 
               - name: spring_data_mongodb_username
-                value: main_admin                              
-             
+                valueFrom: 
+                   configMapKeyRef:
+                      name: mongo-kubernetes-config
+                      key: mongodb_username              
