@@ -4,6 +4,7 @@ data:
   mongodb_database: kubernetes-dummy
   authentication_database: admin
   mongodb_username: root
+  kafka_bootstrap_servers: kafka.kubeless.svc.cluster.local:9092
 kind: ConfigMap
 metadata:
   name: mongo-kubernetes-config

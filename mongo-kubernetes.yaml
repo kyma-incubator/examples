@@ -85,4 +85,9 @@ spec:
                 valueFrom: 
                    configMapKeyRef:
                       name: mongo-kubernetes-config
-                      key: mongodb_username              
+                      key: mongodb_username
+              - name: kafka_bootstrap-servers
+                valueFrom: 
+                   configMapKeyRef:
+                      name: mongo-kubernetes-config
+                      key: kafka_bootstrap_servers            
