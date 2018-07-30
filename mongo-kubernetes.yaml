@@ -1,19 +1,31 @@
 apiVersion: v1
+items:
+- apiVersion: gateway.kyma.cx/v1alpha2
+  kind: Api
+  metadata:
+    name: personservice
+  spec:
+    hostname: personservice.yfactory.sap.corp
+    service:
+      name: personservice
+      port: 8080
+---
+apiVersion: v1
 kind: Service
 metadata:
   labels:    
      app: personservice
-     version: "0.0.2"
+     version: "0.0.3"
+  annotations:
+     auth.istio.io/80: NONE
   name: personservice
 spec:
   ports:
-  - port: 8080
-    protocol: TCP
-    targetPort: 8080
+  - name: http
+    port: 8080
   selector:
     app: personservice
-    version: "0.0.2"
-  sessionAffinity: None
+    version: "0.0.3"
   type: NodePort
 
 ---
@@ -21,7 +33,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
    annotations:
-      deployment.kubernetes.io/revision: "2"
+      deployment.kubernetes.io/revision: "3"
    labels:
       run: personservice
    name: personservice   
@@ -35,15 +47,17 @@ spec:
          labels:    
             app: personservice
             run: personservice
-            version: "0.0.2"
+            version: "0.0.3"
+         annotations:
+            sidecar.istio.io/inject: "true"
       spec:          
          containers:
            - name: personservice
-             image: "andy008/mongokubernetes:0.0.2"
+             image: "andy008/mongokubernetes:0.0.3"
+             imagePullPolicy: Always
              ports:
               - containerPort: 8080
                 name: http
-                protocol: TCP
              livenessProbe:
                 httpGet:
                    path: /api/v1/environment
@@ -85,9 +99,4 @@ spec:
                 valueFrom: 
                    configMapKeyRef:
                       name: mongo-kubernetes-config
-                      key: mongodb_username
-              - name: kafka_bootstrap-servers
-                valueFrom: 
-                   configMapKeyRef:
-                      name: mongo-kubernetes-config
-                      key: kafka_bootstrap_servers            
+                      key: mongodb_username       

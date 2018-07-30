@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class KafkaMongoEvent {
+public class MongoChangeEvent {
 	
 	public static final char DELETE = 'D';
 	public static final char SAVE = 'S';
