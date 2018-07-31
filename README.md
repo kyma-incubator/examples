@@ -63,7 +63,8 @@ mongodb_host: first-mongo-mongodb.*d046471*.svc.cluster.local
 
  The below commands do this: 
 
-```kubectl apply -f mongo-kubernetes-configmap.yaml -n <your namespace>
+```
+kubectl apply -f mongo-kubernetes-configmap.yaml -n <your namespace>
 kubectl apply -f mongo-kubernetes.yaml -n <your namespace>
 ```
 
