@@ -8,13 +8,6 @@
 	<artifactId>MongoKubernetesMicroservice</artifactId>
 	<version>0.0.3</version>
 	<packaging>jar</packaging>
-	<repositories>
-		<repository>
-			<id>jcenter</id>
-			<name>jcenter</name>
-			<url>https://jcenter.bintray.com/</url>
-		</repository>
-	</repositories>
 	<name>MongoKubernetesMicroservice</name>
 	<description>Kubernetes Service using Mongo DB</description>
 
@@ -65,12 +58,16 @@
 			<artifactId>de.flapdoodle.embed.mongo</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 		</dependency>
-		
+
 	</dependencies>
 
 	<build>

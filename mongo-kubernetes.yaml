@@ -1,14 +1,13 @@
-apiVersion: v1
-items:
-- apiVersion: gateway.kyma.cx/v1alpha2
-  kind: Api
-  metadata:
+
+apiVersion: gateway.kyma.cx/v1alpha2
+kind: Api
+metadata:
+  name: personservice
+spec:
+  hostname: personservice.yfactory.sap.corp
+  service:
     name: personservice
-  spec:
-    hostname: personservice.yfactory.sap.corp
-    service:
-      name: personservice
-      port: 8080
+    port: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -58,19 +57,23 @@ spec:
              ports:
               - containerPort: 8080
                 name: http
+              - containerPort: 8081
+                name: actuatorhttp
+                
              livenessProbe:
                 httpGet:
-                   path: /api/v1/environment
-                   port: 8080
+                   path: /actuator/health
+                   port: 8081
                 initialDelaySeconds: 10
-                timeoutSeconds: 3
+                timeoutSeconds: 30
                 periodSeconds: 60
                 failureThreshold: 3
              readinessProbe:
                 httpGet:
-                   path: /api/v1/environment
-                   port: 8080
-                periodSeconds: 5
+                   path: /actuator/health
+                   port: 8081
+                periodSeconds: 60
+                timeoutSeconds: 30
                 initialDelaySeconds: 20
                 failureThreshold: 3
                 successThreshold: 2
