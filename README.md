@@ -88,7 +88,7 @@ The "actual" API is accessible using the following endpoints:
 	"lastName":"Doe",
 	"streetAddress":"Opernplatz",
 	"houseNumber":"1",
-	"zip":"70000",
+	"zip":"80636",
 	"city":"Muenchen",
 	"extensionFields":{
 		"countryIso2":"De"
@@ -103,7 +103,7 @@ The "actual" API is accessible using the following endpoints:
 	"lastName":"Doe",
 	"streetAddress":"Opernplatz",
 	"houseNumber":"1",
-	"zip":"70000",
+	"zip":"80636",
 	"city":"Muenchen",
 	"extensionFields":{
 		"countryIso2":"De"
