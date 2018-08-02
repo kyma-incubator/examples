@@ -1,14 +1,13 @@
 package com.sap.demo.service;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import com.sap.demo.entity.Person;
 import com.sap.demo.repository.PersonRepository;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Service
 public class PersonService {
@@ -17,25 +16,27 @@ public class PersonService {
 	private PersonRepository repository;
 	
 
-	public Mono<Person> savePerson(Mono<Person> person) {
+	public Person savePerson(Person person) {
 		
-		return repository.saveAll(person).elementAt(0);
+		return repository.save(person);
 	}
 	
-	public Flux<Person> listPersons() {
+	public Iterable<Person> listPersons() {
 		
 		return repository.findAll();
 	}
 	
-	public Mono<Person> findPerson(String id) {		
-		return repository.findById(id);
+	public Person findPerson(String id) {	
+		Optional<Person> result = repository.findById(id);
+		
+		return result.isPresent() ? result.get() : null;
 	}	
 	
-	public Mono<Void> deletePerson(String id) {
-		return repository.deleteById(id);
+	public void deletePerson(String id) {
+		repository.deleteById(id);
 	}	
 	
-	public Flux<Person> search(Person person) {		
+	public Iterable<Person> search(Person person) {		
 		return repository.findAll(Example.of(person));
 	}
 

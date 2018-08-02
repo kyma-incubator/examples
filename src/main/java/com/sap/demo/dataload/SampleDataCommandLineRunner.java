@@ -19,10 +19,10 @@ public class SampleDataCommandLineRunner implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {		
 				
-		if (personRepository.count().block() <= 0L) {
+		if (personRepository.count() <= 0L) {
 			personRepository.save(new Person(null, "John", "Doe", 
-					"Opernplatz", "1", "80636", "Muenchen", 
-					Collections.singletonMap("countryIso2", "DE"))).block();
+					"Nymphenburger Str.", "86", "80636", "Muenchen", 
+					Collections.singletonMap("countryIso2", "DE")));
 		}
 		
 	}

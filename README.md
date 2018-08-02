@@ -30,7 +30,8 @@ Docker credential helpers can be downloaded from https://github.com/docker/docke
 
 To provide your credentials create a json file like the one below:
 
-```{ 
+```
+{ 
     "ServerURL": "registry.hub.docker.com",
     "Username": "<username>", 
     "Secret": "<password>" 
@@ -63,7 +64,8 @@ mongodb_host: first-mongo-mongodb.*d046471*.svc.cluster.local
 
  The below commands do this: 
 
-```kubectl apply -f mongo-kubernetes-configmap.yaml -n <your namespace>
+```
+kubectl apply -f mongo-kubernetes-configmap.yaml -n <your namespace>
 kubectl apply -f mongo-kubernetes.yaml -n <your namespace>
 ```
 
@@ -75,19 +77,22 @@ kubectl apply -f mongo-kubernetes.yaml -n <your namespace>
 
 **mongo-kubernetes-configmap.yaml must be adapted to you mongo db deployment.**
 
-## Access on Kyma
+## Try out on Kyma
 
-After deployment the app is ready to be accessed under /api/v1/environment. This path will display all environment variables passed to the container.
+After deployyment you can access the swagger documentation under https://{kymahost}/swagger-ui.html. This also allows you to try it out. 
 
-The "actual" API is accessible using the following endpoints:
+If you don't like Open API (fka. Swagger) here is some other documentation:
+
+The API is accessible using the following endpoints:
 
 * GET /api/v1/person: List all persons in the DB
 * POST /api/v1/person: Create person with the following data
-```{
+```
+{
 	"firstName":"John",
 	"lastName":"Doe",
-	"streetAddress":"Opernplatz",
-	"houseNumber":"1",
+	"streetAddress":"Nymphenburger Str.",
+	"houseNumber":"86",
 	"zip":"80636",
 	"city":"Muenchen",
 	"extensionFields":{
@@ -98,11 +103,12 @@ The "actual" API is accessible using the following endpoints:
 * GET /api/v1/person/{personid}: Return all data for person with id `personid`
 * DELETE /api/v1/person/{personid}: Delete person with id `personid`
 * PATCH /api/v1/person/{personid}: Update person with id `personid` with the following data:
-```{
+```
+{
 	"firstName":"Jack",
 	"lastName":"Doe",
-	"streetAddress":"Opernplatz",
-	"houseNumber":"1",
+	"streetAddress":"Nymphenburger Str.",
+	"houseNumber":"86",
 	"zip":"80636",
 	"city":"Muenchen",
 	"extensionFields":{
