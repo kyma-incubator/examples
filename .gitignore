@@ -23,3 +23,12 @@
 /dist/
 /nbdist/
 /.nb-gradle/
+
+###Security###
+*.jks
+*.p12
+*.csr
+*.crt
+*.key
+mongo-kubernetes-configmap-playground.yaml
+mongo-kubernetes-playground.yaml

@@ -1,14 +1,13 @@
-apiVersion: v1
-items:
-- apiVersion: gateway.kyma.cx/v1alpha2
-  kind: Api
-  metadata:
+
+apiVersion: gateway.kyma.cx/v1alpha2
+kind: Api
+metadata:
+  name: personservice
+spec:
+  hostname: personservice.kyma.local
+  service:
     name: personservice
-  spec:
-    hostname: personservice.yfactory.sap.corp
-    service:
-      name: personservice
-      port: 8080
+    port: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -36,6 +35,7 @@ metadata:
       deployment.kubernetes.io/revision: "3"
    labels:
       run: personservice
+      mf_version: "1"
    name: personservice   
 spec:
    replicas: 2
@@ -50,30 +50,35 @@ spec:
             version: "0.0.3"
          annotations:
             sidecar.istio.io/inject: "true"
-      spec:          
+      spec:    
          containers:
            - name: personservice
+# changeme: Replace with pointer to your docker repository/container
              image: "andy008/mongokubernetes:0.0.3"
-             imagePullPolicy: Always
+             imagePullPolicy: Always              
              ports:
               - containerPort: 8080
                 name: http
-             livenessProbe:
-                httpGet:
-                   path: /api/v1/environment
-                   port: 8080
-                initialDelaySeconds: 10
-                timeoutSeconds: 3
-                periodSeconds: 60
-                failureThreshold: 3
-             readinessProbe:
-                httpGet:
-                   path: /api/v1/environment
-                   port: 8080
-                periodSeconds: 5
-                initialDelaySeconds: 20
-                failureThreshold: 3
-                successThreshold: 2
+              - containerPort: 8081
+                name: actuatorhttp
+                
+#             livenessProbe:
+#                httpGet:
+#                   path: /actuator/health
+#                   port: 8081
+#                initialDelaySeconds: 10
+#                timeoutSeconds: 40
+#                periodSeconds: 60
+#                failureThreshold: 3
+#             readinessProbe:
+#                httpGet:
+#                   path: /actuator/health
+#                   port: 8081
+#                periodSeconds: 60
+#                timeoutSeconds: 40
+#                initialDelaySeconds: 20
+#                failureThreshold: 3
+#                successThreshold: 2
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 
@@ -99,4 +104,5 @@ spec:
                 valueFrom: 
                    configMapKeyRef:
                       name: mongo-kubernetes-config
-                      key: mongodb_username       
+                      key: mongodb_username
+                             

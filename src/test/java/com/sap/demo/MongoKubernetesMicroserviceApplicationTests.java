@@ -35,7 +35,7 @@ public class MongoKubernetesMicroserviceApplicationTests {
 		
 		Person dummy = createDummyPerson();
 		
-		Person personResult = personRepository.save(dummy).block();
+		Person personResult = personRepository.save(dummy);
 		
 		assertThat(personResult).isNotNull();
 		assertThat(personResult.getId()).isNotNull().isNotEmpty();

@@ -1,8 +1,9 @@
 package com.sap.demo.event;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 
 import com.sap.demo.entity.Person;
@@ -10,18 +11,25 @@ import com.sap.demo.entity.Person;
 @Component
 public class MongoPersonListener extends AbstractMongoEventListener<Person> {
 	
+	private EventBridge eventBridge;
 	
-	@Override
-	public void onBeforeDelete(BeforeDeleteEvent<Person> event) {
-		
-		System.out.println(String.format("Deleting Person %s", event.getDocument().toJson()));
-		
+	@Autowired
+	public void setEventBridge(EventBridge eventBridge) {
+		this.eventBridge = eventBridge;
 	}
 	
+	@Override	
+	public void onAfterDelete(AfterDeleteEvent<Person> event) {
+		eventBridge.writeMongoChangeEvent(
+				new MongoChangeEvent(event.getCollectionName(), MongoChangeEvent.DELETE, 
+						event.getDocument()));	
+	}
 	@Override
-	public void onBeforeSave(BeforeSaveEvent<Person> event) {
-		
-		System.out.println(String.format("Saving Person %s", event.getDocument().toJson()));
-		
-	}	
+	public void onAfterSave(AfterSaveEvent<Person> event) {
+		eventBridge.writeMongoChangeEvent(
+				new MongoChangeEvent(event.getCollectionName(), MongoChangeEvent.SAVE, 
+						event.getDocument()));		
+	}
+	
+	
 }

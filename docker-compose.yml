@@ -1,9 +1,0 @@
-version: '3'
-services:
-  mongokubernetes:
-    image: "andy008/mongokubernetes:0.0.1-SNAPSHOT"
-    environment:
-     - "spring_data_mongodb_host=192.168.0.1"
-     - "spring_data_mongodb_database=dockerinstance"
-    ports:
-     - "8080:8080"
