@@ -14,7 +14,6 @@ public class LoggingThreadContext {
 	
 	private static class LoggingThreadConfig {
 		private String key = UUID.randomUUID().toString();
-		private boolean warnDebugEnabled = false;		
 		
 		private LoggingThreadConfig() {}
 		
@@ -24,17 +23,7 @@ public class LoggingThreadContext {
 		
 		private void setKey(String key) {
 			this.key = key;
-		}
-		
-		private boolean isWarnDebugEnabled() {
-			return warnDebugEnabled;
-		}
-		
-		private void setWarnDebugEnabled(boolean warnDebugEnabled) {
-			this.warnDebugEnabled = warnDebugEnabled;
-		}
-		
-		
+		}		
 	}
 	
 	public static void setLoggingKey(String key) {
@@ -44,16 +33,9 @@ public class LoggingThreadContext {
 	public static String getLoggingKey() {		
 		return loggingSetup.get().getKey();
 	}
+
 	
-	public static boolean isWarnLoggingEnabled() {
-		return loggingSetup.get().isWarnDebugEnabled();
-	}
-	
-	public static void setWarnLoggingEnabled(boolean warnDebugEnabled) {
-		loggingSetup.get().setWarnDebugEnabled(warnDebugEnabled);
-	}
-	
-	public static void removeLoggingKey() {
+	public static void innitialize() {
 		loggingSetup.remove();
 	}
 	

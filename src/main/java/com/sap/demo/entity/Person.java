@@ -1,5 +1,6 @@
 package com.sap.demo.entity;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.data.annotation.Id;
@@ -8,10 +9,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Document
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Person {
 	
 	@Id
@@ -46,6 +49,6 @@ public class Person {
 	//extension Fields
 	@ApiModelProperty(name="Extension Fields",
 			notes="Arbitrary json key value pairs")
-	private Map<String, Object> extensionFields;
+	private Map<String, Object> extensionFields = new HashMap<String, Object>();
 
 }

@@ -20,6 +20,11 @@
     - [Checks](#checks)
     - [Run the Scenario](#run-the-scenario)
   - [Extend your Person Service](#extend-your-person-service)
+    - [Intro](#intro)
+    - [Create Service Instance](#create-service-instance)
+    - [Develop your Lambda Function](#develop-your-lambda-function)
+    - [Deploy your Lambda Function](#deploy-your-lambda-function)
+    - [Test your Lambda](#test-your-lambda)
 
 
 ## Kyma
@@ -52,7 +57,7 @@ Then deploy Mongo DB
 
 ### Java Build
 
-Project is built using: mvn clean package or mvn clean install. It uses jib (https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin)to build and push to a docker registry (which does not require a local docker install). You **must** use the following maven properties to adapt to your local installation: 
+Project is built using: mvn clean package or mvn clean install. It uses jib (https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin) to build and push to a docker registry (which does not require a local docker install). You **must** use the following maven properties to adapt to your local installation: 
 
 * docker.repositoryname: Docker repository that the image will be published to
 * jib.credentialhelper: docker credential helper that will be used to acquire docker hub 
@@ -263,13 +268,13 @@ keytool -importkeystore -destkeystore personservicekubernetes.jks -srckeystore p
 
 Now copy the resulting `personservicekubernetes.p12` file to folder security. 
 
-To test your deployed application connector instace you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. If you are running on locally on Minikube the port of the gateway needs to be determined seperately. To do this, issue the following command:
+To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. If you are running on locally on Minikube the port of the gateway needs to be determined separately. To do this, issue the following command:
 
 ```
 kubectl -n kyma-system get svc core-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'
 ```
 
-The use the resulting port in your URL, e.g.: https://gateway.<clusterhost>:<port>/personservicekubernetes/v1/metadata/services
+The use the resulting port in your URL, e.g.: https://gateway.{clusterhost}:{port}/personservicekubernetes/v1/metadata/services
 
 ### Reconfigure Person Service
 
@@ -285,6 +290,8 @@ After that we need to create a new config map which is containing a file with al
     "spec": {}    	
   },
 ```
+
+When running locally on Minikube you have to point targetUrl to http://personservice.personservice.svc.cluster.local:8080.
 
 After updating the file, upload it to Kyma as another configmap:
 
@@ -371,5 +378,191 @@ Now you are ready to instantiate the service and bind it to Lambda's and deploym
 
 ## Extend your Person Service
 
-TBC
+### Intro
+
+The preferred way to extend business applications with Kyma is through event driven Lambda (serverless) functions. In the subsequent chapters you will see how to implement such a Lambda function using Node.js and how to bind it to the person maintained Event. 
+
+The function as such is pretty simple. It is triggered when a person was changed (created or updated). Then the logic goes as follows:
+
+1. Call personservice API to retrieve details about the person that what changed (GET /api/v1/person/{id})
+2. Call personservice API to retrieve a list of persons with the same values (POST /api/v1/search)
+3. Call personservice API to persist a list of IDs on the extension field "duplicatePersons" (PATCH /api/v1/person/{id}) for all identified duplicates
+
+As always this function is not intended for productive use. 
+
+### Create Service Instance
+
+A precondition for this scenario is that all steps mentioned in [Run the Scenario](#run-the-scenario) have been executed properly.
+
+In your Kyma Envirnoment ("Personservice") go to the Service Catalog and create a new service instance of the Person API:
+
+![Service Instance Creation Screenshot](images/serviceinstance1.png)
+
+![Service Instance Creation Screenshot](images/serviceinstance2.png)
+
+After that verify your instance by going "Back" and clicking on "Service Instances":
+
+![Service Instance Creation Screenshot](images/serviceinstance3.png)
+
+
+### Develop your Lambda Function
+
+When developing Lambda functions I like to start locally using the IDE of my choice. Kyma lambda functions are basically "normal" Node.js modules containing the containing the following snippet:
+
+```
+module.exports = { 
+	main: function (event, context) {
+		//code goes here
+	} 
+}
+
+```
+
+The meaning and contents of the event and context object is described in https://kyma-project.io/docs/latest/components/serverless#model-model. 
+
+As soon as a Lambda requires NPM dependencies, it also require a package.json file (easiest way to create a skeleton is `npm init`). Dependencies are then managed in the dependencies section:
+
+```
+{
+  "name": "personservicelambda",
+  "version": "1.0.0",
+  "description": "Demo Lambda for the Person Service",
+  "main": "personservice.js",
+  "keywords": [
+    "kyma"
+  ],
+  "dependencies": {
+    "axios": "^0.18.0",
+    "winston": "^3.0.0",
+    "dotenv":"^6.0.0"
+  }
+}
+```
+
+Kyma injects service bindings (including Remote Environments) as Environment Variables to be able to mimic this behavior locally the package "dotenv" can be used. it basically converts the contents of a ".env" (no filename, literally ".env") to normal environment variables that can be accessed through `process.env.environment_variable_name` in your code. Sample for that would be (getting the internal URL of the API Connector pointing to the Remote Environment):
+
+```
+require('dotenv').config();
+
+console.log(`GATEWAY_URL = ${process.env.GATEWAY_URL}`);
+```
+
+To run your Lambda locally you also need a wrapper. The below snippet is actually used to run the code of the sample Lambda:
+
+```
+require('dotenv').config();
+const personservice = require('./personservicemodule');
+
+console.log(`GATEWAY_URL = ${process.env.GATEWAY_URL}`);
+
+var event = { //build a dummy event
+    "data": {
+        "personid":process.env.PERSON_ID
+    },
+    "extensions": {
+        "request": {
+            "headers": {
+                "x-request-id":"hellotracer"
+            }
+        }
+    
+    }
+}
+
+
+personservice.main(event,{}); //invoke the lambda
+```
+
+The code for the sample Lambda function is contained in the "Lambda" folder. in order to run it locally, ensure you have a Node.js (https://nodejs.org/en/download/) environment (Version 8.x installed, to check, execute `node --version`). You also need to make a few changes to the ".env" file. Again you need to replace all occurrences of replaceme. "GATEWAY_URL" must have a value pointing to your deployment of personservice (only root, no "/" in the end). "PERSON_ID" must be the ID of a person in your mongo db (basically GET /api/v1/person/{PERSON_ID} must return a 200 status code).
+
+Then install the dependencies: `npm install axios winston dotenv`
+After that you can run your service: `node personservicecaller.js`
+
+This should give you a fair idea of how to develop Lambdas.
+
+
+### Deploy your Lambda Function
+
+To deploy your Lambda you need to go to your "personservice" Kyma environment. Click on Lambdas and create a new one. Fill all the fields shown in the below screenshots and then save:
+
+
+![Lambda Creation Screenshot](images/lambda1.png)
+
+![Lambda Creation Screenshot](images/lambda2.png)
+
+![Lambda Creation Screenshot](images/lambda3.png)
+
+![Lambda Creation Screenshot](images/lambda4.png)
+
+![Lambda Creation Screenshot](images/lambda5.png)
+
+Now the command `kubectl get pods -n personservice -l app=mark-duplicate-persons` should return a pod in status running (might take several repetions though). Now you can issue the following command to inspect the logs: `kubectl logs -n personservice -l app=mark-duplicate-persons -c mark-duplicate-persons`. As nothing is happening, you should only see the periodic health checks:
+
+```
+::ffff:127.0.0.1 - - [28/Aug/2018:14:37:48 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:37:53 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:37:58 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:03 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:08 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:13 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:18 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:23 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:28 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:33 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:38 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:43 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:48 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+::ffff:127.0.0.1 - - [28/Aug/2018:14:38:53 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
+```
+
+### Test your Lambda
+
+Now you can again use the API as depicted in section [Try out on Kyma](#try-out-on-kyma). Here you basically only have to create a new person using the POST /api/v1/person operation (make sure the record is **unique in your Database**. The easiest way to ensure that, is to invoke the DELETE /api/v1/person operation to empty the database). Make sure you get a 201 response code.
+
+The log, inspected by `kubectl logs -n personservice -l app=mark-duplicate-persons -c mark-duplicate-persons`, should contain something similar to:
+
+```
+Log level 'info'
+{"level":"info","message":"Event received for personid '5b85601a8a50350001a0c160'"}
+::ffff:127.0.0.1 - - [28/Aug/2018:14:45:47 +0000] "POST / HTTP/1.1" 200 - "-" "Go-http-client/1.1"
+{"level":"info","message":"Number of matching Persons found: 1"}
+```
+
+This means the lambda was executed and no duplicates have been found (search returned only one result). Now create a duplicate using the POST /api/v1/person operation. Again make sure you get a 201 response code.
+
+Now the log, inspected by `kubectl logs -n personservice -l app=mark-duplicate-persons -c mark-duplicate-persons`, should contain something similar to:
+
+```
+{"level":"info","message":"Event received for personid '5b85601a8a50350001a0c160'"}
+::ffff:127.0.0.1 - - [28/Aug/2018:14:49:01 +0000] "POST / HTTP/1.1" 200 - "-" "Go-http-client/1.1"
+{"level":"info","message":"Number of matching Persons found: 2"}
+{"level":"info","message":"Person 5b8560dd4b2eaa0001897227 successfully updated"}
+{"level":"info","message":"Person 5b85601a8a50350001a0c160 successfully updated"}
+```
+
+Also invoking GET /api/v1/person/{id} should now show a result with extensionFields/duplicatePersons containing an array of person IDs:
+
+```
+{
+  "id": "5b8560dd4b2eaa0001897227",
+  "firstName": "John",
+  "lastName": "Doe",
+  "streetAddress": "Nymphenburger Str.",
+  "houseNumber": "86",
+  "zip": "80636",
+  "city": "Muenchen",
+  "extensionFields": {
+    "duplicatePersons": [
+      "5b85601a8a50350001a0c160",
+      "5b8560dd4b2eaa0001897227"
+    ]
+  }
+}
+
+```
+
+
+
+
+
 

@@ -25,11 +25,6 @@ public class LoggingAspect {
 
 	private final static ToStringStyle LOGGER_STYLE = new RecursiveToStringStyle();
 	
-	
-	
-	
-	
-	
 
 	@Pointcut("within(com.sap.demo..*) && !@annotation(com.sap.demo.log.NoLogging)")
 	public void loggableClass() {

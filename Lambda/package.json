@@ -1,0 +1,16 @@
+{
+  "name": "personservicelambda",
+  "version": "1.0.0",
+  "description": "Demo Lambda for the Person Service",
+  "main": "personservice.js",
+  "keywords": [
+    "kyma"
+  ],
+  "author": "Andreas Krause",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "winston": "^3.0.0",
+    "dotenv":"^6.0.0"
+  }
+}

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,14 +40,24 @@ public class PersonApi {
 	}
 	
 	
-	//would ideally do a field level mapping, but not needed for demo app
-	@PatchMapping(path="/{id}")
+	
+	@PutMapping(path="/{id}")
 	@ApiOperation(value="Update Person", notes="This function updates a person from on the database. "
 			+ "This does not support delta updates.")
 	public ResponseEntity<Person> upsert(@PathVariable("id") String id, 
 			@RequestBody Person person) {
 		
 		return new ResponseEntity<Person>(personService.savePerson(person), HttpStatus.OK); 
+	}
+	
+	@PatchMapping(path="/{id}")
+	@ApiOperation(value="Update Person", notes="This function updates a person from on the database. "
+			+ "This does support delta updates.")
+	public ResponseEntity<Person> deltaUpdate(@PathVariable("id") String id, 
+			@RequestBody Person person) {	
+			
+		person.setId(id);
+		return new ResponseEntity<Person>(personService.deltaUpdate(person), HttpStatus.OK); 
 	}
 	
 	@GetMapping(path="/{id}")
