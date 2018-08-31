@@ -1,5 +1,6 @@
 package com.sap.demo.entity;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,8 +16,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Person {
+public class Person implements Serializable {
 	
+	private static final long serialVersionUID = 49994416335608157L;
+
 	@Id
 	@ApiModelProperty(name="ID", example="1bf8b88a-7bb8-4b92-90bc-d1fa34a60a57", 
 	notes="Unique MongoDB identifier")

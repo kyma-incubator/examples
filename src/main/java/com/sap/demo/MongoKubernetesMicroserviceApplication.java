@@ -4,6 +4,7 @@ package com.sap.demo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,11 +14,14 @@ import com.sap.demo.event.MongoChangeEvent;
 
 @SpringBootApplication
 @Configuration
+@EnableCaching
 public class MongoKubernetesMicroserviceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MongoKubernetesMicroserviceApplication.class, args);
 	}	
+	
+	
 	
 	@ConditionalOnMissingBean()
 	@Bean

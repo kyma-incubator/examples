@@ -25,6 +25,11 @@
     - [Develop your Lambda Function](#develop-your-lambda-function)
     - [Deploy your Lambda Function](#deploy-your-lambda-function)
     - [Test your Lambda](#test-your-lambda)
+  - [Bind your Person Service to a brokered Redis Backing Service](#bind-your-person-service-to-a-brokered-redis-backing-service)
+    - [Intro](#intro)
+    - [Create Redis Service Instance and Bind it to the Person Service](#create-redis-service-instance-and-bind-it-to-the-person-service)
+    - [Update Kubernetes Deployment Configuration](#update-kubernetes-deployment-configuration)
+    - [Test the Service](#test-the-service)
 
 
 ## Kyma
@@ -561,8 +566,99 @@ Also invoking GET /api/v1/person/{id} should now show a result with extensionFie
 
 ```
 
+## Bind your Person Service to a brokered Redis Backing Service 
+
+### Intro
+
+Applications often times require backing services such as databases, caches, message brokers, etc. In a cloud world these are generally provided and managed by the cloud provider with clear SLAs. These services are generally discovered in a central service catalog. Once a service is deemed relevant it is instantiated (i.e. a Service instance is created, which would map to a e.g. a database instance). This instance is then provided to your application using a binding (i.e. the configuration needed to access the service is injected into the application/container using environment variables). This process nicely decouples application from cloud infrastructure and hence makes it portable.
+
+In this example we are going to address the issue with frequent callbacks of the lambda to our service. To mitigate the consequences for the database we are going to introduce caching. For that we are going to enable caching in the Spring Application and hook it up to a Redis cache which is provisioned via the Helm broker (a hidden feature of Kyma making cloud like service brokers also available locally, it basically wraps the same procedure we have used to provision the [Mongo DB](#mongo-db) in a "normal" service broker process). 
+
+### Create Redis Service Instance and Bind it to the Person Service
+
+To create a service instance you need to go to the service catalog in your Kyma Environment ("personservice"). Navigate to Redis:
+
+![Service Provisioning Screenshot](images/serviceprovisioning1.png)
+
+Add and configure a new instance to your environment:
+
+![Service Provisioning Screenshot](images/serviceprovisioning2.png)
+
+![Service Provisioning Screenshot](images/serviceprovisioning3.png)
+
+After you have created your instance you have to bind it to the Persons Service. To do that, go to Service Instances and navigate to your created instance.
+
+![Service Binding Screenshot](images/servicebinding1.png)
+
+Create a new binding and click through the wizard:
+
+![Service Binding Screenshot](images/servicebinding2.png)
+
+![Service Binding Screenshot](images/servicebinding3.png)
+
+![Service Binding Screenshot](images/servicebinding4.png)
+
+After that, check whether your personservice pods are running: `kubectl get pods -n personservice -l app=personservice`
+
+Then invoke the environment api of the person service (this is returning a json representation of all environment variables part of the container):`https://personservice.{cluster}/api/v1/environment` and search for environment variables prefixed with "HB_REDIS_". Then you should find `HOST` and `PORT`. If this is not the case, restart your pods and try again: `kubectl delete pods -n personservice -l app=personservice` (Deployment controller will recreate them ;-)).
 
 
+### Update Kubernetes Deployment Configuration
 
+In order for the personservice to properly connect to the redis cache, you need to set a couple of environment variables. To do so, adapt either `mongo-kubernetes-local3.yaml` or `mongo-kubernetes-cluster3.yaml` to your environment. Below an example containing the relevant parts:
 
+```
+              - name: spring_profiles_active
+                value: "ApplicationConnector,Cache"
+              - name: logging_level_com_sap_demo_service
+                value: "TRACE"
+              - name: spring_redis_host
+                value: "${HB_REDIS_MICRO_D9472D4F_AB3F_11E8_A13E_423F5D47B70E_REDIS_SERVICE_HOST}"   
+              - name: spring_redis_port
+                value: "${HB_REDIS_MICRO_D9472D4F_AB3F_11E8_A13E_423F5D47B70E_REDIS_SERVICE_PORT}"
+              - name: spring_redis_password
+                valueFrom: 
+                   secretKeyRef:
+                      name: hb-redis-micro-d9472d4f-ab3f-11e8-a13e-423f5d47b70e-redis
+                      key: redis-password
+```
+
+Make the following settings:
+
+* `spring_profiles_active`: This is used to activate the PersonServiceCache.java implementation
+* `logging_level_com_sap_demo_service`: Activate logging to be able to see cache in trace results
+* `spring_redis_host`: This is to provide a reference to the redis host. By putting the value in the proposed format (${HB_REDIS_MICRO_D9472D4F_AB3F_11E8_A13E_423F5D47B70E_REDIS_SERVICE_HOST}) you are pointing spring to another environment variable (which can be retrieved from the API call to /api/v1/environment).
+* `spring_redis_port`: This is to provide a reference to the redis port
+* `spring_redis_password`: This is mapping a kubernetes secret to an environment variable. The secret contains the redis pasword and is created by the service broker. You need to adapt the `name` to your concrete instance. To get a list of secrets, type: `kubectl get secrets -n personservice`. Pick the one prefixed with `hb-redis`.
+
+Now you can update your deployment and restart the pods:
+
+* Local:
+
+```
+kubectl apply -f mongo-kubernetes-local3.yaml -n personservice
+kubectl delete pods -n personservice -l app=personservice
+
+```
+
+* Cluster:
+
+```
+kubectl apply -f mongo-kubernetes-local3.yaml -n personservice
+kubectl delete pods -n personservice -l app=personservice
+```
+
+### Test the Service
+
+To test this you will have to stream the logs of your personservice. To do this issue the following command: `kubectl logs -n personservice {your pod}  personservice --follow` (replace "{your pod}" with the name of your pod).
+
+Now invoke GET /api/v1/person/{personid}. During the first call you should see something along the lines of the below example. All subsequent calls will not appear as they will be directly fetched from the cache.
+
+```
+Entering public com.sap.demo.entity.Person com.sap.demo.service.PersonServiceCache.findPerson(java.lang.String) with Arguments:
+class java.lang.String: 5b8560dd4b2eaa0001897227
+2018-08-31 11:20:50.577 DEBUG 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84: Cache miss for Person ID: 5b8560dd4b2eaa0001897227
+2018-08-31 11:20:50.577 TRACE 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84:
+Exiting PersonServiceCache.findPerson(..) with result: Person(id=5b8560dd4b2eaa0001897227, firstName=John, lastName=Doe, streetAddress=Nymphenburger Str., houseNumber=86, zip=80636, city=Muenchen, extensionFields={duplicatePersons=[5b85601a8a50350001a0c160, 5b8560dd4b2eaa0001897227]})
+```
 
