@@ -37,7 +37,7 @@ metadata:
       deployment.kubernetes.io/revision: "3"
    labels:
       run: personservice
-      mf_version: "2"
+      mf_version: "3"
    name: personservice   
 spec:
    replicas: 2
@@ -117,14 +117,11 @@ spec:
               - name: logging_level_com_sap_demo_service
                 value: "TRACE"
               - name: spring_redis_host
-                value: "${#changeme}"   
+                value: "${HOST}"   
               - name: spring_redis_port
-                value: "${#changeme}"
+                value: "${PORT}"
               - name: spring_redis_password
-                valueFrom: 
-                   secretKeyRef:
-                      name: #changeme
-                      key: redis-password            
+                value: "${REDIS_PASSWORD}"           
              volumeMounts:
               - mountPath: /registration
                 name: registrationfile

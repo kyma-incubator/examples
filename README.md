@@ -38,9 +38,11 @@ This App runs on Kyma (https://kyma-project.io/; for local installation see: htt
 
 ## About
 
-This sample application was created to give you a running end to end sample application implemented in java / Spring Boot running on Kyma. In the end state it should make all the features Kyma delivers visible to you as developers. Also it should help you to get started and implement your own scenarios on Kyma. However this is not ment to be Best Practice / Production ready code. Instead it is often kept simple with manual steps to make clear what actually happens. If you have issues/remarks while using it, please feel free to feedback.  
+This sample application was created to give you a running end to end sample application implemented in Java / Spring Boot running on Kyma. In the end state it should make all the features Kyma delivers visible to you as developers. Also it should help you to get started and implement your own scenarios on Kyma. However this is not meant to be Best Practice / Production ready code. Instead it is often kept simple with manual steps to make clear what actually happens. If you have issues/remarks while using it, please feel free to feedback.  
+
 
 ## First Steps: Deploy the application
+
 
 ### Environment Setup
 
@@ -65,7 +67,7 @@ Then deploy Mongo DB
 Project is built using: mvn clean package or mvn clean install. It uses jib (https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin) to build and push to a docker registry (which does not require a local docker install). You **must** use the following maven properties to adapt to your local installation: 
 
 * docker.repositoryname: Docker repository that the image will be published to
-* jib.credentialhelper: docker credential helper that will be used to acquire docker hub 
+* jib.credentialhelper: docker credential helper that will be used to acquire docker hub (adapt to YOUR Operating System, pass or secretservice for Linuy, wincred for Windows and osxkeychain for Linux)
 
 
 You **can** use the following maven properties to adapt to your local installation: 
@@ -73,6 +75,8 @@ You **can** use the following maven properties to adapt to your local installati
 * project.version: Tag that will be assigned to docker image 
 * jib.version: Version of the jib plugin that will be used
 credentials (see: https://docs.docker.com/engine/reference/commandline/login/ heading: "Credential helper protocol")
+
+For editing the code I recommend either Eclipse with Spring plugins installed or Spring Tool Suite (https://spring.io/tools/sts/all). You will also need to install the Lombok plugin (https://projectlombok.org/setup/overview). Lombok is used to generate getters/setters and sometimes constructors. It keeps the code lean and neat.
 
 ### Docker Credential Helper Setup
 
@@ -600,12 +604,30 @@ Create a new binding and click through the wizard:
 
 After that, check whether your personservice pods are running: `kubectl get pods -n personservice -l app=personservice`
 
-Then invoke the environment api of the person service (this is returning a json representation of all environment variables part of the container):`https://personservice.{cluster}/api/v1/environment` and search for environment variables prefixed with "HB_REDIS_". Then you should find `HOST` and `PORT`. If this is not the case, restart your pods and try again: `kubectl delete pods -n personservice -l app=personservice` (Deployment controller will recreate them ;-)).
+Then invoke the environment api of the person service (this is returning a json representation of all environment variables part of the container):`https://personservice.{cluster}/api/v1/environment` and search for the following variables:
+
+* HOST
+* PORT
+* REDIS_PASSWORD
+
+If you don't find them, restart your pods and try again: `kubectl delete pods -n personservice -l app=personservice` (Deployment controller will recreate them ;-)).
+
+The variables are injected through the Binding (details are available in the documentation).
+
+```
+spec:
+  containers:
+  - envFrom:
+    - secretRef:
+        name: redis-instance-binding
+```
+
+To see the concrete values, issue the following command: `kubectl get secret -n d046471 -o yaml redis-instance-binding`. The values are base64 encoded.
 
 
 ### Update Kubernetes Deployment Configuration
 
-In order for the personservice to properly connect to the redis cache, you need to set a couple of environment variables. To do so, adapt either `mongo-kubernetes-local3.yaml` or `mongo-kubernetes-cluster3.yaml` to your environment. Below an example containing the relevant parts:
+In order for the personservice to properly connect to the redis cache, you need to set a couple of environment variables. To do so, `mongo-kubernetes-local3.yaml` or `mongo-kubernetes-cluster3.yaml` have been adapted. However you still need to replace the values depicted with `#changeme` to cater to your environment. Below the the changed values to bind to the service:
 
 ```
               - name: spring_profiles_active
@@ -613,23 +635,20 @@ In order for the personservice to properly connect to the redis cache, you need 
               - name: logging_level_com_sap_demo_service
                 value: "TRACE"
               - name: spring_redis_host
-                value: "${HB_REDIS_MICRO_D9472D4F_AB3F_11E8_A13E_423F5D47B70E_REDIS_SERVICE_HOST}"   
+                value: "${HOST}"   
               - name: spring_redis_port
-                value: "${HB_REDIS_MICRO_D9472D4F_AB3F_11E8_A13E_423F5D47B70E_REDIS_SERVICE_PORT}"
+                value: "${PORT}"
               - name: spring_redis_password
-                valueFrom: 
-                   secretKeyRef:
-                      name: hb-redis-micro-d9472d4f-ab3f-11e8-a13e-423f5d47b70e-redis
-                      key: redis-password
+                value: "${REDIS_PASSWORD}"
 ```
 
 Make the following settings:
 
 * `spring_profiles_active`: This is used to activate the PersonServiceCache.java implementation
 * `logging_level_com_sap_demo_service`: Activate logging to be able to see cache in trace results
-* `spring_redis_host`: This is to provide a reference to the redis host. By putting the value in the proposed format (${HB_REDIS_MICRO_D9472D4F_AB3F_11E8_A13E_423F5D47B70E_REDIS_SERVICE_HOST}) you are pointing spring to another environment variable (which can be retrieved from the API call to /api/v1/environment).
-* `spring_redis_port`: This is to provide a reference to the redis port
-* `spring_redis_password`: This is mapping a kubernetes secret to an environment variable. The secret contains the redis pasword and is created by the service broker. You need to adapt the `name` to your concrete instance. To get a list of secrets, type: `kubectl get secrets -n personservice`. Pick the one prefixed with `hb-redis`.
+* `spring_redis_host`: This is to provide a reference to the redis host. By putting the value in the proposed format (${HOST}) you are pointing spring to another environment variable which is introduced through the binding.
+* `spring_redis_port`: This is to provide a reference to the redis port.
+* `spring_redis_password`: This is to provide a reference to the redis password.
 
 Now you can update your deployment and restart the pods:
 
