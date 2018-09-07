@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,9 +21,9 @@ import com.sap.demo.service.PersonService;
 import io.swagger.annotations.ApiOperation;
 
 @RestController
+@Profile("Security")
 @RequestMapping("/api/v1/person")
-@Profile("!Security")
-public class PersonApi {
+public class PersonApiSecure {
 	
 	@Autowired
 	private PersonService personService;	
@@ -30,6 +31,7 @@ public class PersonApi {
 	@PostMapping
 	@ApiOperation(value="Create Person", notes="This function creates a new person entry on the DB."
 			+ "Externally supplied ids are ignored.")
+	@PreAuthorize("#oauth2.hasScope('person_write')")
 	public ResponseEntity<Person> create(@RequestBody Person person) {			
 		person.setId(null);
 		return new ResponseEntity<Person>(personService.savePerson(person), HttpStatus.CREATED);		
@@ -38,6 +40,7 @@ public class PersonApi {
 	
 	@GetMapping
 	@ApiOperation(value="Get Person List", notes="This function retrieves all persons from the Database.")
+	@PreAuthorize("#oauth2.hasScope('person_read')")
 	public ResponseEntity<Iterable<Person>> findAll() {
 		return new ResponseEntity<Iterable<Person>>(personService.listPersons(), HttpStatus.OK);
 	}
@@ -47,6 +50,7 @@ public class PersonApi {
 	@PutMapping(path="/{id}")
 	@ApiOperation(value="Update Person", notes="This function updates a person from on the database. "
 			+ "This does not support delta updates.")
+	@PreAuthorize("#oauth2.hasScope('person_write')")
 	public ResponseEntity<Person> upsert(@PathVariable("id") String id, 
 			@RequestBody Person person) {
 		
@@ -56,6 +60,7 @@ public class PersonApi {
 	@PatchMapping(path="/{id}")
 	@ApiOperation(value="Update Person", notes="This function updates a person from on the database. "
 			+ "This does support delta updates.")
+	@PreAuthorize("#oauth2.hasScope('person_write')")
 	public ResponseEntity<Person> deltaUpdate(@PathVariable("id") String id, 
 			@RequestBody Person person) {	
 			
@@ -65,6 +70,7 @@ public class PersonApi {
 	
 	@GetMapping(path="/{id}")
 	@ApiOperation(value="Read Person by ID", notes="This function reads a single person from the database.")
+	@PreAuthorize("#oauth2.hasScope('person_read')")
 	public ResponseEntity<Person> read(@PathVariable("id") String id) {
 		
 		return new ResponseEntity<Person>(personService.findPerson(id), HttpStatus.OK); 
@@ -72,6 +78,7 @@ public class PersonApi {
 	
 	@DeleteMapping(path="/{id}")
 	@ApiOperation(value="Delete Person by ID", notes="This function deletes a person from the database.")
+	@PreAuthorize("#oauth2.hasScope('person_write')")
 	public ResponseEntity<Person> delete(@PathVariable("id") String id) {
 		personService.deletePerson(id);
 		return new ResponseEntity<Person>(HttpStatus.NO_CONTENT);
@@ -80,6 +87,7 @@ public class PersonApi {
 	
 	@DeleteMapping
 	@ApiOperation(value="Delete all Persons in DB", notes="This function deletes all persons from the database.")
+	@PreAuthorize("#oauth2.hasScope('person_write')")
 	public ResponseEntity<Person> deleteAll() {
 		personService.deleteAllPersons();
 		return new ResponseEntity<Person>(HttpStatus.NO_CONTENT);
@@ -89,6 +97,7 @@ public class PersonApi {
 	@PostMapping(path="/search")
 	@ApiOperation(value="Search for People", notes="This function performs a people search in the database, and returns the persons that meet the criteria " + 
 			"specified in the request.")
+	@PreAuthorize("#oauth2.hasScope('person_read')")
 	public ResponseEntity<Iterable<Person>> search(@RequestBody Person person) {
 		return new ResponseEntity<Iterable<Person>>(personService.search(person), HttpStatus.OK);
 	}

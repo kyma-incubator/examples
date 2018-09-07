@@ -1,12 +1,16 @@
 package com.sap.demo.rest.swagger;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
+import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
@@ -20,6 +24,7 @@ public class SpringFoxConfiguration {
 // Begin Swagger Documentation
     
     @Bean
+    @Profile("!Security")
     public Docket api() {     	
     	
         return new Docket(DocumentationType.SWAGGER_2)
@@ -32,6 +37,26 @@ public class SpringFoxConfiguration {
     }
     
     
+    @Bean
+    @Profile("Security")
+    public Docket secureApi() { 
+    	
+    	return new Docket(DocumentationType.SWAGGER_2)
+    	          .apiInfo(apiInfo())
+    	          .globalOperationParameters(Arrays.asList(
+    	        		  new ParameterBuilder()
+    	        		  .name("Authorization")
+    	                  .description("Place for your JWT Token")
+    	                  .modelRef(new ModelRef("string"))
+    	                  .parameterType("header")
+    	                  .required(true)
+    	                  .build()))
+    	          .useDefaultResponseMessages(false)
+    	          .select()                                  
+    	          .apis(RequestHandlerSelectors.basePackage("com.sap.demo"))              
+    	          .paths(PathSelectors.any())
+    	          .build();      	
+    }
     
     private ApiInfo apiInfo() {
     	return new ApiInfo("Person Service Kubernetes API", 
@@ -46,6 +71,5 @@ public class SpringFoxConfiguration {
     								"", Collections.emptyList());
     }
     
- // End Swagger Documentation
 
 }

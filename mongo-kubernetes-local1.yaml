@@ -3,6 +3,8 @@ apiVersion: gateway.kyma.cx/v1alpha2
 kind: Api
 metadata:
   name: personservice
+  labels:
+     app: personservice
 spec:
   hostname: personservice.kyma.local
   service:
@@ -55,6 +57,11 @@ spec:
            - name: personservice
 # changeme: Replace with pointer to your docker repository/container
              image: "andy008/mongokubernetes:0.0.3"
+             resources:
+                limits:
+                   memory: 1024Mi
+                requests:
+                   memory: 512Mi
              imagePullPolicy: Always              
              ports:
               - containerPort: 8080

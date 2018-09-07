@@ -6,9 +6,7 @@ metadata:
   labels:
      app: personservice
 spec:
-# changeme: Replace {clusterhost} with cluster hostname (i.e. the part behind console in your kyma
-# console url
-  hostname: personservice.{clusterhost}
+  hostname: personservice.kyma.local
   service:
     name: personservice
     port: 8080
@@ -39,7 +37,7 @@ metadata:
       deployment.kubernetes.io/revision: "3"
    labels:
       run: personservice
-      mf_version: "2"
+      mf_version: "3"
    name: personservice   
 spec:
    replicas: 2
@@ -55,6 +53,12 @@ spec:
          annotations:
             sidecar.istio.io/inject: "true"
       spec:    
+
+         hostAliases:
+# changeme: Replace with Minikube IP (command sudo minikube ip)       
+          - ip: 192.168.218.139
+            hostnames:
+             - "gateway.kyma.local"     
          containers:
            - name: personservice
 # changeme: Replace with pointer to your docker repository/container
@@ -63,7 +67,7 @@ spec:
                 limits:
                    memory: 1024Mi
                 requests:
-                   memory: 512Mi
+                   memory: 512Mi             
              imagePullPolicy: Always              
              ports:
               - containerPort: 8080
@@ -120,7 +124,15 @@ spec:
                       name: mongo-kubernetes-config
                       key: connector_baseurl
               - name: spring_profiles_active
-                value: "ApplicationConnector"                      
+                value: "ApplicationConnector,Cache,Security"
+              - name: logging_level_com_sap_demo_service
+                value: "TRACE"
+              - name: spring_redis_host
+                value: "${HOST}"   
+              - name: spring_redis_port
+                value: "${PORT}"
+              - name: spring_redis_password
+                value: "${REDIS_PASSWORD}"                      
              volumeMounts:
               - mountPath: /registration
                 name: registrationfile
@@ -138,4 +150,4 @@ spec:
           - name: kyma-certificate
             secret:
               secretName: kyma-certificate
-                                                          
+                             

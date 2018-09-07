@@ -30,6 +30,14 @@
     - [Create Redis Service Instance and Bind it to the Person Service](#create-redis-service-instance-and-bind-it-to-the-person-service)
     - [Update Kubernetes Deployment Configuration](#update-kubernetes-deployment-configuration)
     - [Test the Service](#test-the-service)
+  - [Protect the Service](#protect-the-service)
+    - [Intro](#intro)
+    - [Deploy OAuth2 Authorization Server](#deploy-oauth2-authorization-server)
+    - [Adapt Kubernetes Deployment](#adapt-kubernetes-deployment)
+    - [Optional: Create IDP Preset](#optional-create-idp-preset)
+    - [Secure your API](#secure-your-api)
+    - [Security For Lambdas (Not on Minikube)](#security-for-lambdas-not-on-minikube)
+    - [Test the Service](#test-the-service)
 
 
 ## Kyma
@@ -680,4 +688,278 @@ class java.lang.String: 5b8560dd4b2eaa0001897227
 2018-08-31 11:20:50.577 TRACE 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84:
 Exiting PersonServiceCache.findPerson(..) with result: Person(id=5b8560dd4b2eaa0001897227, firstName=John, lastName=Doe, streetAddress=Nymphenburger Str., houseNumber=86, zip=80636, city=Muenchen, extensionFields={duplicatePersons=[5b85601a8a50350001a0c160, 5b8560dd4b2eaa0001897227]})
 ```
+
+## Protect the Service
+
+### Intro
+
+Kyma (through Istio Authentication Policies) allows to add JWT protection to your API. This gives you the chance to offload offline JWT validation to Kyma and focus on processing the authorizations in your application. In this section we are going to setup a Dummy OAuth2 Authorization Server for issuing the tokens we need, enhance our person service to authorize users using Spring Security, make the Kyma API Check for Authorizations and update the Application Registration in the Apllication Connector to also supply OAuth2 tokens.
+
+### Deploy OAuth2 Authorization Server
+
+This example uses the Dummy Authorization Server made available under https://github.com/akrausesap/jwt_issuer. Clone the repository and update the `kubernetes-kyma.yaml` file with your host (marked with `#changeme`): 
+
+```
+apiVersion: gateway.kyma.cx/v1alpha2
+kind: Api
+metadata:
+  name: tokenissuer
+spec:
+  hostname: #changeme
+  service:
+    name: tokenissuer
+    port: 8080
+
+```
+
+Then deploy to your cluster: `kubectl apply -f kubernetes-kyma.yaml -n personservice`
+
+After that check whether the pod is running with: `kubectl get pods -n personservice -l app=tokenissuer`
+
+Then you can go to `https://{hostname}/swagger-ui.html`. Test the following operations:
+
+* GET /jwk: To get the public key used for validating the signature. Should return something like: 
+
+```
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "kid": "4d55898e-01eb-4670-bf2e-ac8158cbcd6d",
+      "n": "ofqo3O3rfJ04thtPf5VSM1EEr8AdffYcGEGIlBU-ml9JVal6YFgTdPXkpLBB9ckOMau6kr49fzGYZW9T44D0XwLFd1sv-ix8eKmsXcfmHpUCG4faSAb-LWpQS_Y2Kq_t_mMuHG4qco0umYGw2PmmD-8fDsyvkZUXqp3tERdIztC46GEaPQ0A0pNO49EhNk-yRmPibHYgC6hdPBdpsgFZwXm1xKr6XZufIXgoaR0rgAzs2EOS8brDKcM_2GwiYzCU4SktA8M96Mbw4bgBwwTW9dpt3Ciq0iQuPPY-3KDrw7yPBecKcVt2SbddhW7ifsbTwJADiphwx0g_oMza4rgQ8Q",
+      "e": "AQAB"
+    }
+  ]
+}
+```
+
+
+* Any Verb /oauth2/token/query?subject=testsubject: To get a JWT Token. Should return something like: 
+
+```
+{
+  "access_token": "eyJraWQiOiI0ZDU1ODk4ZS0wMWViLTQ2NzAtYmYyZS1hYzgxNThjYmNkNmQiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ0ZXN0c3ViamVjdCIsImlzcyI6IkR1bW15SldUSXNzdWVyIn0.bFJLdn4BOhgCkMLN770tOwyodqE5Gu6LRYGfrrVZuHztmlnmyY3OVBdCsNH31CPMgmO7Z1ZDPnJw1tNXnXCv58r11BNcMlHBbGjaZPzNPz5__05qQeTvlmEtgP7ehYBGOqlhRmDlbWZYAb2CVhOmncAzgloGZlXPFFoa3knMgoe5ewH85DOBx9-_PifQERbgBjvZmCq85rlt_CWynfVOLjVZYGBlK40k9opT9ci8VZNid4bSHMgrC3v8pdCXMB9FnRwf5rnNHy4OxPDd4_nTKfA5dsRINc8g1Q9aeD6ufJLsCoPzhBhXgBNg1dTcuV84DpYKWoysmM6r6nnDSjdo4A",
+  "token_type": "Bearer"
+}
+```
+
+### Adapt Kubernetes Deployment
+
+In order for the person service API to validate JWT tokens, you need to flip an environment variable (Activate the Security Profile):
+
+```
+              - name: spring_profiles_active
+                value: "ApplicationConnector,Cache,Security"
+```
+
+This is already done in `mongo-kubernetes-local4.yaml` and `mongo-kubernetes-cluster4.yaml`, however you still need to update the `changeme` parts as depicted previously.
+
+Now you can update your deployment, the api and restart the pods:
+
+* Local:
+
+```
+kubectl apply -f mongo-kubernetes-local4.yaml -n personservice
+kubectl delete pods -n personservice -l app=personservice
+
+```
+
+* Cluster:
+
+```
+kubectl apply -f mongo-kubernetes-cluster4.yaml -n personservice
+kubectl delete pods -n personservice -l app=personservice
+```
+
+Now you can test the spring application. When calling GET /api/v1/person you should receive the following 401 response:
+
+```
+{
+    "error": "unauthorized",
+    "error_description": "Full authentication is required to access this resource"
+}
+```
+
+Now you should acquire a token from the previously deployed Dummy Authorization Server. To do so, send the following request:
+
+
+```
+POST /oauth2/token/body
+
+{
+	"subject": "ItsMe",
+	"issuer":"https://tokenissuer.{cluster}.kyma.cx",
+	"expirationDurationMinutes": 3600,
+	"scopes": ["person_write", "person_read"],
+	"includeIssuedAt": true
+}
+
+```
+
+Copy the `access_token` from the below sample response:
+
+```
+{
+    "access_token": "eyJraWQiOiI5YzRlNDVmZS01ODhiLTQ5N2QtODY0MS01NjEyODAzYTI0ZTQiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJJdHNNZSIsImlzcyI6Imh0dHBzOi8vdG9rZW5pc3N1ZXIue2NsdXN0ZXJ9Lmt5bWEuY3giLCJzY29wZSI6WyJwZXJzb25fd3JpdGUiLCJwZXJzb25fcmVhZCJdLCJleHAiOjE1MzYzNTg0MTQsImlhdCI6MTUzNjE0MjQxNH0.ksftPuP3Vn5WugXz6dpGsvmS-P25ubW8iJdBuWrBA6D3qek_VVCbMP2mNvb-1dQ0SYb6-r8AY5BuGgn3Kx7dYN1cp2ujw3kzfJCrK5yI0cX4ZZ4fe6d3ZVdmrCgmedQUgiMSWUAqDPCZD6PzuDuHxgntobrEZxvExMpNEN-Xqp8LoQ1mUJNLrMZazQL3h0pE32qQfV1W7VbnirOVedIf_C7Uv1_zl3sflvEnK1V79y6iA3bSmcRq0-O2r5HxgKkvfRB_iBWz8oZEP-AOYtNh84ZHk54NtWct7c__9OQVZ4kGqo4Tv39r3c6gWi9aRBpu7Qwk3pPhyc4KgVhV3JAgrQ",
+    "token_type": "Bearer",
+    "expires_in": 216000
+}
+```
+
+When calling GET /api/v1/person include the `access_token` as in an HTTP Header:
+
+```
+Authorization:Bearer eyJraWQiOiI5YzRlNDVmZS01ODhiLTQ5N2QtODY0MS01NjEyODAzYTI0ZTQiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJJdHNNZSIsImlzcyI6Imh0dHBzOi8vdG9rZW5pc3N1ZXIue2NsdXN0ZXJ9Lmt5bWEuY3giLCJzY29wZSI6WyJwZXJzb25fd3JpdGUiLCJwZXJzb25fcmVhZCJdLCJleHAiOjE1MzYzNTg0MTQsImlhdCI6MTUzNjE0MjQxNH0.ksftPuP3Vn5WugXz6dpGsvmS-P25ubW8iJdBuWrBA6D3qek_VVCbMP2mNvb-1dQ0SYb6-r8AY5BuGgn3Kx7dYN1cp2ujw3kzfJCrK5yI0cX4ZZ4fe6d3ZVdmrCgmedQUgiMSWUAqDPCZD6PzuDuHxgntobrEZxvExMpNEN-Xqp8LoQ1mUJNLrMZazQL3h0pE32qQfV1W7VbnirOVedIf_C7Uv1_zl3sflvEnK1V79y6iA3bSmcRq0-O2r5HxgKkvfRB_iBWz8oZEP-AOYtNh84ZHk54NtWct7c__9OQVZ4kGqo4Tv39r3c6gWi9aRBpu7Qwk3pPhyc4KgVhV3JAgrQ
+```
+
+Now your call should work as expected. If not, revisit the configuration.
+
+For those familiar with JWT Tokens, you might wonder that there was no key exchanged. This is on purpose. Our Spring Application actually ignores the whole signature checking piece. It basically trusts every token coming in its way. It is Kyma's job to ensure calls with invalid/no tokens (broken signature, invalid issuer, etc.) are not forwarded to our service. The Spring Application is configured as shown below to achieve this behavior ( `com.sap.demo.security.OAuth2ResourceServerConfig.java` Other security things are also done in package `com.sap.demo.security`):
+
+```
+@Bean
+    public JwtAccessTokenConverter accessTokenConverter() {
+        final JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+       
+        // Signature is checked in Kyma API / Istio, hence we do not need to bother
+        // retrieving the key, decoding it and putting it in here
+        converter.setVerifier(new SignatureVerifier() {			
+			@Override
+			public String algorithm() {
+				return "RS256";			
+				// If your token uses a different Algorithm, depict it here
+			}
+			
+			@Override
+			public void verify(byte[] content, byte[] signature) {
+				// Do nothing, token is already verified by istio	
+			}
+		});
+        
+        converter.setJwtClaimsSetVerifier(jwtClaimsSetVerifier());
+
+        return converter;
+    }
+```
+
+Credits go to @eugenp and https://www.baeldung.com/spring-security-oauth-jwt for a lot of the code and inspiration.
+
+
+### Optional: Create IDP Preset
+
+Kyma allows to persist configuration of trusted Token providers and re-use it upon API Exposure (In the UI). They basically serve as copy templates when exposing a new API. To do that, go to "Administration->IDP Presets" and choose "Create Preset". Now you can provide Name, Issuer and JWKS URI.
+
+* Name is just free Text (e.g. "my-dummy-issuer")
+* Issuer must be depicted as "iss" in your JWT Token. Kyma only accepts a URL or an email address. (see https://istio.io/docs/reference/config/istio.authentication.v1alpha1/). Recommendation is https://{hostname}/
+* JWKS URI must match https://{hostname}/jwk
+
+See sample below:
+
+![IDP Preset Screenshot](images/idppreset.png)
+
+### Secure your API
+
+To have Kyma / Istio deal with all the complexities of validating JWT Tokens, we need to change our definition of the API a little. Basically all we need to do, is to adapt the below snippet to your own environment:
+
+```
+apiVersion: gateway.kyma.cx/v1alpha2
+kind: Api
+metadata:
+  name: personservice
+  labels:
+     app: personservice
+spec:
+  authentication: 
+    - type: JWT
+      jwt:
+        issuer: "{issuer}"
+        jwksUri: "{jwk_url}"
+  hostname: personservice.{yourhost}
+  service:
+    name: personservice
+    port: 8080
+```
+
+To get there issue: `kubectl get apis -n personservice -l app=personservice > my-protected-personservice-api.yaml`
+
+Then adapt the `authentication` spec in my-protected-personservice-api.yaml. Mind the values you have configured in (Deploy OAuth2 Authorization Server)[deploy-oauth2-authorization-server]. Also mind the restrictions for issuer mentioned in (Optional: Create IDP Preset)[optional:-create-idp-preset]. After that you can apply it: `kubectl apply -n personservice -f my-protected-personservice-api.yaml`
+
+After that (it might take a while to reflect in the system) you should get an `Origin authentication failed.` message when invoking the service. 
+
+### Security For Lambdas (Not on Minikube)
+
+**If you are running this locally you will have issues with failed DNS lookups of the lambda function. There are probably ways to fix this, but they are not described here. If you are running on a cluster where APIs have public DNS entries, you can continue.**
+
+When you create a new person, your Lambda will fail. To fix it, we need to adapt the registration file. Specifically we need to provide the OAuth2 configuration:
+
+```
+"api": {
+    "targetUrl": "https://personservice.<kymahost>/",
+    "spec":{swagger is here, but removed for readability}
+    "credentials": {
+      "oauth": {
+        "url": "https://<tokenservicehost>/oauth2/token/query?audience=personservice&expirationDurationMinutes=3600&includeIssuedAt=true&issuer=<issuer>&notBeforeMinutesInThePast=0&scopes=person_read%2Cperson_write&subject=itsme",
+        "clientId": "doesntmatter",
+        "clientSecret": "doesntmatter"
+    }    
+}
+
+```
+
+Replace:
+
+* <tokenservicehost>: host name configured for token service
+* <issuer>: issuer configured in API
+* <kymahost>: hostname of kyma instance
+
+Then issue the following commands:
+
+```
+kubectl delete configmap -n personservice registrationfile
+kubectl create configmap -n personservice registrationfile --from-file=registrationfile.json -n personservice
+kubectl delete pod -n personservice -l app=personservice
+
+```
+
+After that again issue a POST against `/api/v1/applicationconnector/registration`. Before doing so, acquire a new JWT Token as described before and supply it in an Authorization header. Now your registration should be updated and all lambda calls will acquire a token from the service and supply it for the outbound calls. 
+
+### Test the Service
+
+To test the service you will now need a REST client like curl or postman, as even the swagger ui requires a JWT token (you could also get there through a browser pluging, but again beyond the scope of this). We have already seen that requests without JWT Token are rejected. Now we want to get a valid JWT Token and make the call. Therefore we need to make the following call to get one:
+
+```
+POST https://{tokenservicehost}/oauth2/token/body
+
+{
+	"subject": "Itsme",
+	"issuer":"https://{tokenservicehost}/",
+	"expirationDurationMinutes": 3600,
+	"scopes": ["person_read"],
+	"includeIssuedAt": true
+}
+```
+Make sure to replace the 2 occurrences of `{tokenservicehost}`. 
+
+The resulting token will then be used for a GET Call to https://{personservicehost}/api/v1/person which should go through as expected.
+
+Now make a POST call to the same URL with the below JSon: 
+
+```
+{
+   "id":"5b8fbe690e66110001f267e2",
+   "firstName":"John",
+   "lastName":"Doe",
+   "streetAddress":"Nymphenburger Str.",
+   "houseNumber":"86",
+   "zip":"80636",
+   "city":"Muenchen",
+   "extensionFields":{
+      "countryIso2":"DE"
+   }
+}
+```
+
+This should now return an unauthorized response telling you that you are missing scope `person_write`.
+
+Through that you have seen how Kyma and your application complement each other with regards to security.
 

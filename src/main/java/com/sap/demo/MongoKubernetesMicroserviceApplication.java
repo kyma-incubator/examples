@@ -12,15 +12,18 @@ import com.sap.demo.event.EventBridge;
 import com.sap.demo.event.MongoChangeEvent;
 
 
-@SpringBootApplication
+
+
+@SpringBootApplication(exclude={
+	    org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class
+	})
 @Configuration
 @EnableCaching
 public class MongoKubernetesMicroserviceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MongoKubernetesMicroserviceApplication.class, args);
-	}	
-	
+	}		
 	
 	
 	@ConditionalOnMissingBean()
