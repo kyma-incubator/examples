@@ -62,8 +62,6 @@ function handleAxiosError(error) {
     } else {
         logger.log('error', `Unknown error`, {"errorMessage": error.message});
     }
-
-    process.exit(1);
 }
 
 function updateDuplicatePersonExtension(duplicatePersonsArray, traceCtxHeaders) {
