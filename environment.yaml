@@ -8,3 +8,31 @@ metadata:
     env: "true"
     istio-injection: enabled
   name: personservice
+  
+---  
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: kyma-default
+  namespace: personservice
+spec:
+  limits:
+  - default:
+      memory: 512Mi
+    defaultRequest:
+      memory: 32Mi
+    max:
+      memory: 1536Mi
+    type: Container
+    
+---
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: kyma-default
+  namespace: personservice
+spec:
+  hard:
+    limits.memory: 6Gi
+    requests.memory: 4Gi

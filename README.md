@@ -51,12 +51,13 @@ This sample application was created to give you a running end to end sample appl
 
 ## First Steps: Deploy the application
 
-
 ### Environment Setup
 
 An Environment is a custom Kyma security and organizational unit based on the concept of Kubernetes Namespaces. Kyma Environments allow you to divide the cluster into smaller units to use for different purposes, such as development and testing.
 
 To setup our environment issue the following command: `kubectl apply -f environment.yaml`
+
+Furthermore this adapts the default resource constraints to ensure we don't hit ceilings in terms of memory usage. (However on Minikube/Local installation this might be challenging)
 
 
 ### Mongo DB
