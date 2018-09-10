@@ -7,27 +7,26 @@ import java.util.Date;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sap.demo.event.EventBridge;
-import com.sap.demo.event.MongoChangeEvent;
+import com.sap.demo.event.PersonCreateEvent;
+import com.sap.demo.event.PersonDeleteEvent;
+import com.sap.demo.event.PersonEvent;
 import com.sap.demo.exception.PersonServiceException;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@Profile("ApplicationConnector")
-@Component
-public class ApplicationConnectorEventBridge implements EventBridge{
+
+public abstract class AbstractApplicationConnectorEventBridge {
 	
 	private static final String DELETE_EVENT = "person.deleted";
-	private static final String MAINTAIN_EVENT = "person.maintained";
+	private static final String CREATE_EVENT = "person.created";
+	private static final String CHANGE_EVENT = "person.changed";
 	private static final String VERSION = "v1";
 	
 	private RestTemplate restTemplate;
@@ -37,22 +36,25 @@ public class ApplicationConnectorEventBridge implements EventBridge{
 		this.restTemplate = restTemplate;
 	}
 
-	@Override	
-	public void writeMongoChangeEvent(MongoChangeEvent event) {
+	protected void writePersonEvent(PersonEvent event) {
 		
 		KymaEvent kymaEvent;
 		
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
 		
 		
-		if(event.getType() == MongoChangeEvent.DELETE) {
+		if(event instanceof PersonDeleteEvent) {
 			kymaEvent = new KymaEvent(DELETE_EVENT, VERSION, df.format(new Date()), 
 					 Collections.singletonMap("personid", 
-							 event.getEventData().get("_id").toString()));
-		} else {
-			kymaEvent = new KymaEvent(MAINTAIN_EVENT, VERSION, df.format(new Date()), 
+							 event.getPersonId()));
+		} else if (event instanceof PersonCreateEvent) {
+			kymaEvent = new KymaEvent(CREATE_EVENT, VERSION, df.format(new Date()), 
 					 Collections.singletonMap("personid", 
-							 event.getEventData().get("_id").toString()));			
+							 event.getPersonId()));	
+		} else {
+			kymaEvent = new KymaEvent(CHANGE_EVENT, VERSION, df.format(new Date()), 
+					 Collections.singletonMap("personid", 
+							 event.getPersonId()));	
 		}
 		
 		

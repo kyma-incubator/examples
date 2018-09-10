@@ -42,7 +42,7 @@ metadata:
       mf_version: "1"
    name: personservice   
 spec:
-   replicas: 2
+   replicas: 1
    selector:
       matchLabels:
          run: personservice
@@ -61,9 +61,7 @@ spec:
              image: "andy008/mongokubernetes:0.0.3"
              resources:
                 limits:
-                   memory: 1024Mi
-                requests:
-                   memory: 512Mi
+                   memory: 1Gi
              imagePullPolicy: Always              
              ports:
               - containerPort: 8080

@@ -3,13 +3,16 @@ package com.sap.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-import com.sap.demo.event.EventBridge;
-import com.sap.demo.event.MongoChangeEvent;
+import com.sap.demo.event.PersonChangeEvent;
+import com.sap.demo.event.PersonCreateEvent;
+import com.sap.demo.event.PersonDeleteEvent;
 
 
 
@@ -19,6 +22,7 @@ import com.sap.demo.event.MongoChangeEvent;
 	})
 @Configuration
 @EnableCaching
+@EnableMongoRepositories(basePackages = "com.sap.demo")
 public class MongoKubernetesMicroserviceApplication {
 
 	public static void main(String[] args) {
@@ -26,21 +30,46 @@ public class MongoKubernetesMicroserviceApplication {
 	}		
 	
 	
-	@ConditionalOnMissingBean()
 	@Bean
-	public EventBridge eventBridge() {
-		return new EventBridge() {
-			
-			
+	@Profile("!ApplicationConnector")
+	public ApplicationListener<PersonCreateEvent> personCreateEvent() {
+		return new ApplicationListener<PersonCreateEvent>() {
+						
 			@Override
-			public void writeMongoChangeEvent(MongoChangeEvent event) {
-				
-				if (event.getType() == MongoChangeEvent.DELETE) {
-					System.out.println(String.format("Person %s deleted", event.getEventData().toJson()));
-				} else  {
-					System.out.println(String.format("Person %s maintained", event.getEventData().toJson()));
-				}
+			public void onApplicationEvent(PersonCreateEvent event) {
+				System.out.println(
+						String.format("Person with ID %s created", event.getPersonId()));
 			}
 		};
+		
 	}
+	
+	@Bean
+	@Profile("!ApplicationConnector")
+	public ApplicationListener<PersonDeleteEvent> personDeleteEvent() {
+		return new ApplicationListener<PersonDeleteEvent>() {
+						
+			@Override
+			public void onApplicationEvent(PersonDeleteEvent event) {
+				System.out.println(
+						String.format("Person with ID %s deleted", event.getPersonId()));
+			}
+		};
+		
+	}
+	
+	@Bean
+	@Profile("!ApplicationConnector")
+	public ApplicationListener<PersonChangeEvent> personChangeEvent() {
+		return new ApplicationListener<PersonChangeEvent>() {
+						
+			@Override
+			public void onApplicationEvent(PersonChangeEvent event) {
+				System.out.println(
+						String.format("Person with ID %s changed", event.getPersonId()));
+			}
+		};
+		
+	}
+	
 }

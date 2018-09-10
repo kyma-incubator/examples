@@ -399,7 +399,7 @@ Now you are ready to instantiate the service and bind it to Lambda's and deploym
 
 The preferred way to extend business applications with Kyma is through event driven Lambda (serverless) functions. In the subsequent chapters you will see how to implement such a Lambda function using Node.js and how to bind it to the person maintained Event. 
 
-The function as such is pretty simple. It is triggered when a person was changed (created or updated). Then the logic goes as follows:
+The function as such is pretty simple. It is triggered when a person was created. Then the logic goes as follows:
 
 1. Call personservice API to retrieve details about the person that what changed (GET /api/v1/person/{id})
 2. Call personservice API to retrieve a list of persons with the same values (POST /api/v1/search)
@@ -880,9 +880,21 @@ spec:
     port: 8080
 ```
 
-To get there issue: `kubectl get apis -n personservice -l app=personservice > my-protected-personservice-api.yaml`
+To get there issue: `kubectl edit api personservice -n personservice`
 
-Then adapt the `authentication` spec in my-protected-personservice-api.yaml. Mind the values you have configured in (Deploy OAuth2 Authorization Server)[deploy-oauth2-authorization-server]. Also mind the restrictions for issuer mentioned in (Optional: Create IDP Preset)[optional:-create-idp-preset]. After that you can apply it: `kubectl apply -n personservice -f my-protected-personservice-api.yaml`
+Then adapt the `authentication` section to match the below sample (replacing parts in curly braces `{}`):
+
+```
+  authentication: 
+    - type: JWT
+      jwt:
+        issuer: "{issuer}"
+        jwksUri: "{jwk_url}"
+```
+
+Mind the values you have configured in (Deploy OAuth2 Authorization Server)[deploy-oauth2-authorization-server]. Also mind the restrictions for issuer mentioned in (Optional: Create IDP Preset)[optional:-create-idp-preset]. After that you can apply it: `kubectl apply -n personservice -f my-protected-personservice-api.yaml`
+
+Alternatively you can also use `kubectl edit api personservice -n personservice`
 
 After that (it might take a while to reflect in the system) you should get an `Origin authentication failed.` message when invoking the service. 
 
@@ -898,7 +910,7 @@ When you create a new person, your Lambda will fail. To fix it, we need to adapt
     "spec":{swagger is here, but removed for readability}
     "credentials": {
       "oauth": {
-        "url": "https://<tokenservicehost>/oauth2/token/query?audience=personservice&expirationDurationMinutes=3600&includeIssuedAt=true&issuer=<issuer>&notBeforeMinutesInThePast=0&scopes=person_read%2Cperson_write&subject=itsme",
+        "url": "https://<tokenservicehost>/oauth2/token/query?expirationDurationMinutes=3600&includeIssuedAt=true&issuer=<issuer>&notBeforeMinutesInThePast=0&scopes=person_read%2Cperson_write&subject=itsme",
         "clientId": "doesntmatter",
         "clientSecret": "doesntmatter"
     }    
@@ -908,9 +920,9 @@ When you create a new person, your Lambda will fail. To fix it, we need to adapt
 
 Replace:
 
-* <tokenservicehost>: host name configured for token service
-* <issuer>: issuer configured in API
-* <kymahost>: hostname of kyma instance
+* /<tokenservicehost/>: host name configured for token service
+* /<issuer/>: issuer configured in API
+* /<kymahost/>: hostname of kyma instance
 
 Then issue the following commands:
 

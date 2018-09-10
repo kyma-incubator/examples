@@ -3,11 +3,16 @@ package com.sap.demo.service;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import com.sap.demo.entity.Person;
+import com.sap.demo.event.PersonChangeEvent;
+import com.sap.demo.event.PersonCreateEvent;
+import com.sap.demo.event.PersonDeleteEvent;
+import com.sap.demo.event.PersonEvent;
 import com.sap.demo.exception.NotFoundException;
 import com.sap.demo.exception.PersonServiceException;
 import com.sap.demo.repository.PersonRepository;
@@ -19,12 +24,20 @@ public class PersonServiceDefault implements PersonService {
 	@Autowired
 	private PersonRepository repository;
 	
-
+	@Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+	
+	private void publishPersonEvent(PersonEvent event) {
+		applicationEventPublisher.publishEvent(event);
+	}
+	
 	/* (non-Javadoc)
 	 * @see com.sap.demo.service.PersonService#savePerson(com.sap.demo.entity.Person)
 	 */
 	@Override
 	public Person savePerson(Person person) {
+		
+		Person savedPerson;
 		
 		//prevent no change updates
 		if(person.getId() != null) {
@@ -33,16 +46,23 @@ public class PersonServiceDefault implements PersonService {
 			if (dbResult.isPresent()) {
 				
 				if (dbResult.get().equals(person)) {
+					// no event needed, sue to no change ;-)
 					return dbResult.get();
 				} else {
-					return repository.save(person);
+					savedPerson = repository.save(person);					
+					publishPersonEvent(new PersonChangeEvent(savedPerson));					
+					return savedPerson;
 				}
 				
 			} else {
-				return repository.save(person);
+				savedPerson = repository.save(person);					
+				publishPersonEvent(new PersonCreateEvent(savedPerson));					
+				return savedPerson;
 			}
 		} else {		
-			return repository.save(person);
+			savedPerson = repository.save(person);					
+			publishPersonEvent(new PersonCreateEvent(savedPerson));					
+			return savedPerson;
 		}
 	}
 	
@@ -51,6 +71,8 @@ public class PersonServiceDefault implements PersonService {
 	 */
 	@Override
 	public Person deltaUpdate(Person person) {
+		
+		Person savedPerson;
 		
 		if(person.getId() == null) {
 			throw new PersonServiceException("ID of Person must not be null");
@@ -97,11 +119,16 @@ public class PersonServiceDefault implements PersonService {
 				
 				return currentPersonOptional.get();
 			} else  {
-				return repository.save(mergedPerson);
+				
+				savedPerson = repository.save(mergedPerson);
+				publishPersonEvent(new PersonChangeEvent(savedPerson));
+				return savedPerson;
 			}
 			
 		} else {
-			return repository.save(person);			
+			savedPerson = repository.save(person);	
+			publishPersonEvent(new PersonCreateEvent(person));
+			return savedPerson;			
 		}		
 	}
 	
@@ -140,6 +167,8 @@ public class PersonServiceDefault implements PersonService {
 		}
 		
 		repository.deleteById(id);
+		
+		publishPersonEvent(new PersonDeleteEvent(id));
 	}	
 	
 	/* (non-Javadoc)
@@ -155,6 +184,7 @@ public class PersonServiceDefault implements PersonService {
 	 */
 	@Override
 	public void deleteAllPersons() {
+		
 		repository.deleteAll();
 	}
 
