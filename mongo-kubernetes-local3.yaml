@@ -6,7 +6,7 @@ metadata:
   labels:
      app: personservice
 spec:
-  hostname: personservice.kyma.local
+  hostname: personservice
   service:
     name: personservice
     port: 8080
@@ -125,6 +125,8 @@ spec:
                 value: "ApplicationConnector,Cache"
               - name: logging_level_com_sap_demo_service
                 value: "TRACE"
+              - name: management_health_redis_enabled
+                value: false  
               - name: spring_redis_host
                 value: "${HOST}"   
               - name: spring_redis_port

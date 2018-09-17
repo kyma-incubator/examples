@@ -5,14 +5,12 @@ import java.security.KeyStore;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +28,6 @@ public class ApplicationConnectorRestTemplateConfiguration {
 	
 	private RestTemplateBuilder restTemplateBuilder;
 	
-	private HttpRequestInterceptor istioTraceInterceptor;
 	
 	@Value("${personservicekubernetes.applicationconnetor.keytorepassword}")
 	private String keyStorePassword = "set-me";
@@ -44,12 +41,6 @@ public class ApplicationConnectorRestTemplateConfiguration {
 	@Autowired
 	public void setRestTemplateBuilder(RestTemplateBuilder restTemplateBuilder) {
 		this.restTemplateBuilder = restTemplateBuilder;
-	}
-	
-	@Autowired
-	@Qualifier("IstioTraceInterceptor")
-	public void istioTraceInterceptor(HttpRequestInterceptor istioTraceInterceptor) {
-		this.istioTraceInterceptor = istioTraceInterceptor;
 	}
 	
 	
@@ -75,7 +66,6 @@ public class ApplicationConnectorRestTemplateConfiguration {
 
 			HttpClient client = HttpClients.custom()
 					.setSSLSocketFactory(socketFactory)
-					.addInterceptorLast(istioTraceInterceptor)
 					.build();	
 
 			return restTemplateBuilder

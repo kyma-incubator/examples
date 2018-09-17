@@ -37,10 +37,10 @@ metadata:
       deployment.kubernetes.io/revision: "3"
    labels:
       run: personservice
-      mf_version: "3"
+      mf_version: "2"
    name: personservice   
 spec:
-   replicas: 1
+   replicas: 2
    selector:
       matchLabels:
          run: personservice
@@ -66,24 +66,21 @@ spec:
                 name: http
               - containerPort: 8081
                 name: actuatorhttp
-                
-#             livenessProbe:
-#                httpGet:
-#                   path: /actuator/health
-#                   port: 8081
-#                initialDelaySeconds: 10
-#                timeoutSeconds: 40
-#                periodSeconds: 60
-#                failureThreshold: 3
-#             readinessProbe:
-#                httpGet:
-#                   path: /actuator/health
-#                   port: 8081
-#                periodSeconds: 60
-#                timeoutSeconds: 40
-#                initialDelaySeconds: 20
-#                failureThreshold: 3
-#                successThreshold: 2
+             livenessProbe:
+                httpGet:
+                   path: /actuator/health
+                   port: 8081
+                initialDelaySeconds: 60
+                periodSeconds: 60
+                failureThreshold: 3   
+             readinessProbe:
+                httpGet:
+                   path: /actuator/ready
+                   port: 8081
+                periodSeconds: 30
+                initialDelaySeconds: 20
+                failureThreshold: 1
+                successThreshold: 2                
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 
@@ -116,17 +113,9 @@ spec:
                       name: mongo-kubernetes-config
                       key: connector_baseurl
               - name: spring_profiles_active
-                value: "ApplicationConnector,Cache"
-              - name: logging_level_com_sap_demo_service
-                value: "TRACE"
+                value: "ApplicationConnector,Actuator" 
               - name: management_health_redis_enabled
-                value: false 
-              - name: spring_redis_host
-                value: "${HOST}"   
-              - name: spring_redis_port
-                value: "${PORT}"
-              - name: spring_redis_password
-                value: "${REDIS_PASSWORD}"           
+                value: false                      
              volumeMounts:
               - mountPath: /registration
                 name: registrationfile

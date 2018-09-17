@@ -67,6 +67,8 @@ public class OAuth2ResourceServerConfig extends ResourceServerConfigurerAdapter 
 			}
 		});
         
+  
+        
         converter.setJwtClaimsSetVerifier(jwtClaimsSetVerifier());
 
         return converter;

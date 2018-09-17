@@ -6,9 +6,7 @@ metadata:
   labels:
      app: personservice
 spec:
-# changeme: Replace {clusterhost} with cluster hostname (i.e. the part behind console in your kyma
-# console url
-  hostname: personservice.{clusterhost}
+  hostname: personservice
   service:
     name: personservice
     port: 8080
@@ -118,7 +116,9 @@ spec:
                       name: mongo-kubernetes-config
                       key: connector_baseurl
               - name: spring_profiles_active
-                value: "ApplicationConnector"                      
+                value: "ApplicationConnector" 
+              - name: management_health_redis_enabled
+                value: false                      
              volumeMounts:
               - mountPath: /registration
                 name: registrationfile
