@@ -1198,11 +1198,11 @@ This shows a simple request which is answered by the Personservice directly with
 
 Now we want to get more advanced and change a person which triggers a request to the events endpoint described in [Connect your Service to Kyma as Extension Platform](#connect-your-service-to-kyma-as-extension-platform). It will now also show up in the trace, but be more complex, as there is now also an outbound call to the events API (PATCH /api/v1/person/{id}).
 
-![Tracing](images/tracing3.png)
+![Tracing](images/tracing4.png)
 
 Trace shows the following:
 
-![Tracing](images/tracing4.png)
+![Tracing](images/tracing3.png)
 
 For those of you who really want to know what is going on, you can also create a new person and trace it all the way through the Lambda processing. However this requires your lambda to be properly hooked up to the service as described in [Extend your Person Service](#extend-your-person-service). Then you would see something along the lines of:
 
@@ -1222,9 +1222,8 @@ Under View Options we select Trace JSON. This will provide access to the trace I
 
 For the pod we found we will issue the following kubectl command to print the logs into a text file (replace `<podname>` with the name identified in the trace): `kubectl logs -n personservice -c personservice <podname> > logs.txt`
 
-)
 Based on the trace ID we can now search the logfile and see what happened inside the pod:
 
 ![Getting the Log](images/gettingthelog3.png) 
 
-All of this is not very integrated, but here is also where the ecosystem kicks in with tools for log management/aggregation. Kyma and the underlying framewoks ensure that the data is collected. You have to integrate it into your corporate tooling based on the open standards leveraged. 
+All of this is not very integrated, but here is also where the ecosystem kicks in with tools for log management/aggregation. Kyma and the underlying framewoks ensure that the data is collected. You have to integrate it into your corporate tooling based on the open standards leveraged (open tracing, etc.). 
