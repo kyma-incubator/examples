@@ -6,7 +6,7 @@ metadata:
   labels:
      app: personservice
 spec:
-  hostname: personservice.kyma.local
+  hostname: personservice
   service:
     name: personservice
     port: 8080
@@ -110,4 +110,8 @@ spec:
                    configMapKeyRef:
                       name: mongo-kubernetes-config
                       key: mongodb_username
+              - name: management_health_redis_enabled
+                value: false 
+              - name: spring_profiles_active
+                value: Default 
                              

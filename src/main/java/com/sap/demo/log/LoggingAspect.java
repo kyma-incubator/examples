@@ -30,9 +30,7 @@ public class LoggingAspect {
 	public void loggableClass() {
 	}
 	
-	private String formatLogMessage(String message) {
-		return String.format("%s:\n%s", LoggingThreadContext.getLoggingKey(), message);
-	}
+	
 	
 
 	private String objectToString(Object o) {
@@ -87,13 +85,13 @@ public class LoggingAspect {
 
 					String traceTrace = String.format("Entering %s with Arguments:\n%s", methodName, argumentString);
 					
-					log.trace(formatLogMessage(traceTrace));					
+					log.trace(traceTrace);					
 				} else if (log.isDebugEnabled()) {
 
 					String methodName = joinPoint.getSignature().toShortString();
 					String debugTrace = String.format("Entering %s", methodName);
 
-					log.debug(formatLogMessage(debugTrace));
+					log.debug(debugTrace);
 				}
 				
 
@@ -107,14 +105,14 @@ public class LoggingAspect {
 									objectToString(result) : 
 									"null");
 					
-					log.trace(formatLogMessage(traceTrace));
+					log.trace(traceTrace);
 					
 					
 				} else if (log.isDebugEnabled()) {
 				
 					String methodName = joinPoint.getSignature().toShortString();
 					String debugTrace = String.format("Exiting %s", methodName);
-					log.debug(formatLogMessage(debugTrace));
+					log.debug(debugTrace);
 				}
 
 				return result;
@@ -129,7 +127,7 @@ public class LoggingAspect {
 
 					String errorTrace = String.format("Catching %s in method %s" + "\nMessage: %s\nStackTrace: %s",
 							t.getClass().getName(), methodName, t.getMessage(), stackTrace);
-					log.error(formatLogMessage(errorTrace));
+					log.error(errorTrace);
 				}
 				throw t;
 			}

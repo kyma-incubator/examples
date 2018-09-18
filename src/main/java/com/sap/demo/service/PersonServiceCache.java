@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import com.sap.demo.entity.Person;
-import com.sap.demo.log.LoggingThreadContext;
 
 @Service("PersonService")
 @Profile("Cache")
@@ -28,8 +27,8 @@ public class PersonServiceCache extends PersonServiceDefault {
 	public Person savePerson(Person person) {		
 		Person result = super.savePerson(person);
 		
-		logger.debug(String.format("%s: Updating Cache for Person ID: %s", 
-				LoggingThreadContext.getLoggingKey(), result.getId()));
+		logger.debug(String.format("Updating Cache for Person ID: %s", 
+				 result.getId()));
 		
 		return result;
 	}
@@ -43,8 +42,8 @@ public class PersonServiceCache extends PersonServiceDefault {
 		
 		Person result = super.deltaUpdate(person);
 		
-		logger.debug(String.format("%s: Updating Cache for Person ID: %s", 
-				LoggingThreadContext.getLoggingKey(), result.getId()));
+		logger.debug(String.format("Updating Cache for Person ID: %s", 
+				result.getId()));
 		
 		return result;
 	}
@@ -54,8 +53,8 @@ public class PersonServiceCache extends PersonServiceDefault {
 	@Cacheable(key="#id", value="persons")
 	public Person findPerson(String id) {		
 		
-		logger.debug(String.format("%s: Cache miss for Person ID: %s", 
-				LoggingThreadContext.getLoggingKey(), id));				
+		logger.debug(String.format("Cache miss for Person ID: %s", 
+				id));				
 		return super.findPerson(id);
 	}	
 	
@@ -66,8 +65,8 @@ public class PersonServiceCache extends PersonServiceDefault {
 		
 		
 		super.deletePerson(id);		
-		logger.debug(String.format("%s: Cache evict for Person ID: %s", 
-				LoggingThreadContext.getLoggingKey(), id));
+		logger.debug(String.format("Cache evict for Person ID: %s", 
+				id));
 	}		
 	
 	
@@ -78,8 +77,7 @@ public class PersonServiceCache extends PersonServiceDefault {
 	@CacheEvict(value = "persons", allEntries=true)
 	public void deleteAllPersons() {
 		super.deleteAllPersons();
-		logger.debug(String.format("%s: Cache evicted for all persons", 
-				LoggingThreadContext.getLoggingKey()));
+		logger.debug("Cache evicted for all persons");
 	}
 
 }
