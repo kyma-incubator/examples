@@ -38,6 +38,17 @@
     - [Secure your API](#secure-your-api)
     - [Security For Lambdas (Not on Minikube)](#security-for-lambdas-not-on-minikube)
     - [Test the Service](#test-the-service)
+  - [Operate your Service: Make it Self-Healing](#operate-your-service-make-it-self-healing)
+     - [Intro](#intro)
+     - [Preparation](#preparation)
+     - [Determining whether your service is alive](#determining-whether-your-service-is-alive)
+     - [Determining whether your service is ready to serve traffic](#determining-whether-your-service-is-ready-to-serve-traffic)
+     - [Deploying to Kyma](#deploying-to-kyma)
+     - [Testing](#testing)
+  - [Operate your Service: Traces and Logs](#operate-your-service-traces-and-logs)
+     - [Intro](#intro)
+     - [Testing Tracing](#testing-tracing)
+     - [Testing Logging](#testing-logging)
 
 
 ## Kyma
@@ -283,7 +294,7 @@ openssl pkcs12 -export -name personservicekubernetes -in personservicekubernetes
 keytool -importkeystore -destkeystore personservicekubernetes.jks -srckeystore personservicekubernetes.p12 -srcstoretype pkcs12 -alias personservicekubernetes  -srcstorepass kyma-project -storepass kyma-project
 ```
 
-Now copy the resulting `personservicekubernetes.p12` file to folder security. 
+Now copy the resulting `personservicekubernetes.jks` file to folder security. 
 
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. If you are running on locally on Minikube the port of the gateway needs to be determined separately. To do this, issue the following command:
 
@@ -1111,3 +1122,108 @@ Now you can issue a POST request to /api/v1/monitoring/readiness?isReady=false. 
 
 Also all API calls to `/api/v1/person` endpoint (GET) will have the same value for `x-serving-host`. Hence the other pod was sucessfully excluded from loadbalancing. In order to bring it back to live issue `kubectl delete -n personservice <podname>`. Then Kubernetes will recreate it and it will be ready.
 
+## Operate your Service: Traces and Logs
+
+### Intro
+Kyma comes with tracing and logging support through Kubernetes, Istio and Jaeger. Tracing is mainly influenced by Istio (https://istio.io/docs/tasks/telemetry/distributed-tracing/) and Jaeger (https://www.jaegertracing.io/). Tracing enables you to corelate requests as they travel from service to service. All you need to do is propagate a set of tracing headers. The rest is taken care of by Istio and Jaeger.
+
+```
+   Client Span                                                Server Span
+┌──────────────────┐                                       ┌──────────────────┐
+│                  │                                       │                  │
+│   TraceContext   │           Http Request Headers        │   TraceContext   │
+│ ┌──────────────┐ │          ┌───────────────────┐        │ ┌──────────────┐ │
+│ │ TraceId      │ │          │ X─B3─TraceId      │        │ │ TraceId      │ │
+│ │              │ │          │                   │        │ │              │ │
+│ │ ParentSpanId │ │ Extract  │ X─B3─ParentSpanId │ Inject │ │ ParentSpanId │ │
+│ │              ├─┼─────────>│                   ├────────┼>│              │ │
+│ │ SpanId       │ │          │ X─B3─SpanId       │        │ │ SpanId       │ │
+│ │              │ │          │                   │        │ │              │ │
+│ │ Sampled      │ │          │ X─B3─Sampled      │        │ │ Sampled      │ │
+│ └──────────────┘ │          └───────────────────┘        │ └──────────────┘ │
+│                  │                                       │                  │
+└──────────────────┘                                       └──────────────────┘
+```
+
+Logs are just written to stdout so that they are accessible through `kubectl logs` and log aggregation solutions such as fluentd (not included in kyma).
+
+To embed all of this into our Spring Boot Application, no coding is necessary. All we need to do is embed Spring Cloud Sleuth (https://cloud.spring.io/spring-cloud-sleuth/):
+
+```
+		<dependency> 
+    		<groupId>org.springframework.cloud</groupId>
+    		<artifactId>spring-cloud-starter-sleuth</artifactId>
+		</dependency>
+```
+
+This will ensure our App:
+
+* Extracts and propagates Headers
+* Decorates logs with TraceId, ParentSpanId and SpanId
+
+In our Spring app logging uses SLF4J and is mainly based on the `LoggingAspect.java` which uses Aspect Oriented Programming to proxy and log every call to a class within the package hierarchy.
+
+### Testing Tracing
+
+To test the tracing you need to launch the Jaeger UI. Jaeger is not exposed to the Internet and hence you need to expose it using kubectl.
+
+On Windows:
+```
+kubectl get pod -n kyma-system -l app=jaeger -o jsonpath="{.items[0].metadata.name}"
+
+take the result and set <pod_name> 
+
+kubectl port-forward -n kyma-system <pod name> 16686:16686
+```
+
+On Mac/Linux:
+```
+kubectl port-forward -n kyma-system $(kubectl get pod -n kyma-system -l app=jaeger -o jsonpath='{.items[0].metadata.name}') 16686:16686
+```
+
+Now you can invoke it under `http://localhost:16686`. Further details can be found here: https://kyma-project.io/docs/latest/components/tracing
+
+Now we send a simple GET to /api/v1/person. In Jaeger we will make the following selections:
+
+* Service: Personservice
+* Limit Results: 20
+
+![Tracing](images/tracing1.png)
+
+Selecting the relevant record we will se the following picture:
+
+![Tracing](images/tracing2.png)
+
+This shows a simple request which is answered by the Personservice directly without propagation. It enters through Istio. Mixer ensures that all rules are followed and then the person service answers the request.
+
+Now we want to get more advanced and change a person which triggers a request to the events endpoint described in [Connect your Service to Kyma as Extension Platform](#connect-your-service-to-kyma-as-extension-platform). It will now also show up in the trace, but be more complex, as there is now also an outbound call to the events API (PATCH /api/v1/person/{id}).
+
+![Tracing](images/tracing4.png)
+
+Trace shows the following:
+
+![Tracing](images/tracing3.png)
+
+For those of you who really want to know what is going on, you can also create a new person and trace it all the way through the Lambda processing. However this requires your lambda to be properly hooked up to the service as described in [Extend your Person Service](#extend-your-person-service). Then you would see something along the lines of:
+
+![Tracing](images/tracing5.png)
+
+### Testing Logging
+
+Now since we know how the request was going through the Service Mesh, we also want to inspect what was happening within the App. Therefore we need to look into the logs. Fortunately Spring Cloud Sleuth has decorated them for us.
+
+To get there we open one of the traces again and extract the trace id and the pod it was executed on (Example is based on GET /api/v1/person)..
+
+![Getting the Log](images/gettingthelog1.png))
+
+Under View Options we select Trace JSON. This will provide access to the trace ID:
+
+![Getting the Log](images/gettingthelog2.png)
+
+For the pod we found we will issue the following kubectl command to print the logs into a text file (replace `<podname>` with the name identified in the trace): `kubectl logs -n personservice -c personservice <podname> > logs.txt`
+
+Based on the trace ID we can now search the logfile and see what happened inside the pod:
+
+![Getting the Log](images/gettingthelog3.png) 
+
+All of this is not very integrated, but here is also where the ecosystem kicks in with tools for log management/aggregation. Kyma and the underlying framewoks ensure that the data is collected. You have to integrate it into your corporate tooling based on the open standards leveraged (open tracing, etc.). 
