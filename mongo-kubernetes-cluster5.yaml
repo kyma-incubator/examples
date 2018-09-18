@@ -113,9 +113,11 @@ spec:
                       name: mongo-kubernetes-config
                       key: connector_baseurl
               - name: spring_profiles_active
-                value: "ApplicationConnector,Actuator" 
+                value: ApplicationConnector,Actuator
               - name: management_health_redis_enabled
-                value: false                      
+                value: "false"
+              - name: logging_level_com_sap_demo
+                value: "DEBUG"                      
              volumeMounts:
               - mountPath: /registration
                 name: registrationfile
