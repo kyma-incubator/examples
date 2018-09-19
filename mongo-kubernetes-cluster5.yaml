@@ -36,19 +36,18 @@ metadata:
    annotations:
       deployment.kubernetes.io/revision: "3"
    labels:
-      run: personservice
-      mf_version: "2"
+      app: personservice
+      mf_version: "5"
    name: personservice   
 spec:
    replicas: 2
    selector:
       matchLabels:
-         run: personservice
+         app: personservice
    template:
       metadata:
          labels:    
             app: personservice
-            run: personservice
             version: "0.0.3"
          annotations:
             sidecar.istio.io/inject: "true"

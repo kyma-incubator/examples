@@ -1,4 +1,4 @@
-# A sample Application for running Spring Boot on Kubernetes/Kyma with Mongodb
+# A sample Application based on Spring Boot showing the features of Kyma
 
 ## Table of Contents
 
@@ -1209,3 +1209,6 @@ Based on the trace ID we can now search the logfile and see what happened inside
 ![Getting the Log](images/gettingthelog3.png) 
 
 All of this is not very integrated, but here is also where the ecosystem kicks in with tools for log management/aggregation. Kyma and the underlying framewoks ensure that the data is collected. You have to integrate it into your corporate tooling based on the open standards leveraged (open tracing, etc.). 
+
+
+
