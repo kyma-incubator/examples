@@ -36,19 +36,18 @@ metadata:
    annotations:
       deployment.kubernetes.io/revision: "3"
    labels:
-      run: personservice
+      app: personservice
       mf_version: "2"
    name: personservice   
 spec:
    replicas: 1
    selector:
       matchLabels:
-         run: personservice
+         app: personservice
    template:
       metadata:
          labels:    
             app: personservice
-            run: personservice
             version: "0.0.3"
          annotations:
             sidecar.istio.io/inject: "true"
@@ -66,24 +65,7 @@ spec:
                 name: http
               - containerPort: 8081
                 name: actuatorhttp
-                
-#             livenessProbe:
-#                httpGet:
-#                   path: /actuator/health
-#                   port: 8081
-#                initialDelaySeconds: 10
-#                timeoutSeconds: 40
-#                periodSeconds: 60
-#                failureThreshold: 3
-#             readinessProbe:
-#                httpGet:
-#                   path: /actuator/health
-#                   port: 8081
-#                periodSeconds: 60
-#                timeoutSeconds: 40
-#                initialDelaySeconds: 20
-#                failureThreshold: 3
-#                successThreshold: 2
+      
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 
