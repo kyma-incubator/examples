@@ -93,7 +93,7 @@ spec:
                       name: mongo-kubernetes-config
                       key: mongodb_username
               - name: management_health_redis_enabled
-                value: false 
+                value: "false" 
               - name: spring_profiles_active
                 value: Default 
                              

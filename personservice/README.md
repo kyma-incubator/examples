@@ -444,6 +444,7 @@ As soon as a Lambda requires NPM dependencies, it also require a package.json fi
   "dependencies": {
     "axios": "^0.18.0",
     "winston": "^3.0.0",
+    "express": "^4.16.3",
     "dotenv":"^6.0.0"
   }
 }
@@ -462,31 +463,41 @@ To run your Lambda locally you also need a wrapper. The below snippet is actuall
 ```
 require('dotenv').config();
 const personservice = require('./personservicemodule');
+var express = require('express');
+var app = express();
+
 
 console.log(`GATEWAY_URL = ${process.env.GATEWAY_URL}`);
 
-var event = { //build a dummy event
-    "data": {
-        "personid":process.env.PERSON_ID
-    },
-    "extensions": {
-        "request": {
-            "headers": {
-                "x-request-id":"hellotracer"
-            }
+
+
+app.get("/", async function (req, res) {
+    var event = {
+        "data": {
+            "personid":req.query.personId
+        },
+        "extensions": {
+            "request": req,            
+            "response":res        
         }
-    
-    }
-}
+    };
 
+    await personservice.main(event,{});    
+});
 
-personservice.main(event,{}); //invoke the lambda
+app.listen(3000, function () {
+    console.log('Example app listening on port 3000!');
+  });
 ```
 
-The code for the sample Lambda function is contained in the "Lambda" folder. in order to run it locally, ensure you have a Node.js (https://nodejs.org/en/download/) environment (Version 8.x installed, to check, execute `node --version`). You also need to make a few changes to the ".env" file. Again you need to replace all occurrences of replaceme. "GATEWAY_URL" must have a value pointing to your deployment of personservice (only root, no "/" in the end). "PERSON_ID" must be the ID of a person in your mongo db (basically GET /api/v1/person/{PERSON_ID} must return a 200 status code).
 
-Then install the dependencies: `npm install axios winston dotenv`
+The code for the sample Lambda function is contained in the "Lambda" folder. in order to run it locally, ensure you have a Node.js (https://nodejs.org/en/download/) environment (Version 8.x installed, to check, execute `node --version`). You also need to make a few changes to the ".env" file. Again you need to replace all occurrences of replaceme. "GATEWAY_URL" must have a value pointing to your deployment of personservice (only root, no "/" in the end).
+The wrapper starts a local http server on port 3000 that uses the query parameter personId which must be the ID of a person in your mongo db (basically GET /api/v1/person/{PERSON_ID} must return a 200 status code). 
+
+Then install the dependencies: `npm install axios winston dotenv express`
 After that you can run your service: `node personservicecaller.js`
+
+Once this is done you can send requests through `http://localhost:3000?presonid=<your personid>` and execute the function locally.
 
 This should give you a fair idea of how to develop Lambdas.
 

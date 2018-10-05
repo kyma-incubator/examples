@@ -25,7 +25,7 @@
 		<project.version>0.0.3</project.version>
 		<jib.version>0.9.9</jib.version>
 		<docker.repositoryname>andy008</docker.repositoryname>
-		<jib.credentialhelper>wincred</jib.credentialhelper>
+		<jib.credentialhelper>osxkeychain</jib.credentialhelper>
 		<springfox.version>2.9.2</springfox.version>
 		<commons-io.version>2.6</commons-io.version>
 		<commons.lang.version>3.7</commons.lang.version>
@@ -139,6 +139,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+	
 			<plugin>
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>jib-maven-plugin</artifactId>

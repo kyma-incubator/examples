@@ -1,26 +1,27 @@
 require('dotenv').config();
 const personservice = require('./personservicemodule');
+var express = require('express');
+var app = express();
+
 
 console.log(`GATEWAY_URL = ${process.env.GATEWAY_URL}`);
 
-var event = {
-    "data": {
-        "personid":process.env.PERSON_ID
-    },
-    "extensions": {
-        "request": {
-            "headers": {
-                "x-request-id":"hellotracer"
-            }
+
+
+app.get("/", async function (req, res) {
+    var event = {
+        "data": {
+            "personid":req.query.personId
+        },
+        "extensions": {
+            "request": req,            
+            "response":res        
         }
-    
-    }
-}
+    };
 
+    await personservice.main(event,{});    
+});
 
-var result = personservice.main(event,{});
-
-
-
-
-
+app.listen(3000, function () {
+    console.log('Example app listening on port 3000!');
+  });

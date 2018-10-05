@@ -42,3 +42,6 @@ mongo-kubernetes-playground4.yaml
 mongo-kubernetes-configmap-playground5.yaml
 mongo-kubernetes-playground6.yaml
 mongo-kubernetes-configmap-playground6.yaml
+mongo-kubernetes-configmap-cxlive.yaml
+.DS_Store
+

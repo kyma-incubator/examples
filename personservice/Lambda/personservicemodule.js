@@ -9,123 +9,138 @@ if (logLevel === undefined) {
 }
 
 const logger = winston.createLogger({
-    level : logLevel,
+    level: logLevel,
     transports: [
         new winston.transports.Console()
     ]
-  });
+});
 
 //Extract Itro trace information to propagate it further ==> see https://istio.io/docs/tasks/telemetry/distributed-tracing/
-const traceHeaders = ['x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid', 
-'x-b3-sampled', 'x-b3-Flags', 'x-ot-span-context'];
+const traceHeaders = ['x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid',
+    'x-b3-sampled', 'x-b3-Flags', 'x-ot-span-context'];
 
 
 module.exports = {
-    main: function (event, context) {
+    main: async function (event, context) {
         console.log(`Log level '${logLevel}'`);
 
         var traceCtxHeaders = extractTraceHeaders(event.extensions.request.headers);
 
         var personId = event.data.personid;
 
-        logger.log('info', `Event received for personid '${personId}'`);       
-        
-        var url = `${process.env.GATEWAY_URL}/api/v1/person/${personId}`;
-        
-        logger.log('debug', `Calling GET: ${url}`);
+        logger.log('info', `Event received for personid '${personId}'`);
 
-        axios.get(url, {
-            headers: traceCtxHeaders,
-            responseType: 'json'
-        }).then(function (response) {
-            
+        var url = `${process.env.GATEWAY_URL}/api/v1/person/${personId}`;
+
+        logger.log('debug', `Calling GET: ${url}`);
+        try {
+            var response = await axios.get(url, {
+                headers: traceCtxHeaders,
+                responseType: 'json'
+            });
+
+
             var personMaintained = response.data;
 
             // Remove specificts that would harm duplicate search
             delete personMaintained.id;
             delete personMaintained.extensionFields;
 
+            // get Array of IDs
+            var foundPersonArray = await findDuplicates(personMaintained, traceCtxHeaders);
+
+            logger.log('debug', `Duplicate Person IDs`, { "foundPersonArray": foundPersonArray });
+
+
+            // Array must be longer than 1 to represent a duplicate
+            if (foundPersonArray.length > 1) {
+                await updateDuplicatePersonExtension(foundPersonArray, traceCtxHeaders);
+            }
+
+            event.extensions.response.status(200).json({"status":"OK"}).send();
             
-            handleDuplicates(personMaintained, traceCtxHeaders);
-
-        }).catch(error => handleAxiosError(error)); //Generalized Error Handling    
+        } catch (error) {
+            logAxiosError(error, event.extensions.response);
+        }
     }
 }
 
-function handleAxiosError(error) {
-    if (error.response) { //response.status != 2xx
-        logger.log('error', `Error Status returned`,
-        { "status": error.status, "statusText": error.statusText, "responseHeaders": error.headers, 
-        "requestConfig": error.config});
-    } else if (error.request) { //request failed
-        logger.log('error', `Request failed`, {"errorDetail" : error.request});
-    } else {
-        logger.log('error', `Unknown error`, {"errorMessage": error.message});
-    }
-}
-
-function updateDuplicatePersonExtension(duplicatePersonsArray, traceCtxHeaders) {
+async function logAxiosError(error, response) {
+    var errorDetail;
     
-    for (var counter in duplicatePersonsArray) {      
+    if (error.response) { //response.status != 2xx
+
+        errorDetail = {
+                "status": error.response.status, "statusText": error.response.statusText, "responseHeaders": error.response.headers,
+                "requestConfig": error.config
+        };
+        logger.log('error', `Error Status returned`,
+            errorDetail);
+    } else if (error.request) { //request failed
+        errorDetail = { "errorDetail": error.request };
+
+        logger.log('error', `Request failed`, errorDetail);
+    } else {
+        errorDetail = { "errorMessage": error.message };
+
+        logger.log('error', `Unknown error`, errorDetail);
+    }
+
+    response.status(500).json(errorDetail).send();
+}
+
+async function updateDuplicatePersonExtension(duplicatePersonsArray, traceCtxHeaders) {
+
+    for (var counter in duplicatePersonsArray) {
 
         var url = `${process.env.GATEWAY_URL}/api/v1/person/${duplicatePersonsArray[counter]}`;
 
         var data = {
             "id": duplicatePersonsArray[counter],
             "extensionFields": {
-              "duplicatePersons": duplicatePersonsArray
-                }
-            };
+                "duplicatePersons": duplicatePersonsArray
+            }
+        };
 
-        logger.log('debug', `Updating Person ${duplicatePersonsArray[counter]}, calling PATCH: ${url}`, {"data": data});
-        
+        logger.log('debug', `Updating Person ${duplicatePersonsArray[counter]}, calling PATCH: ${url}`, { "data": data });
 
-        axios.patch(url, data, {
+
+        var response = await axios.patch(url, data, {
             headers: traceCtxHeaders,
             responseType: 'json'
-            }).then(function (response) {
-                logger.log('info', `Person ${response.data.id} successfully updated`);
-                logger.log('debug', `Person ${response.data.id} updated, `, {"responseData": response.data});
-            }).catch(error => handleAxiosError(error));
-    }       
+        });
+
+        logger.log('info', `Person ${response.data.id} successfully updated`);
+        logger.log('debug', `Person ${response.data.id} updated, `, { "responseData": response.data });
+    }
 
 }
 
-function handleDuplicates(personToSearch, traceCtxHeaders) {
+async function findDuplicates(personToSearch, traceCtxHeaders) {
     var url = `${process.env.GATEWAY_URL}/api/v1/person/search`;
 
 
-    logger.log('debug', `Calling POST: ${url}`, {"searchRequest": personToSearch});
+    logger.log('debug', `Calling POST: ${url}`, { "searchRequest": personToSearch });
 
-    axios.post(url, personToSearch, {
+    var response = await axios.post(url, personToSearch, {
         headers: traceCtxHeaders,
         responseType: 'json'
-    }).then(function (response) {
-        
-        var duplicatePersons = response.data;
-        
-        logger.log('info', `Number of matching Persons found: ${duplicatePersons.length}`);  
-        logger.log('debug', `Number of matching Persons found: ${duplicatePersons.length}`, {"searchResponse": duplicatePersons});    
+    });
 
-        // get Array of IDs
-        var foundPersonArray = duplicatePersons.map(function(person) {
-            return person.id;
-        });
-        
-        logger.log('debug', `Duplicate Person IDs`, {"foundPersonArray": foundPersonArray}); 
-     
+    var duplicatePersons = response.data;
 
-        // Array must be longer than 1 to represent a duplicate
-        if (foundPersonArray.length > 1) {
-            updateDuplicatePersonExtension(foundPersonArray, traceCtxHeaders);
-        }
+    logger.log('info', `Number of matching Persons found: ${duplicatePersons.length}`);
+    logger.log('debug', `Number of matching Persons found: ${duplicatePersons.length}`, { "searchResponse": duplicatePersons });
 
-    }).catch(error => handleAxiosError(error));
+    // get Array of IDs
+    return duplicatePersons.map(function (person) {
+        return person.id;
+    });
 }
 
 function extractTraceHeaders(headers) {
-   
-    logger.log('debug', `Number of headers found: ${headers.length}`, {"headers": headers});
+
+    logger.log('debug', `Number of headers found: ${headers.length}`, { "headers": headers });
 
     var map = {};
 

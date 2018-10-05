@@ -54,7 +54,6 @@ spec:
       spec:    
          containers:
            - name: personservice
-# changeme: Replace with pointer to your docker repository/container
              image: "andy008/mongokubernetes:0.0.3"
              resources:
                 limits:
@@ -64,8 +63,7 @@ spec:
               - containerPort: 8080
                 name: http
               - containerPort: 8081
-                name: actuatorhttp                
-
+                name: actuatorhttp
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 
@@ -102,7 +100,7 @@ spec:
               - name: logging_level_com_sap_demo_service
                 value: "TRACE"
               - name: management_health_redis_enabled
-                value: false 
+                value: "false" 
               - name: spring_redis_host
                 value: "${HOST}"   
               - name: spring_redis_port
