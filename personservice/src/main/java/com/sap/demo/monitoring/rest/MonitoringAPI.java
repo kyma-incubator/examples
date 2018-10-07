@@ -52,18 +52,16 @@ public class MonitoringAPI {
 	}
 	
 	@PostMapping("/api/v1/monitoring/readiness")
-	@ApiOperation(value="Set Readiness Indicator Status", notes="This function set the readiness indicator status (Spring Boot Actuator)")
+	@ApiOperation(value="Set Readiness Indicator Status", notes="This function set the readiness indicator status to not Ready for a given number of seconds (Spring Boot Actuator).")
 	public ResponseEntity<Map<String,String>> setReadinessIndicator(
-			@RequestParam(defaultValue="true", name="isReady") boolean isReady) {
+			@RequestParam(defaultValue="60", name="notReadySeconds") int notReadySeconds) {
 		
-		if(isReady) {
-			readinessIndicator.setReady();
-		} else {
-			readinessIndicator.setNotReady();
-		}
+		long notReadyTimeMills = System.currentTimeMillis() + (notReadySeconds * 1000);
+		
+		readinessIndicator.setNotReadyTimeMills(notReadyTimeMills);
 		
 		return new ResponseEntity<Map<String,String>>(
-				Collections.singletonMap("ReadynessStatus", String.valueOf(isReady)),
+				Collections.singletonMap("NotReadyUntil", String.valueOf(notReadyTimeMills)),
 				HttpStatus.ACCEPTED);		
 	}
 }

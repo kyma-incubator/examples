@@ -1,0 +1,11 @@
+apiVersion: applicationconnector.kyma-project.io/v1alpha1
+kind: RemoteEnvironment
+metadata:
+  labels:
+    app: personservice-gateway
+  name: personservicekubernetes
+spec:
+  description: A sample service for managing persons
+  labels: 
+    app: personservicekubernetes  
+

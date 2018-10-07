@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-kubernetes-config
+  labels:
+     app: personservice
+     version: "0.0.3"
+data:
+  mongodb_host: first-mongo-mongodb.personservice.svc.cluster.local
+  mongodb_database: kubernetes-dummy
+  authentication_database: admin
+  mongodb_username: root
+# # changeme: Replace with your Gateway URL from previous step (including port)
+  connector_baseurl: https://gateway.live-demo.cluster.kyma.cx/personservicekubernetes

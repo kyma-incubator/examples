@@ -1,3 +1,6 @@
+# docker-compose -f docker-compose-local-mongo.yml up -d
+# docker-compose -f docker-compose-local-mongo.yml stop
+
 version: '2'
 
 services:

@@ -12,29 +12,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import lombok.Data;
+
 @Component
 @WebEndpoint(id="ready",enableByDefault=true)
 @Profile("Actuator")
+@Data
 public class DemoReadinessIndicator implements ApplicationListener<ApplicationReadyEvent>{
 	
-	private boolean isReady = false;
-	
-	public void setNotReady() {
-		isReady = false;
-	}
-	
-	public void setReady() {
-		isReady = true;
-	}
+	// Default to Max value and change to current time after Application Ready Event
+	private long notReadyTimeMills = Long.MAX_VALUE;
 	
 	@ReadOperation(produces="application/json")
 	public ResponseEntity<Map<String, Boolean>> getReadinessStatus() {
 		
-		if(isReady) {
-			return new ResponseEntity<Map<String,Boolean>>(Collections.singletonMap("isReady", isReady),
+		if(System.currentTimeMillis() > notReadyTimeMills) {
+			return new ResponseEntity<Map<String,Boolean>>(Collections.singletonMap("isReady", true),
 					HttpStatus.OK);
 		} else {
-			return new ResponseEntity<Map<String,Boolean>>(Collections.singletonMap("isReady", isReady),
+			return new ResponseEntity<Map<String,Boolean>>(Collections.singletonMap("isReady", false),
 					HttpStatus.SERVICE_UNAVAILABLE);
 		}
 		
@@ -43,7 +39,7 @@ public class DemoReadinessIndicator implements ApplicationListener<ApplicationRe
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
-		isReady = true;
+		notReadyTimeMills = System.currentTimeMillis();
 	}
 
 }

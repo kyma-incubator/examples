@@ -242,14 +242,16 @@ Steps 3 and 4 are based on deploying additional configuration to the kyma instan
 
 To connect external systems (so called remote environments) you need to use the application connector. For information see: https://kyma-project.io/docs/latest/components/application-connector.
 
-Application connector requires deployment of a new environment specific gateway:
-1. Clone Kyma and from kyma location call the following command:
-   ```
-   helm install --name personservicekubernetes --set deployment.args.sourceType=personservicekubernetes --set global.isLocalEnv=false --set *global.domainName=kyma.local* --namespace kyma-integration ./resources/remote-environments
-   ```
-   Replace *global.domainName=kyma.local* with your kyma domain.
+To create one, you need to issue the following command: `kubectl apply -f re-personservice.yaml`
 
-2. Restart the UI api layer by deleting its Pods with `kubectl delete pod -l=app=ui-api -n kyma-system`. After Pods are recreated, your new Environment shall show up as green in the Kyma Console under `Administration -> Remote Environments`
+To check whether the pods are up and running issue `kubectl get pod -l app=personservice-gateway -n kyma-integration`, result should look like:
+
+```
+NAME                                     READY     STATUS    RESTARTS   AGE
+personservice-gateway-56ddb944b6-nw6m6   2/2       Running   0          21m
+```
+
+After Pods are recreated, your new Environment shall show up as green in the Kyma Console under `Administration -> Remote Environments`
 
 ### Pair Person Service with Kyma Application Connector
 
@@ -322,7 +324,7 @@ Now (based on your Kyma cluster type) you again need to update the fields marked
 
 To check whether your changes are active, issue the following command until you again have **exactly** 2 Pods of `personservice-*-*` in status running: `kubectl get pods -n personservice`.
 
-After that issue a kubectl describe command for 1 of the pods (replacing '\*' with actual values): `kubectl describe pod personservice-*-* -n personservice`
+After that issue a kubectl describe command for 1 of the pods (replacing '\*' with actual values): `kubectl describe pod -l app=personservice -n personservice`
 
 The output must look something like this ('..' depicts other content which I deleted):
 
@@ -380,7 +382,9 @@ Now you should see the following under Remote Environments:
 
 ![Remote Environment Registration Screenshot](images/remoteenvironmentregistration2.png)
 
-This means now you can bind this 'Remote Environment' to a 'Kyma Environment' and process events in Serverless Lambda functions. To do so, bind the Remote Environment 'personservicekubernetes' to the Kyma Environment 'personservice' by clicking `Create Binding`. Then go to the Kyma Environment personservice's 'Service Catalog' and explore the Service 'Person API'.
+This means now you can bind this 'Remote Environment' to a 'Kyma Environment' and process events in Serverless Lambda functions. You can either use the UI or kubectl. On the UI, bind the Remote Environment 'personservicekubernetes' to the Kyma Environment 'personservice' by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f re-personservice-environment-map.yaml` to do the same.
+
+Then go to the Kyma Environment personservice's 'Service Catalog' and explore the Service 'Person API'.
 
 ![Remote Environment Registration Screenshot](images/remoteenvironmentregistration3.png)
 
@@ -1103,7 +1107,7 @@ Events:
 
 It basically shows that kubernetes is recreating the failing container. After that the container is back alive.
 
-Now you can issue a POST request to /api/v1/monitoring/readiness?isReady=false. This will make the readinessProbe fail. You will again see this in your pod monitor. Now you can in a separate terminal window execute the command `kubectl describe pod -n personservice <podname>` for the pod that was failing. In the event log you will see the following picture:
+Now you can issue a POST request to /api/v1/monitoring/readiness?isReady=60. This will make the readinessProbe fail for 60 seconds. You will again see this in your pod monitor. Now you can in a separate terminal window execute the command `kubectl describe pod -n personservice <podname>` for the pod that was failing. In the event log you will see the following picture:
 
 ```
   Type     Reason     Age               From                           Message
@@ -1113,7 +1117,7 @@ Now you can issue a POST request to /api/v1/monitoring/readiness?isReady=false. 
   Warning  Unhealthy  12s (x4 over 4m)  kubelet, k8s-agent-27799012-2  Readiness probe failed: HTTP probe failed with statuscode: 503
 ```
 
-Also all API calls to `/api/v1/person` endpoint (GET) will have the same value for `x-serving-host`. Hence the other pod was sucessfully excluded from loadbalancing. In order to bring it back to live issue `kubectl delete -n personservice <podname>`. Then Kubernetes will recreate it and it will be ready.
+Also all API calls to `/api/v1/person` endpoint (GET) will have the same value for `x-serving-host`. Hence the other pod was sucessfully excluded from loadbalancing. 
 
 ## Operate your Service: Traces and Logs
 
