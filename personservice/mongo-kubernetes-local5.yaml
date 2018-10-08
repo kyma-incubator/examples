@@ -122,7 +122,9 @@ spec:
               - name: management_health_redis_enabled
                 value: "false"
               - name: logging_level_com_sap_demo
-                value: "DEBUG"                
+                value: "DEBUG"
+              - name: spring_zipkin_baseUrl
+                value: "http://jaeger-collector.kyma-system.svc.cluster.local:9411"                
              volumeMounts:
               - mountPath: /registration
                 name: registrationfile
