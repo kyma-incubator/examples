@@ -5,7 +5,7 @@
 
 	<groupId>com.sap.demo.d046471</groupId>
 	<artifactId>MongoKubernetesMicroservice</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.3¬</version>
 	<packaging>jar</packaging>
 	<name>MongoKubernetesMicroservice</name>
 	<description>Kubernetes Service using Mongo DB</description>

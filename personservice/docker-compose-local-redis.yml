@@ -1,0 +1,12 @@
+# docker-compose -f docker-compose-local-redis.yml up -d
+# docker-compose -f docker-compose-local-redis.yml stop
+
+version: '2'
+
+services:
+  redis:
+    image: 'bitnami/redis:latest'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'

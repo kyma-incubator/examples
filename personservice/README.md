@@ -1211,7 +1211,17 @@ Based on the trace ID we can now search the logfile and see what happened inside
 
 ![Getting the Log](images/gettingthelog3.png) 
 
-All of this is not very integrated, but here is also where the ecosystem kicks in with tools for log management/aggregation. Kyma and the underlying framewoks ensure that the data is collected. You have to integrate it into your corporate tooling based on the open standards leveraged (open tracing, etc.). 
+To make this more simple, Kyma comes with OK Log and Logspout (https://kyma-project.io/docs/latest/components/logging). These tools help to aggregate logs within the cluster. To access OK Log:
 
+1. `kubectl port-forward -n kyma-system svc/core-logging-oklog 7650:7650`
+2. Open `http://localhost:7650/ui` in a browser and paste the extracted Trace ID
+
+Then you will have a ui to search the aggregated logs. 
+
+![Getting the Log](images/gettingthelog4.png)
+
+There is also a commandline client available under https://github.com/oklog/oklog/releases. This will allow you to query logs and pipe them into auxilliary tools: `./oklog-0.3.2-darwin-amd64 query -from 1h -to now -q "Person.*1d8db64fbbaf58ae" -regex` (`1d8db64fbbaf58ae1d8db64fbbaf58ae` must be replaced with traceID).
+
+**Be careful, log collection runs asynchronously and hence there might be a small delay.**
 
 
