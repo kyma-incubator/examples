@@ -9,6 +9,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import com.sap.demo.entity.Person;
+import com.sap.demo.repository.PersonRepository;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 @Service("PersonService")
 @Profile("Cache")
@@ -16,6 +19,11 @@ public class PersonServiceCache extends PersonServiceDefault {
 	
 
 	
+	public PersonServiceCache(MeterRegistry registry, PersonRepository repository) {
+		super(registry, repository);
+	}
+
+
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 

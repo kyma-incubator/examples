@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: personservicekubernetes
+  labels:
+    app: personservice
+    prometheus: core #links to kyma prometheus instance
+spec:
+  jobLabel: "Personservice"
+  selector:
+    matchLabels:
+      app: personservice # label selector for service
+  namespaceSelector:
+    matchNames:
+    - personservice # links to person service namespace for metric collection
+  endpoints:
+  - port: actuatorhttp # port name in service
+    path: "/actuator/prometheus" # enpoint of spring metrics actuator
+

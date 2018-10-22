@@ -17,15 +17,28 @@ import com.sap.demo.exception.NotFoundException;
 import com.sap.demo.exception.PersonServiceException;
 import com.sap.demo.repository.PersonRepository;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+
+
 @Service("PersonService")
 @Profile("!Cache")
 public class PersonServiceDefault implements PersonService {
 	
-	@Autowired
+	
 	private PersonRepository repository;
 	
 	@Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+	
+	@Autowired
+	public PersonServiceDefault(MeterRegistry registry, PersonRepository repository) {
+		this.repository = repository;
+		
+		Gauge.builder("personservice.persistency.repository.size", repository, PersonRepository::count)
+				.tag("Repository", "Persons").register(registry);
+		
+	}
 	
 	private void publishPersonEvent(PersonEvent event) {
 		applicationEventPublisher.publishEvent(event);

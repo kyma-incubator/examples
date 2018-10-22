@@ -5,7 +5,7 @@
 
 	<groupId>com.sap.demo.d046471</groupId>
 	<artifactId>MongoKubernetesMicroservice</artifactId>
-	<version>0.0.3¬</version>
+	<version>0.0.3</version>
 	<packaging>jar</packaging>
 	<name>MongoKubernetesMicroservice</name>
 	<description>Kubernetes Service using Mongo DB</description>
@@ -29,7 +29,7 @@
 		<springfox.version>2.9.2</springfox.version>
 		<commons-io.version>2.6</commons-io.version>
 		<commons.lang.version>3.7</commons.lang.version>
-		<oauth.version>2.3.3.RELEASE</oauth.version>
+		<oauth.version>2.3.4.RELEASE</oauth.version>
 		<jwt.version>1.0.9.RELEASE</jwt.version>
 	</properties>
 	
@@ -129,6 +129,10 @@
 			<groupId>commons-io</groupId>
     		<artifactId>commons-io</artifactId>
     		<version>${commons-io.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
 
 	</dependencies>

@@ -67,9 +67,18 @@ This application runs on [Kyma](https://kyma-project.io) therefor to try out thi
 
 An Environment is a custom Kyma security and organizational unit based on the concept of Kubernetes Namespaces. Kyma Environments allow you to divide the cluster into smaller units to use for different purposes, such as development and testing. Learn more from official documentation about [Environments](https://kyma-project.io/docs/latest/root/kyma#details-environments)
 
-To setup environment for this showcase call this command: `kubectl apply -f environment.yaml`. Now, once you call `kubectl get namespaces -l=env=true` among other Environments you will see the one you just created
+To setup environment for this showcase call this command: `kubectl apply -f environment.yaml`. Now, once you call `kubectl get namespaces -l=env=true` among other Environments you will see the one you just created.
 
-You also just created default resource constraints to ensure we don't hit ceilings in terms of memory usage. (However on Minikube/Local installation this might be challenging). For more details read [Configure Default Memory Requests and Limits for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/)
+Now issue the following commands to delete default resource constraints and re-create them a little more relaxed:
+
+```
+kubectl delete -n personservice LimitRange kyma-default
+kubectl delete -n personservice ResourceQuota kyma-default
+
+kubectl apply -f environment-resources.yaml  -n personservice
+```
+
+This was to ensure we don't hit ceilings in terms of memory usage. (However on Minikube/Local installation this might be challenging). For more details read [Configure Default Memory Requests and Limits for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/)
 
 ### Mongo DB
 
@@ -501,7 +510,7 @@ The wrapper starts a local http server on port 3000 that uses the query paramete
 Then install the dependencies: `npm install axios winston dotenv express`
 After that you can run your service: `node personservicecaller.js`
 
-Once this is done you can send requests through `http://localhost:3000?presonid=<your personid>` and execute the function locally.
+Once this is done you can send requests through `http://localhost:3000?personid=<your personid>` and execute the function locally.
 
 This should give you a fair idea of how to develop Lambdas.
 
@@ -1223,5 +1232,122 @@ Then you will have a ui to search the aggregated logs.
 There is also a commandline client available under https://github.com/oklog/oklog/releases. This will allow you to query logs and pipe them into auxilliary tools: `./oklog-0.3.2-darwin-amd64 query -from 1h -to now -q "Person.*1d8db64fbbaf58ae" -regex` (`1d8db64fbbaf58ae1d8db64fbbaf58ae` must be replaced with traceID).
 
 **Be careful, log collection runs asynchronously and hence there might be a small delay.**
+
+## Operate your Service: Metrics
+
+### Intro
+
+Kyma comes with a Prometheus Operator included. This means you can instrument your Services and scrape metrics as described in https://kyma-project.io/docs/latest/components/monitoring. In order to instrument the Person Service and get application level metrics I have added the following dependency to the Maven POM file:
+
+```
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+```
+
+Furthermore I have added the following lines of code to the `PersonServiceDefault` class:
+
+```
+	@Autowired
+	public PersonServiceDefault(MeterRegistry registry, PersonRepository repository) {
+		this.repository = repository;
+		
+		Gauge.builder("personservice.persistency.repository.size", repository, PersonRepository::count)
+				.tag("Repository", "Persons").register(registry);
+		
+	}
+
+```
+
+These add a metric called `personservice_persistency_repository_size` to the `/actuator/prometheus` endpoint so that we can plot them in a chart using Grafana.
+
+### Collecting Metrics in Prometheus
+
+
+In oder to be able to collect the metrics from Prometheus the following Service was added to `mongo-kubernetes-local6.yaml`and `mongo-kubernetes-cluster6.yaml`:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  labels:    
+     app: personservice
+     version: "0.0.3"
+  annotations:
+     auth.istio.io/80: NONE
+  name: personservice-actuator
+spec:
+  ports:
+  - name: actuatorhttp
+    port: 8081
+  selector:
+    app: personservice
+    version: "0.0.3"
+  type: ClusterIP
+```
+Deploy them using `kubectl apply -n personservice -f mongo-kubernetes-cluster6.yaml` or `kubectl apply -n personservice -f mongo-kubernetes-local6.yaml`. 
+
+Now you can configure Prometheus to scrape the metrics. To do so you need to create a resource of type ServiceMonitor. This needs to be part of the `kyma-system` namespace:
+
+```
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: personservicekubernetes
+  labels:
+    app: personservice
+    prometheus: core #links to kyma prometheus instance
+spec:
+  jobLabel: "Personservice"
+  selector:
+    matchLabels:
+      app: personservice # label selector for service
+  namespaceSelector:
+    matchNames:
+    - personservice # links to person service namespace for metric collection
+  endpoints:
+  - port: actuatorhttp # port name in service
+    path: "/actuator/prometheus" # enpoint of spring metrics actuator
+```
+
+To create this resource issue: `kubectl apply -f ServiceMonitor.yaml -n kyma-system`.
+
+Now you can check whether it is working in Prometheus. To do so you need to expose prometheus on your localhost using `kubectl port-forward -n kyma-system svc/prometheus-operated 9090:9090`. Now you can open http://localhost:9090/targets` in a browser. You should fin a target like in the screenshot below:
+
+![Prometheus](images/prometheus1.png)
+
+Furthermore you can go to `http://localhost:9090/graph`and issue the following PromQl statement as a verification  `up{job="personservice-actuator"}`. This will should yield something along these lines:
+
+![Prometheus](images/prometheus2.png)
+
+You besides creating dashboards, you can also use the collected metrics for alerting. This will not be depicted here but is rather straight forward.
+
+### Creating a Dashboard
+
+For Dashboarding we can use Grafana. Grafana will visualize the following PromQL (https://prometheus.io/docs/prometheus/latest/querying/basics/) queries:
+
+* container_memory_usage_bytes{namespace="personservice",container_name="personservice"}/1000000 ==> Memory usage of the Person Service Pods in Megabytes
+* sum(up{job="personservice-actuator"}) ==> Number of instances of the person service
+* max(personservice_persistency_repository_size{Repository="Persons"}) ==> Our custom metric for providing the number of Person records in the Mongo DB
+* sum by (job,method) (rate(http_server_requests_seconds_count{job="personservice-actuator"}[1m])*60) ==> request rate per Minute and HTTP method
+
+Grafana is accessed under `https://grafana.{clusterhost}/login` or from `https://console.{clusterhost}/` Administration -> Stats & Metrics. After Login you should see the below picture and go to "Import":
+
+
+![Dashboards](images/grafana1.png)
+
+Now upload `Person_Service_Dashboard.json`. 
+
+![Dashboards](images/grafana2.png)
+
+This will require to wire the dashboard to a datasource called `Prometheus`:
+
+![Dashboards](images/grafana3.png)
+
+After doing so your dashboard will look as follows:
+
+![Dashboards](images/grafana4.png)
+
 
 
