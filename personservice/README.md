@@ -50,6 +50,10 @@
   * [Intro](#intro-4)
   * [Testing Tracing](#testing-tracing)
   * [Testing Logging](#testing-logging)
+- [Operate your Service: Metrics](#operate-your-service--metrics)
+  * [Intro](#intro-5)
+  * [Collecting Metrics in Prometheus](#collecting-metrics-in-prometheus)
+  * [Creating a Dashboard](#creating-a-dashboard)
 
 ## Overview
 
