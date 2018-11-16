@@ -1,0 +1,8 @@
+{
+    "name": "sample-es-ws-api",
+    "provider": "Amazing Web Shop using Kyma",
+    "description": "Sample service for e-2-e integration",
+    "api": {
+        "targetUrl": "https://requestloggerbin.herokuapp.com/bin/a3438557-ca18-4a41-82cc-2a447b310027"
+    }
+}
