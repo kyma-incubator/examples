@@ -32,7 +32,7 @@ The runtime flow involves following steps:
 
 We will set up the secure connectivity between the mock external solution and the Kyma remote environment `ec-default`.
 
-Here we will use the [one-click integration flow](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/docs/015-details-one-click-configuration.md)
+Here we will use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/docs/010-architecture-connector-service.md) to secure the communication.
 
 * Clone this [repository](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/docs/015-details-one-click-configuration.md).
 
