@@ -4,7 +4,7 @@ const traceHeaders = ['x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-paren
 module.exports = { main: function (event, context) {
     console.log(event.data);
     var orderId = event.data.orderCode;
-    var url = `${process.env.GATEWAY_URL}/electronics/orders/${orderId}`;
+    var url = `${process.env.ses-GATEWAY_URL}/electronics/orders/${orderId}`;
     var namespace = 'workshop';
     console.log(namespace)
     console.log(url)

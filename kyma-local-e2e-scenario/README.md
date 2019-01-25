@@ -24,21 +24,25 @@ The runtime flow involves following steps:
 ## Start Kyma locally
 * Refer these [instructions](https://github.com/kyma-project/kyma/blob/master/docs/kyma/docs/030-inst-local-installation-from-release.md)
 
-## Create Kyma environment
-* Throughout this workshop we use `workshop` environment so please create it first.
-* If you desire to use a different environment then change each `workshop` here with your desired environment name.
+## Create Kyma namespace
+* Throughout this workshop we use `workshop` namespace so please create it first.
+* If you desire to use a different namespace then change each `workshop` here with your desired namespace name.
+
+## Create Application
+* Under `Integration`, create Application.
+* Name it `sample-external-solution`.
 
 ## Establish secure connection between external solution and Kyma
 
-We will set up the secure connectivity between the mock external solution and the Kyma remote environment `ec-default`.
+We will set up the secure connectivity between the mock external solution and the Kyma application `sample-external-solution`.
 
 Here we will use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/docs/010-architecture-connector-service.md) to secure the communication.
 
 * Clone this [repository](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/docs/015-details-one-click-configuration.md).
 
 * Copy the token
-  * Navigate to the `Administration --> Remote Environment --> ec-default`
-  * `Connect Remote Environment`
+  * Navigate to the `Integration --> Applications --> sample-external-solution`
+  * `Connect Application`
   * Copy the token to the clipboard
   
 * Use the one-click-generation [helper script](https://github.com/janmedrek/one-click-integration-script) to generate the certificate
@@ -76,13 +80,13 @@ The APIs are the one which Kyma will be calling. In this example, it is simple m
 
     ```
     # Using httpie
-    http POST https://gateway.kyma.local:${NODE_PORT}/ec-default/v1/metadata/services --cert=generated.pem --verify=no < register-service.json
+    http POST https://gateway.kyma.local:${NODE_PORT}/sample-external-solution/v1/metadata/services --cert=generated.pem --verify=no < register-service.json
     # Using curl
-    curl -X POST -H "Content-Type: application/json" -d @./register-service.json https://gateway.kyma.local:${NODE_PORT}/ec-default/v1/metadata/services --cert generated.pem -k
+    curl -X POST -H "Content-Type: application/json" -d @./register-service.json https://gateway.kyma.local:${NODE_PORT}/sample-external-solution/v1/metadata/services --cert generated.pem -k
     ```
 
 * Verify
-  * Navigate to Administration --> Remote Environments --> ec-default
+  * Navigate to Administration --> Applications --> sample-external-solution
   * You should be able to see the registered API
 
 ## Register Events
@@ -91,33 +95,33 @@ The APIs are the one which Kyma will be calling. In this example, it is simple m
     
 	```
     # Using httpie
-    http POST https://gateway.kyma.local:${NODE_PORT}/ec-default/v1/metadata/services --cert=generated.pem --verify=no < register-events.json 
+    http POST https://gateway.kyma.local:${NODE_PORT}/sample-external-solution/v1/metadata/services --cert=generated.pem --verify=no < register-events.json 
     # Using curl
-    curl -X POST -H "Content-Type: application/json" -d @./register-events.json https://gateway.kyma.local:${NODE_PORT}/ec-default/v1/metadata/services --cert generated.pem -k
+    curl -X POST -H "Content-Type: application/json" -d @./register-events.json https://gateway.kyma.local:${NODE_PORT}/sample-external-solution/v1/metadata/services --cert generated.pem -k
     ```
 	
 * Verify
-  * Navigate to Administration --> Remote Environments --> ec-default
+  * Navigate to Administration --> Applications --> sample-external-solution
   * You should see the registered events.
 
-## Bind Remote Environment
+## Bind Application
 
-* Navigate to Administration --> Remote Environments --> ec-default
-* Create a binding with the Kyma environment `workshop`.
+* Navigate to Administration --> Applications --> sample-external-solution
+* Create a binding with the Kyma namespace `workshop`.
 
 
-## Add events and APIs to the Kyma Environment
+## Add events and APIs to the Kyma Namespace
 
-* Navigate to Service Catalog for Kyma environment `workshop`
+* Navigate to Service Catalog for Kyma namespace `workshop`
 
 * You should see the registered APIs and events available.
 * For both click on the details
-* Add to your environment
+* Add to your namespace
 * Check under `Service Instances` if they appear
 
 ## Deploy service
 
-* Deploy the [http-db-service deployment](https://github.com/kyma-project/examples/tree/master/http-db-service/deployment) to Kyma environment `workshop`
+* Deploy the [http-db-service deployment](https://github.com/kyma-project/examples/tree/master/http-db-service/deployment) to Kyma namespace `workshop`
 
 * Access the service locally using port-forward
   * `kubectl port-forward -n workshop $(kubectl get pod -n workshop -l example=http-db-service -o jsonpath='{.items[0].metadata.name}') 8017:8017`
@@ -129,22 +133,23 @@ The APIs are the one which Kyma will be calling. In this example, it is simple m
   * Add label `app:<name-of-the-lambda>`
 * Add dependencies using the [package.json](package.json)
 * Select function trigger as event trigger, then choose `order.created`
-* Add `Service Instance Binding` for each service instances
+* Add `Service Instance Binding` for `sample-ws-api`. 
+  * Provide prefix `SES`
 
 # Runtime
 ## Publish the event
     ```
 	# using httpie
-    echo '{"event-type" : "order.created", "event-type-version" : "v1", "event-time" : "2018-05-02T22:08:41+00:00", "data" : {"orderCode" : "1234"}}'|http POST https://gateway.kyma.local:${NODE_PORT}/ec-default/v1/events --cert=generated.pem --verify=no
+    echo '{"event-type" : "order.created", "event-type-version" : "v1", "event-time" : "2018-05-02T22:08:41+00:00", "data" : {"orderCode" : "1234"}}'|http POST https://gateway.kyma.local:${NODE_PORT}/sample-external-solution/v1/events --cert=generated.pem --verify=no
 	
 	# using curl
-	echo '{"event-type" : "order.created", "event-type-version" : "v1", "event-time" : "2018-05-02T22:08:41+00:00", "data" : {"orderCode" : "1234"}}'|curl -X POST -d @- https://gateway.kyma.local:${NODE_PORT}/ec-default/v1/events --cert generated.pem -k
+	echo '{"event-type" : "order.created", "event-type-version" : "v1", "event-time" : "2018-05-02T22:08:41+00:00", "data" : {"orderCode" : "1234"}}'|curl -X POST -d @- https://gateway.kyma.local:${NODE_PORT}/sample-external-solution/v1/events --cert generated.pem -k
     ```
 
 # Verification
 
 * **Lambda was triggered**
-  * Inspect the pod logs for lambda in `workshop` environment
+  * Inspect the pod logs for lambda in `workshop` namespace
 * The call to `mock bin` from lambda succeeded
 
 * Accessing the url for order service http://localhost:8017/orders, you should see the orders list updated
