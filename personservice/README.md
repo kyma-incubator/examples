@@ -75,16 +75,15 @@ An Environment is a custom Kyma security and organizational unit based on the co
 
 To setup the environment for this showcase call this command from the project root:
 
->`kubectl apply -f environment.yaml`
+`kubectl apply -f environment.yaml`
 
 Now, once you call `kubectl get namespaces -l=env=true` among other environments you will see the one you just created.
 
 Issue the following commands to delete default resource constraints and re-create them a little more relaxed:
 
->`kubectl delete -n personservice LimitRange kyma-default`  
->`kubectl delete -n personservice ResourceQuota kyma-default`
->
->`kubectl apply -f environment-resources.yaml -n personservice`
+`kubectl delete -n personservice LimitRange kyma-default`  
+`kubectl delete -n personservice ResourceQuota kyma-default`  
+`kubectl apply -f environment-resources.yaml -n personservice`
 
 This was to ensure we don't hit ceilings in terms of memory usage (However, on Minikube/Local installation this might be challenging). For more details read [Configure Default Memory Requests and Limits for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/)
 
@@ -92,17 +91,16 @@ This was to ensure we don't hit ceilings in terms of memory usage (However, on M
 
 To deploy Mongodb use Helm (https://helm.sh). To install helm do the following:
 
-1. Initialize Helm (if not already done, client-only option as kyma already comes with tiller installed):
-> `helm init --client-only`
+1. Initialize Helm (if not already done, client-only option as kyma already comes with tiller installed):  
+`helm init --client-only`
 
-2. Then deploy Mongo DB:
-
-> `helm install --name first-mongo --set persistence.size=2Gi stable/mongodb --namespace personservice`
+2. Then deploy Mongo DB:  
+`helm install --name first-mongo --set persistence.size=2Gi stable/mongodb --namespace personservice`
 
 ### Java Build
 
-Project is built using:
->`mvn clean package` or `mvn clean install` 
+Project is built using:  
+`mvn clean package` or `mvn clean install` 
 
 It uses jib (https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin) to build and push to a docker registry (which does not require a local docker install). You **must** use the following maven properties to adapt your local installation:
 
@@ -133,20 +131,19 @@ To provide your credentials create a json file like the one below:
 
 To push this file into the credentials helper enter the following statement under Linux:
 
->`cat credentials.json | docker-credential-pass store`
+`cat credentials.json | docker-credential-pass store`
 
 Windows:
 
->`type credentials.json | docker-credential-wincred store`
+`type credentials.json | docker-credential-wincred store`
 
 To delete a set of credentials:
 
->`echo <ServerURL> | docker-credential-pass erase`
+`echo <ServerURL> | docker-credential-pass erase`
 
 To read a set of credentials:
 
->`echo <ServerURL> | docker-credential-pass get`
-
+`echo <ServerURL> | docker-credential-pass get`
 
 ### Deploy to Local Kyma (Minikube)
 
@@ -157,10 +154,8 @@ Before deploying the attached files you need to adapt `mongo-kubernetes-local1.y
 
 The below commands do this: 
 
-```
-kubectl apply -f mongo-kubernetes-configmap-local1.yaml -n personservice
-kubectl apply -f mongo-kubernetes-local1.yaml -n personservice
-```
+`kubectl apply -f mongo-kubernetes-configmap-local1.yaml -n personservice`  
+`kubectl apply -f mongo-kubernetes-local1.yaml -n personservice`
 
 `mongo-kubernetes-local1.yaml` creates the following Kubernetes objects:
 
@@ -180,8 +175,8 @@ Before deploying the attached files you need to adapt `mongo-kubernetes-cluster1
 
 The below commands do this:
 
->`kubectl apply -f mongo-kubernetes-configmap-cluster1.yaml -n personservice`   
->`kubectl apply -f mongo-kubernetes-cluster1.yaml -n personservice`
+`kubectl apply -f mongo-kubernetes-configmap-cluster1.yaml -n personservice`   
+`kubectl apply -f mongo-kubernetes-cluster1.yaml -n personservice`
 
 `mongo-kubernetes-cluster1.yaml` creates the following Kubernetes objects:
 
@@ -194,8 +189,8 @@ Your service should now be accessible on whatever you specified under `personser
 
 ### Checks
 
-To check whether everything is up and running please issue the following command:
->`kubectl get pods -n personservice`
+To check whether everything is up and running please issue the following command:  
+`kubectl get pods -n personservice`
 
 All pods should have status running. Otherwise wait and repeat until this is the case.
 
@@ -262,11 +257,11 @@ Steps 3 and 4 are based on deploying additional configuration to the kyma instan
 
 To connect external systems (so called remote environments) you need to use the application connector. For information see: https://kyma-project.io/docs/latest/components/application-connector.
 
-To create one, you need to issue the following command: 
->`kubectl apply -f re-personservice.yaml`
+To create one, you need to issue the following command:  
+`kubectl apply -f re-personservice.yaml`
 
-To check whether the pods are up and running issue 
->`kubectl get pod -l app=personservice-gateway -n kyma-integration`  
+To check whether the pods are up and running issue  
+`kubectl get pod -l app=personservice-gateway -n kyma-integration`  
 
 The result should look like this:
 
@@ -290,9 +285,9 @@ Now you need to pair the person service with the newly deployed application conn
 3. Create a Certificate Signing request using OpenSSL (https://www.openssl.org/) a series of commands. Before doing this create a new directory called `security` and then go ahead with OpenSSL in the new dir.
 Create Key: 
 
-> `openssl genrsa -out personservicekubernetes.key 2048`  
-> `openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekubernetes.key -subj "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes"`  
->`openssl base64 -in personservicekubernetes.csr`
+`openssl genrsa -out personservicekubernetes.key 2048`  
+`openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekubernetes.key -subj "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes"`  
+`openssl base64 -in personservicekubernetes.csr`
 
 4. Use the REST client of your choice to create the following rest call to the full URL with token you copied previously:
 ![Connect Remote Environment CSR Screenshot](images/remoteenvironmentpairing3.png)
@@ -316,7 +311,7 @@ The use the resulting port in your URL, e.g.: https://gateway.{clusterhost}:{por
 
 To start with we need to deploy the newly created keystore to the cluster. To do so change directory to `security` and then issue the following command:
 
->`kubectl create secret generic kyma-certificate --from-file=personservicekubernetes.jks -n personservice`
+`kubectl create secret generic kyma-certificate --from-file=personservicekubernetes.jks -n personservice`
 
 After that you need to create a new config map which is containing a file with all details needed to register the Person Service at the Kyma Cluster. If you want to know more about this step, refer to https://kyma-project.io/docs/latest/components/application-connector#details-api. For simplicity all registration information is maintained in file `registration/registrationfile.json`. The contents of this file will be posted against the `/v1/metadata/services` endpoint. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
 
@@ -346,44 +341,35 @@ Now (based on your Kyma cluster type) you again need to update the fields marked
 
 ### Checks
 
-To check whether your changes are active, issue the following command until you again have **exactly** 2 Pods of `personservice-*-*` in status running: `kubectl get pods -n personservice`.
+To check whether your changes are active, issue the following command until you again have **exactly** 2 Pods of `personservice-*-*` in status running:  
+`kubectl get pods -n personservice`.
 
-After that issue a kubectl describe command for 1 of the pods (replacing '\*' with actual values): `kubectl describe pod -l app=personservice -n personservice`
+After that issue a kubectl describe command for 1 of the pods (replacing '\*' with actual values):  
+`kubectl describe pod -l app=personservice -n personservice`
 
 The output must look something like this ('..' depicts other content which I deleted):
 
 ```
 Name:           personservice-*-*
 Namespace:      personservice
-
 ..
-
 Init Containers:
   istio-init:
-  
    ..
-   
 Containers:
   personservice:
     Container ID:   
-    
     ..
-    
     Environment:
       .. 
-      
       personservicekubernetes_applicationconnetor_baseurl:  <set to the key 'connector_baseurl' of config map 'mongo-kubernetes-config'>        Optional: false
       spring_profiles_active:                               ApplicationConnector
-     
       ..
-    
     Mounts:
       /registration from registrationfile (ro)
       /security from kyma-certificate (ro)
-      /var/run/secrets/kubernetes.io/serviceaccount from default-token-6nb7x (ro)
-       
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-6nb7x (ro)   
   ..
-  
 Volumes:
   registrationfile:
     Type:      ConfigMap (a volume populated by a ConfigMap)
@@ -393,7 +379,6 @@ Volumes:
     Type:        Secret (a volume populated by a Secret)
     SecretName:  kyma-certificate
     Optional:    false
-
 ```
 
 ### Run the Scenario
