@@ -43,22 +43,29 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 * Copy the token
   * Navigate to the `Integration --> Applications --> sample-external-solution`
   * `Connect Application`
-  * Copy the token to the clipboard
+  * Copy the token url to the clipboard
   
 * Use the one-click-generation [helper script](https://github.com/janmedrek/one-click-integration-script) to generate the certificate
 
   ```
-  ./one-click-integration.sh -u <paste token here>
+  ./one-click-integration.sh -u <paste token url here>
   ```
   This will generate a `generated.pem` file. This contains the signed certificate and key that we will use for subsequent communications.
 
   > **NOTE** The token is short-lived. So either hurry up or regenrate the token
   
 ## Node port
-The Node port will be used for making the calls to Kyma.
+The Node port will be used for making the calls to Kyma. The following command will store the Node port in a shell variable named "NODE_PORT".
 
   ```
   export NODE_PORT=$(kubectl get svc -n kyma-system application-connector-nginx-ingress-controller -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
+  ```
+
+Validate (optionally) that the shell variable is correctly set. This should return a port number. e.g. 30812
+
+  ```
+  echo $NODE_PORT
+
   ```
 
 ## Mock External solution
@@ -87,7 +94,7 @@ The APIs are the one which Kyma will be calling. In this example, it is simple m
 
 * Verify
   * Navigate to Administration --> Applications --> sample-external-solution
-  * You should be able to see the registered API
+  * You should be able to see the registered API 'sample-es-ws-api'.
 
 ## Register Events
 
@@ -102,7 +109,7 @@ The APIs are the one which Kyma will be calling. In this example, it is simple m
 	
 * Verify
   * Navigate to Administration --> Applications --> sample-external-solution
-  * You should see the registered events.
+  * You should see the registered event 'es-all-events'.
 
 ## Bind Application
 
@@ -129,12 +136,15 @@ The APIs are the one which Kyma will be calling. In this example, it is simple m
 
 ## Create Lambda
 
-* Create the lambda definition in `lambda ui` using [lambda.js](./lambda.js)
+* Navigate to `Namespaces --> namespace "workshop" --> Development --> Lamdas` 
+* Create the lambda definition 
+  * Function Name `MySampleApp`
   * Add label `app:<name-of-the-lambda>`
-* Add dependencies using the [package.json](package.json)
-* Select function trigger as event trigger, then choose `order.created`
-* Add `Service Instance Binding` for `sample-ws-api`. 
-  * Provide prefix `SES`
+  * Copy [lambda.js](./lambda.js) to the field Cod
+  * Select function trigger as event trigger, then choose `order.created`. (If there are no events, go back to the step "Add events and APIs to the Kyma Namespace")
+  * Add dependencies using the [package.json](package.json)
+  * Add `Service Instance Binding` for `sample-ws-api`. 
+    * Provide prefix `ses`
 
 # Runtime
 ## Publish the event
