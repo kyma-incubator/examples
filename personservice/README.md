@@ -244,21 +244,21 @@ The API is accessible using the following endpoints:
 Altough our Person Service application is running inside of Kyma, we will now treat it like any other external application (hence you can also try this outside of your Kyma instance). This is just to demonstrate what you would do with your legacy application to hook it up to Kyma. The below picture highlights what we are going to do:
 
 ![Connect Remote Environment Response Screenshot](images/extensibility.png)
+>Remote Environments are now called Applications
 
-1. Create/Deploy new Application Connector Instance on Kyma ==> This is to provide a dedicated Enpoint for the Person Service to connect to Kyma
-2. Pair Person Service with Kyma Application Connector ==> This is to establish secure connectivity from Person Service to Kyma (even over public networks)
-3. Register Personservice Metadata at the Application Connector ==> This is to fill the API and Event Catalog on Kyma
-4. Fire Events to the Kyma Event Bridge ==> This is to execute event driven logic/extensions on Kyma
+1. Create/Deploy new Application Connector Instance on Kyma &rarr; This is to provide a dedicated Enpoint for the Person Service to connect to Kyma
+2. Pair Person Service with Kyma Application Connector &rarr; This is to establish secure connectivity from Person Service to Kyma (even over public networks)
+3. Register Person Service Metadata at the Application Connector &rarr; This is to fill the API and Event Catalog on Kyma
+4. Fire Events to the Kyma Event Bridge &rarr; This is to execute event driven logic/extensions on Kyma
 
 Steps 3 and 4 are based on deploying additional configuration to the kyma instance.
 
-
 ### Create new Application Connector Instance on Kyma
 
-To connect external systems (so called remote environments) you need to use the application connector. For information see: https://kyma-project.io/docs/latest/components/application-connector.
+To connect external systems (called Applications) you need to use the application connector. For information see: https://kyma-project.io/docs/latest/components/application-connector.
 
 To create one, you need to issue the following command:  
-`kubectl apply -f re-personservice.yaml`
+`kubectl apply -f app-personservice.yaml`
 
 To check whether the pods are up and running issue  
 `kubectl get pod -l app=personservice-gateway -n kyma-integration`  
@@ -391,7 +391,7 @@ Now you should see the following under Remote Environments:
 
 ![Remote Environment Registration Screenshot](images/remoteenvironmentregistration2.png)
 
-This means now you can bind this 'Remote Environment' to a 'Kyma Environment' and process events in Serverless Lambda functions. You can either use the UI or kubectl. On the UI, bind the Remote Environment 'personservicekubernetes' to the Kyma Environment 'personservice' by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f re-personservice-environment-map.yaml` to do the same.
+This means now you can bind this 'Remote Environment' to a 'Kyma Environment' and process events in Serverless Lambda functions. You can either use the UI or kubectl. On the UI, bind the Remote Environment 'personservicekubernetes' to the Kyma Environment 'personservice' by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f app-personservice-environment-map.yaml` to do the same.
 
 Then go to the Kyma Environment personservice's 'Service Catalog' and explore the Service 'Person API'.
 
