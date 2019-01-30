@@ -515,6 +515,7 @@ To deploy your Lambda you need to go to your "personservice" Kyma namespace. Cli
 ![Lambda Creation Screenshot](images/lambda1.png)
 
 ![Lambda Creation Screenshot](images/lambda2.png)
+**Important:** Leave the prefix empty!
 
 ![Lambda Creation Screenshot](images/lambda3.png)
 
