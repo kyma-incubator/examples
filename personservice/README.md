@@ -416,20 +416,18 @@ As always this function is not intended for productive use.
 
 A precondition for this scenario is that all steps mentioned in [Run the Scenario](#run-the-scenario) have been executed properly.
 
-In your Kyma Envirnoment ("Personservice") go to the Service Catalog and create a new service instance of the Person API:
+In your Kyma Namespace "Personservice" go to the Catalog and create a new service instance of the Person API:
 
 ![Service Instance Creation Screenshot](images/serviceinstance1.png)
 
-![Service Instance Creation Screenshot](images/serviceinstance2.png)
-
-After that verify your instance by going "Back" and clicking on "Service Instances":
+After that verify your instance by selecting "Instances" in the Service Catalog:
 
 ![Service Instance Creation Screenshot](images/serviceinstance3.png)
 
 
 ### Develop your Lambda Function
 
-When developing Lambda functions I like to start locally using the IDE of my choice. Kyma lambda functions are basically "normal" Node.js modules containing the containing the following snippet:
+When developing Lambda functions, I like to start locally using the IDE of my choice. Kyma lambda functions are basically "normal" Node.js modules containing the containing the following snippet:
 
 ```
 module.exports = { 
@@ -462,7 +460,7 @@ As soon as a Lambda requires NPM dependencies, it also require a package.json fi
 }
 ```
 
-Kyma injects service bindings (including Remote Environments) as Environment Variables to be able to mimic this behavior locally the package "dotenv" can be used. it basically converts the contents of a ".env" (no filename, literally ".env") to normal environment variables that can be accessed through `process.env.environment_variable_name` in your code. Sample for that would be (getting the internal URL of the API Connector pointing to the Remote Environment):
+Kyma injects service bindings (including Applications) as Environment Variables. To be able to mimic this behavior locally the package `dotenv` can be used. It basically converts the contents of a `.env` (no file extension, literally ".env") to normal environment variables that can be accessed through `process.env.environment_variable_name` in your code. Sample for that would be (getting the internal URL of the API Connector pointing to the Remote Environment):
 
 ```
 require('dotenv').config();
@@ -478,10 +476,7 @@ const personservice = require('./personservicemodule');
 var express = require('express');
 var app = express();
 
-
 console.log(`GATEWAY_URL = ${process.env.GATEWAY_URL}`);
-
-
 
 app.get("/", async function (req, res) {
     var event = {
@@ -489,12 +484,11 @@ app.get("/", async function (req, res) {
             "personid":req.query.personId
         },
         "extensions": {
-            "request": req,            
-            "response":res        
+            "request": req,
+            "response":res
         }
     };
-
-    await personservice.main(event,{});    
+    await personservice.main(event,{});
 });
 
 app.listen(3000, function () {
@@ -503,7 +497,7 @@ app.listen(3000, function () {
 ```
 
 
-The code for the sample Lambda function is contained in the "Lambda" folder. in order to run it locally, ensure you have a Node.js (https://nodejs.org/en/download/) environment (Version 8.x installed, to check, execute `node --version`). You also need to make a few changes to the ".env" file. Again you need to replace all occurrences of replaceme. "GATEWAY_URL" must have a value pointing to your deployment of personservice (only root, no "/" in the end).
+The code for the sample Lambda function is contained in the "Lambda" folder. in order to run it locally, ensure you have a Node.js (https://nodejs.org/en/download/) environment (Version 8.x+ installed, to check, execute `node --version`). You also need to make a few changes to the ".env" file. Again you need to replace all occurrences of replaceme. "GATEWAY_URL" must have a value pointing to your deployment of personservice (only root, no "/" in the end).
 The wrapper starts a local http server on port 3000 that uses the query parameter personId which must be the ID of a person in your mongo db (basically GET /api/v1/person/{PERSON_ID} must return a 200 status code). 
 
 Then install the dependencies: `npm install axios winston dotenv express`
@@ -516,8 +510,7 @@ This should give you a fair idea of how to develop Lambdas.
 
 ### Deploy your Lambda Function
 
-To deploy your Lambda you need to go to your "personservice" Kyma environment. Click on Lambdas and create a new one. Fill all the fields shown in the below screenshots and then save:
-
+To deploy your Lambda you need to go to your "personservice" Kyma namespace. Click on Lambdas and create a new one. Fill all the fields as shown in the below screenshots and then save:
 
 ![Lambda Creation Screenshot](images/lambda1.png)
 
