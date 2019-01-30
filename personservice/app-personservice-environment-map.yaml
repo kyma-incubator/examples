@@ -1,5 +1,5 @@
 apiVersion: applicationconnector.kyma-project.io/v1alpha1
-kind: EnvironmentMapping
+kind: ApplicationMapping
 metadata:
   generation: 1
   name: personservicekubernetes
