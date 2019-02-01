@@ -598,27 +598,23 @@ In this example we are going to address the issue with frequent callbacks of the
 
 ### Create Redis Service Instance and Bind it to the Person Service
 
-To create a service instance you need to go to the service catalog in your Kyma Environment ("personservice"). Navigate to Redis:
+To create a service instance you need to go to the service catalog in your Kyma Namespace ("personservice"). Navigate to Redis:
 
 ![Service Provisioning Screenshot](images/serviceprovisioning1.png)
 
-Add and configure a new instance to your environment:
+Add and configure a new instance to your namespace:
 
 ![Service Provisioning Screenshot](images/serviceprovisioning2.png)
 
-![Service Provisioning Screenshot](images/serviceprovisioning3.png)
-
-After you have created your instance you have to bind it to the Persons Service. To do that, go to Service Instances and navigate to your created instance.
+After you have created your instance you have to bind it to the Persons Service. To do that, go to Instances and navigate to your created instance.
 
 ![Service Binding Screenshot](images/servicebinding1.png)
 
-Create a new binding and click through the wizard:
+Bind a new application and click through the wizard:
 
 ![Service Binding Screenshot](images/servicebinding2.png)
 
 ![Service Binding Screenshot](images/servicebinding3.png)
-
-![Service Binding Screenshot](images/servicebinding4.png)
 
 After that, check whether your personservice pods are running: `kubectl get pods -n personservice -l app=personservice`
 
@@ -640,12 +636,12 @@ spec:
         name: redis-instance-binding
 ```
 
-To see the concrete values, issue the following command: `kubectl get secret -n d046471 -o yaml redis-instance-binding`. The values are base64 encoded.
+To see the concrete values, issue the following command: `kubectl get secret -o yaml <name_of_secret>`. You can find the name of the secret in the "secret" column of your "bound applications". The values are base64 encoded.
 
 
 ### Update Kubernetes Deployment Configuration
 
-In order for the personservice to properly connect to the redis cache, you need to set a couple of environment variables. To do so, `mongo-kubernetes-local3.yaml` or `mongo-kubernetes-cluster3.yaml` have been adapted. However you still need to replace the values depicted with `#changeme` to cater to your environment. Below the the changed values to bind to the service:
+In order for the personservice to properly connect to the redis cache, you need to set a couple of environment variables. To do so, `mongo-kubernetes-local3.yaml` or `mongo-kubernetes-cluster3.yaml` have been adapted. However you still need to replace the values depicted with `#changeme` to cater to your environment. Below the changed values to bind to the service:
 
 ```
               - name: spring_profiles_active
@@ -672,18 +668,13 @@ Now you can update your deployment and restart the pods:
 
 * Local:
 
-```
-kubectl apply -f mongo-kubernetes-local3.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-
-```
+`kubectl apply -f mongo-kubernetes-local3.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 * Cluster:
 
-```
-kubectl apply -f mongo-kubernetes-local3.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-```
+`kubectl apply -f mongo-kubernetes-cluster3.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 ### Test the Service
 
@@ -694,7 +685,7 @@ Now invoke GET /api/v1/person/{personid}. During the first call you should see s
 ```
 Entering public com.sap.demo.entity.Person com.sap.demo.service.PersonServiceCache.findPerson(java.lang.String) with Arguments:
 class java.lang.String: 5b8560dd4b2eaa0001897227
-2018-08-31 11:20:50.577 DEBUG 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84: Cache miss for Person ID: 5b8560dd4b2eaa0001897227
+2018-08-31 11:20:50.577 DEBUG 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84: Cache miss for Person ID: 5b8560dd4b2eaa0001897227 
 2018-08-31 11:20:50.577 TRACE 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84:
 Exiting PersonServiceCache.findPerson(..) with result: Person(id=5b8560dd4b2eaa0001897227, firstName=John, lastName=Doe, streetAddress=Nymphenburger Str., houseNumber=86, zip=80636, city=Muenchen, extensionFields={duplicatePersons=[5b85601a8a50350001a0c160, 5b8560dd4b2eaa0001897227]})
 ```
