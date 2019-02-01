@@ -16,4 +16,3 @@ spec:
   endpoints:
   - port: actuatorhttp # port name in service
     path: "/actuator/prometheus" # enpoint of spring metrics actuator
-

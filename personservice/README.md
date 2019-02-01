@@ -1133,10 +1133,10 @@ Logs are just written to stdout so that they are accessible through `kubectl log
 To embed all of this into our Spring Boot Application, no coding is necessary. All we need to do is embed Spring Cloud Sleuth (https://cloud.spring.io/spring-cloud-sleuth/):
 
 ```
-		<dependency> 
-    			<groupId>org.springframework.cloud</groupId>
-    			<artifactId>spring-cloud-starter-zipkin</artifactId>
-		</dependency>
+<dependency> 
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-zipkin</artifactId>
+</dependency>
 ```
 
 This will ensure our App:
@@ -1148,8 +1148,7 @@ In our Spring app logging uses SLF4J and is mainly based on the `LoggingAspect.j
 
 ### Testing Tracing
 
-To test the tracing you need to launch the Jaeger UI. Details can be found under https://kyma-project.io/docs/latest/components/tracing. You can access the Jaeger UI either locally at https://jaeger.kyma.local or on a cluster at https://jaeger.{domain-of-kyma-cluster}.
-
+To test the tracing you need to launch the Jaeger UI. Details can be found under https://kyma-project.io/docs/latest/components/tracing. You can access the Jaeger UI either locally at `https://jaeger.kyma.local` or on a cluster at `https://jaeger.{domain-of-kyma-cluster}`.
 
 Now we send a simple GET to /api/v1/person. In Jaeger we will make the following selections:
 
@@ -1217,32 +1216,29 @@ There is also a commandline client available under https://github.com/oklog/oklo
 Kyma comes with a Prometheus Operator included. This means you can instrument your Services and scrape metrics as described in https://kyma-project.io/docs/latest/components/monitoring. In order to instrument the Person Service and get application level metrics I have added the following dependency to the Maven POM file:
 
 ```
-		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-registry-prometheus</artifactId>
-		</dependency>
+<dependency>
+  <groupId>io.micrometer</groupId>
+  <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
 ```
 
 Furthermore I have added the following lines of code to the `PersonServiceDefault` class:
 
 ```
-	@Autowired
-	public PersonServiceDefault(MeterRegistry registry, PersonRepository repository) {
-		this.repository = repository;
-		
-		Gauge.builder("personservice.persistency.repository.size", repository, PersonRepository::count)
-				.tag("Repository", "Persons").register(registry);
-		
-	}
-
+@Autowired
+public PersonServiceDefault(MeterRegistry registry, PersonRepository repository) {
+  this.repository = repository;
+  Gauge.builder("personservice.persistency.repository.size", repository, PersonRepository::count)
+      .tag("Repository", "Persons").register(registry);
+  
+}
 ```
 
 These add a metric called `personservice_persistency_repository_size` to the `/actuator/prometheus` endpoint so that we can plot them in a chart using Grafana.
 
 ### Collecting Metrics in Prometheus
 
-
-In oder to be able to collect the metrics from Prometheus the following Service was added to `mongo-kubernetes-local6.yaml`and `mongo-kubernetes-cluster6.yaml`:
+In oder to be able to collect the metrics from Prometheus the following Service was added to `mongo-kubernetes-local6.yaml` and `mongo-kubernetes-cluster6.yaml`:
 
 ```
 apiVersion: v1
@@ -1263,7 +1259,9 @@ spec:
     version: "0.0.3"
   type: ClusterIP
 ```
-Deploy them using `kubectl apply -n personservice -f mongo-kubernetes-cluster6.yaml` or `kubectl apply -n personservice -f mongo-kubernetes-local6.yaml`. 
+Deploy them using   
+`kubectl apply -n personservice -f mongo-kubernetes-cluster6.yaml` or  
+`kubectl apply -n personservice -f mongo-kubernetes-local6.yaml`
 
 Now you can configure Prometheus to scrape the metrics. To do so you need to create a resource of type ServiceMonitor. This needs to be part of the `kyma-system` namespace:
 
@@ -1288,13 +1286,13 @@ spec:
     path: "/actuator/prometheus" # enpoint of spring metrics actuator
 ```
 
-To create this resource issue: `kubectl apply -f ServiceMonitor.yaml -n kyma-system`.
+To create this resource issue: `kubectl apply -f ServiceMonitor.yaml -n kyma-system`
 
-Now you can check whether it is working in Prometheus. To do so you need to expose prometheus on your localhost using `kubectl port-forward -n kyma-system svc/prometheus-operated 9090:9090`. Now you can open http://localhost:9090/targets` in a browser. You should fin a target like in the screenshot below:
+Now you can check whether it is working in Prometheus. To do so you need to expose prometheus on your localhost using `kubectl port-forward -n kyma-system svc/prometheus-operated 9090:9090`. Now you can open http://localhost:9090/targets in a browser. You should find a target like in the screenshot below:
 
 ![Prometheus](images/prometheus1.png)
 
-Furthermore you can go to `http://localhost:9090/graph`and issue the following PromQl statement as a verification  `up{job="personservice-actuator"}`. This will should yield something along these lines:
+Furthermore you can go to `http://localhost:9090/graph` and issue the following PromQl statement as a verification  `up{job="personservice-actuator"}`. This will should yield something along these lines:
 
 ![Prometheus](images/prometheus2.png)
 
@@ -1325,6 +1323,3 @@ This will require to wire the dashboard to a datasource called `Prometheus`:
 After doing so your dashboard will look as follows:
 
 ![Dashboards](images/grafana4.png)
-
-
-

@@ -28,8 +28,24 @@ spec:
     app: personservice
     version: "0.0.3"
   type: NodePort
-
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:    
+     app: personservice
+     version: "0.0.3"
+  annotations:
+     auth.istio.io/80: NONE
+  name: personservice-actuator
+spec:
+  ports:
+  - name: actuatorhttp
+    port: 8081
+  selector:
+    app: personservice
+    version: "0.0.3"
+  type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -56,7 +72,7 @@ spec:
          containers:
            - name: personservice
 # changeme: Replace with pointer to your docker repository/container
-             image: "andy008/mongokubernetes:0.0.3"
+             image: "arifcrtsap/mongokubernetes:0.0.3"
              resources:
                 limits:
                    memory: 1Gi
