@@ -38,7 +38,7 @@ We will set up the secure connectivity between the mock external solution and th
 
 Here we will use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/docs/010-architecture-connector-service.md) to secure the communication.
 
-* Clone this [repository](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/docs/015-details-one-click-configuration.md).
+* Clone this [repository](https://github.com/janmedrek/one-click-integration-script).
 
 * Copy the token
   * Navigate to the `Integration --> Applications --> sample-external-solution`
