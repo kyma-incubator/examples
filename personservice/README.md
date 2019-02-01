@@ -701,7 +701,7 @@ Kyma (through Istio Authentication Policies) allows to add JWT protection to you
 This example uses the Dummy Authorization Server made available under https://github.com/akrausesap/jwt_issuer. Clone the repository and update the `kubernetes-kyma.yaml` file with your host (marked with `#changeme`): 
 
 ```
-apiVersion: gateway.kyma.cx/v1alpha2
+apiVersion: gateway.kyma-project.io/v1alpha2
 kind: Api
 metadata:
   name: tokenissuer
@@ -713,11 +713,13 @@ spec:
 
 ```
 
-Then deploy to your cluster: `kubectl apply -f kubernetes-kyma.yaml -n personservice`
+Then deploy to your cluster:  
+`kubectl apply -f kubernetes-kyma.yaml -n personservice`
 
-After that check whether the pod is running with: `kubectl get pods -n personservice -l app=tokenissuer`
+After that check whether the pod is running with:  
+`kubectl get pods -n personservice -l app=tokenissuer`
 
-Then you can go to `https://{hostname}/swagger-ui.html`. Test the following operations:
+Then you can go to `https://{hostname}/swagger-ui.html`. A restart of your personservice pod may be required (just delete the pod). Test the following operations:
 
 * GET /jwk: To get the public key used for validating the signature. Should return something like: 
 
@@ -751,8 +753,8 @@ If you are running on locally on Minikube you also need to adapt your hosts file
 In order for the person service API to validate JWT tokens, you need to flip an environment variable (Activate the Security Profile):
 
 ```
-              - name: spring_profiles_active
-                value: "ApplicationConnector,Cache,Security"
+          - name: spring_profiles_active
+            value: "ApplicationConnector,Cache,Security"
 ```
 
 This is already done in `mongo-kubernetes-local4.yaml` and `mongo-kubernetes-cluster4.yaml`, however you still need to update the `changeme` parts as depicted previously.
@@ -761,18 +763,13 @@ Now you can update your deployment, the api and restart the pods:
 
 * Local:
 
-```
-kubectl apply -f mongo-kubernetes-local4.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-
-```
+`kubectl apply -f mongo-kubernetes-local4.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 * Cluster:
 
-```
-kubectl apply -f mongo-kubernetes-cluster4.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-```
+`kubectl apply -f mongo-kubernetes-cluster4.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 Now you can test the spring application. When calling GET /api/v1/person you should receive the following 401 response:
 
@@ -850,7 +847,7 @@ Credits go to @eugenp and https://www.baeldung.com/spring-security-oauth-jwt for
 
 ### Optional: Create IDP Preset
 
-Kyma allows to persist configuration of trusted Token providers and re-use it upon API Exposure (In the UI). They basically serve as copy templates when exposing a new API. To do that, go to "Administration->IDP Presets" and choose "Create Preset". Now you can provide Name, Issuer and JWKS URI.
+Kyma allows to persist configuration of trusted Token providers and re-use it upon API Exposure (In the UI). They basically serve as copy templates when exposing a new API. To do that, go to the home screen select "IDP Presets" and choose "Create Preset". Now you can provide Name, Issuer and JWKS URI.
 
 * Name is just free Text (e.g. "my-dummy-issuer")
 * Issuer must be depicted as "iss" in your JWT Token. Kyma only accepts a URL or an email address. (see https://istio.io/docs/reference/config/istio.authentication.v1alpha1/). Recommendation is https://{hostname}/
@@ -862,10 +859,10 @@ See sample below:
 
 ### Secure your API
 
-To have Kyma / Istio deal with all the complexities of validating JWT Tokens, we need to change our definition of the API a little. Basically all we need to do, is to adapt the below snippet to your own environment:
+To have Kyma/Istio deal with all the complexities of validating JWT Tokens, we need to change our definition of the API a little. Basically all we need to do, is to adapt the below snippet to your own environment:
 
 ```
-apiVersion: gateway.kyma.cx/v1alpha2
+apiVersion: gateway.kyma-project.io/v1alpha2
 kind: Api
 metadata:
   name: personservice
@@ -895,7 +892,8 @@ Then adapt the `authentication` section to match the below sample (replacing par
         jwksUri: "{jwk_url}"
 ```
 
-Mind the values you have configured in (Deploy OAuth2 Authorization Server)[deploy-oauth2-authorization-server]. Also mind the restrictions for issuer mentioned in (Optional: Create IDP Preset)[optional:-create-idp-preset]. After that you can apply it: `kubectl apply -n personservice -f my-protected-personservice-api.yaml`
+Mind the values you have configured in [Deploy OAuth2 Authorization Server](#deploy-oauth2-authorization-server). Also mind the restrictions for issuer mentioned in (Optional: Create IDP Preset)[optional:-create-idp-preset]. After that you can apply it:  
+`kubectl apply -n personservice -f my-protected-personservice-api.yaml`
 
 Alternatively you can also use `kubectl edit api personservice -n personservice`
 
@@ -1001,21 +999,21 @@ personservice-755f847c9d-x5xks        2/2       Running   0          7h
 
 Spring Boot comes with a functionality called actuator. This lets you control and determine the status of the spring application. For the person service we have activated it and exposed it as REST API on port 8081. This nicely separates it from the externally exposed api and keeps it reachable only from within the cluster. The key endpoint for determining service health is the /actuator/health resource. It will return "UP" (HTTP 200) or "DOWN" (HTTP 503). Now we are going to exploit this in kubernetes.
 
-Basically we will make the Kubelet invoke this actuator periodically and based on the result 200 or 503 determine whether the service is up or down. If the service is down it should dispose it and start a new one to get back to the target state. To do so we need to look the deployment spec (mongo-kubernetes-cluster5.yml or mongo-kubernetes-local5.yml) and find the section for the lifenssProbe:
+Basically we will make the Kubelet invoke this actuator periodically and based on the result 200 or 503 determine whether the service is up or down. If the service is down it should dispose it and start a new one to get back to the target state. To do so we need to look the deployment spec (`mongo-kubernetes-cluster5.yaml` or `mongo-kubernetes-local5.yaml`) and find the section for the livenessProbe:
 
 ```
-             ports:
-              - containerPort: 8080
-                name: http
-              - containerPort: 8081
-                name: actuatorhttp
-             livenessProbe:
-                httpGet:
-                   path: /actuator/health
-                   port: 8081
-                initialDelaySeconds: 60
-                periodSeconds: 60
-                failureThreshold: 3  
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8081
+          name: actuatorhttp
+        livenessProbe:
+          httpGet:
+              path: /actuator/health
+              port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          failureThreshold: 3  
                     
 ```
 
@@ -1025,20 +1023,20 @@ Under ports we have exposed port 8081 with the name actuatorhttp. We have subseq
 
 Sometimes services are simply just too busy to serve traffic (e.g. whne executing batch loads, etc.). This is where kubernetes offers to remove a service from loadbalancing until it reports back. To support this `DemoReadinessIndicator.java` was implemented. It is a custom actuator that reports the readiness status. HTTP 200 means ready and HTTP 503 means not ready.
 
-To periodically invoke this endpoint the following section was added to the deployment manifest (mongo-kubernetes-cluster5.yml or mongo-kubernetes-local5.yml):
+To periodically invoke this endpoint the following section was added to the deployment manifest (`mongo-kubernetes-cluster5.yaml` or `mongo-kubernetes-local5.yaml`):
 
 ```
-             readinessProbe:
-                httpGet:
-                   path: /actuator/ready
-                   port: 8081
-                periodSeconds: 30
-                initialDelaySeconds: 20
-                failureThreshold: 1
-                successThreshold: 2  
+        readinessProbe:
+          httpGet:
+              path: /actuator/ready
+              port: 8081
+          periodSeconds: 30
+          initialDelaySeconds: 20
+          failureThreshold: 1
+          successThreshold: 2  
 ```
 
-We have Defined `readinessProbe` which periodically (every 30 seconds) makes a GET request to /actuator/ready. If it fails 1 time the pod will be excluded from loadbalancing. Only after 2 successful calls it will be again used for loadbalancing.
+We have defined `readinessProbe` which periodically (every 30 seconds) makes a GET request to /actuator/ready. If it fails 1 time the pod will be excluded from loadbalancing. Only after 2 successful calls it will be again used for loadbalancing.
 
 ### Deploying to Kyma
 
@@ -1046,18 +1044,13 @@ In order for the personservice to be self-healing, `mongo-kubernetes-local5.yaml
 
 * Local:
 
-```
-kubectl apply -f mongo-kubernetes-local5.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-
-```
+`kubectl apply -f mongo-kubernetes-local5.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 * Cluster:
 
-```
-kubectl apply -f mongo-kubernetes-local5.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-```
+`kubectl apply -f mongo-kubernetes-cluster5.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 The `kubectl get pods -n personservice` should after some time yield an output comparable to the one below:
 
