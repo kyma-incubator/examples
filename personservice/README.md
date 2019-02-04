@@ -65,7 +65,10 @@ This sample application was created to give you a running end to end sample appl
 
 ## Prerequisites
 
-This application runs on [Kyma](https://kyma-project.io). Therefore, to try out this example on your local machine you need to [install Kyma](https://kyma-project.io/docs/latest/root/kyma#getting-started-local-kyma-installation) first, or have access to Kyma cluster.
+This application runs on [Kyma](https://kyma-project.io). Therefore, to try out this example on your local machine you need to [install Kyma](https://kyma-project.io/docs/latest/root/kyma#getting-started-local-kyma-installation) first, or have access to Kyma cluster.  
+
+**![alt text](images/kyma_symbol_text.svg "Logo Title Text 1")  
+This example is tested and based on [Kyma 0.6.1](https://github.com/kyma-project/kyma/releases/tag/0.6.1). Compatibility with other versions is not guaranteed.**
 
 ## Deploy the application
 
@@ -100,18 +103,17 @@ To deploy Mongodb use Helm (https://helm.sh). To install helm do the following:
 ### Java Build
 
 Project is built using:  
-`mvn clean package` or `mvn clean install` 
+`mvn clean package`  
 
 It uses jib (https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin) to build and push to a docker registry (which does not require a local docker install). You **must** use the following maven properties to adapt your local installation:
 
 - docker.repositoryname: Docker repository that the image will be published to (just replace by username on docker hub)
-- jib.credentialhelper: Docker credential helper that will be used to acquire docker hub (adapt to YOUR Operating System, pass or secretservice for Linux, wincred for Windows and osxkeychain for Mac)
+- jib.credentialhelper: Docker credential helper that will be used to acquire docker hub credentials (see: https://docs.docker.com/engine/reference/commandline/login/ heading: "Credential helper protocol") (adapt to YOUR OS, pass or secretservice for Linux, wincred for Windows and osxkeychain for Mac)
 
 You **can** use the following maven properties to adapt to your local installation:
 
 * project.version: Tag that will be assigned to docker image
 * jib.version: Version of the jib plugin that will be used
-credentials (see: https://docs.docker.com/engine/reference/commandline/login/ heading: "Credential helper protocol")
 
 For editing the code I recommend either Eclipse with Spring plugins installed or Spring Tool Suite (https://spring.io/tools/sts/all). You will also need to install the Lombok plugin (https://projectlombok.org/setup/overview). Lombok is used to generate getters/setters and sometimes constructors. It keeps the code lean and neat.
 
@@ -244,7 +246,6 @@ The API is accessible using the following endpoints:
 Altough our Person Service application is running inside of Kyma, we will now treat it like any other external application (hence you can also try this outside of your Kyma instance). This is just to demonstrate what you would do with your legacy application to hook it up to Kyma. The below picture highlights what we are going to do:
 
 ![Connect Remote Environment Response Screenshot](images/extensibility.png)
->Remote Environments are now called Applications
 
 1. Create/Deploy new Application Connector Instance on Kyma &rarr; This is to provide a dedicated Enpoint for the Person Service to connect to Kyma
 2. Pair Person Service with Kyma Application Connector &rarr; This is to establish secure connectivity from Person Service to Kyma (even over public networks)
@@ -287,9 +288,8 @@ Create Key:
 
 `openssl genrsa -out personservicekubernetes.key 2048`  
 `openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekubernetes.key -subj "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes"`  
-`openssl base64 -in personservicekubernetes.csr`
 
-4. Use the REST client of your choice to create the following rest call to the full URL (csrUrl) with the token you copied previously:
+1. Encode the content of `personservicekubernetes.csr` (Base64) and use the REST client of your choice to create the following POST call to the full URL (csrUrl) with the token you copied previously:
 ![Connect Remote Environment CSR Screenshot](images/remoteenvironmentpairing3.png)
 5. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`. The decoded response will contain separators with `BEGIN CERTIFICATE` and `END CERTIFICATE` respectively.
 6. Now you can use OpenSSL and java keytool (part of the jdk) to create a PKCS#12 (P12, also good for browser based testing) file and based on that create a Java Key Store (JKS, for the Person Service) for our service. **Do not change any passwords, except if you really know what you are doing!!!**
@@ -340,7 +340,7 @@ Now (based on your Kyma cluster type) you again need to update the fields marked
 
 ### Checks
 
-To check whether your changes are active, issue the following command until you again have **exactly** 2 Pods of `personservice-*-*` in status running:  
+To check whether your changes are active, issue the following command until you again have **exactly** 1 Pod of `personservice-*-*` in status running:  
 `kubectl get pods -n personservice`.
 
 After that issue a kubectl describe command for 1 of the pods (replacing '\*' with actual values):  
@@ -1272,7 +1272,7 @@ metadata:
   name: personservicekubernetes
   labels:
     app: personservice
-    prometheus: core #links to kyma prometheus instance
+    prometheus: monitoring #links to kyma prometheus instance
 spec:
   jobLabel: "Personservice"
   selector:

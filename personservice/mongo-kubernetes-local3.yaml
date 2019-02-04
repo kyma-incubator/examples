@@ -108,7 +108,7 @@ spec:
               - name: logging_level_com_sap_demo_service
                 value: "TRACE"
               - name: management_health_redis_enabled
-                value: false  
+                value: "false"  
               - name: spring_redis_host
                 value: "${HOST}"   
               - name: spring_redis_port

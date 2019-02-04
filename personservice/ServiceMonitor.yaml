@@ -4,7 +4,7 @@ metadata:
   name: personservicekubernetes
   labels:
     app: personservice
-    prometheus: core #links to kyma prometheus instance
+    prometheus: monitoring #links to kyma prometheus instance
 spec:
   jobLabel: "Personservice"
   selector:
