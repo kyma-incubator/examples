@@ -1,5 +1,5 @@
 
-apiVersion: gateway.kyma.cx/v1alpha2
+apiVersion: gateway.kyma-project.io/v1alpha2
 kind: Api
 metadata:
   name: personservice
@@ -54,7 +54,8 @@ spec:
       spec:    
          containers:
            - name: personservice
-             image: "andy008/mongokubernetes:0.0.3"
+           # changeme
+             image: "arifcrtsap/mongokubernetes:0.0.3"
              resources:
                 limits:
                    memory: 1Gi

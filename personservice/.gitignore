@@ -46,4 +46,4 @@ mongo-kubernetes-configmap-playground6.yaml
 mongo-kubernetes-configmap-cxlive.yaml
 mongo-kubernetes-configmap-dev-demo.yaml
 .DS_Store
-
+/Lambda/*

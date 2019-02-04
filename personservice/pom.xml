@@ -13,24 +13,23 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.4.RELEASE</version>
+		<version>2.0.8.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 		<project.version>0.0.3</project.version>
-		<jib.version>0.9.9</jib.version>
-		<docker.repositoryname>andy008</docker.repositoryname>
-		<jib.credentialhelper>osxkeychain</jib.credentialhelper>
+		<jib.version>1.0.0</jib.version>
+		<docker.repositoryname>arifcrtsap</docker.repositoryname>
+		<jib.credentialhelper>wincred</jib.credentialhelper>
 		<springfox.version>2.9.2</springfox.version>
 		<commons-io.version>2.6</commons-io.version>
 		<commons.lang.version>3.7</commons.lang.version>
 		<oauth.version>2.3.4.RELEASE</oauth.version>
-		<jwt.version>1.0.9.RELEASE</jwt.version>
+		<jwt.version>1.0.10.RELEASE</jwt.version>
 	</properties>
 	
 	<dependencyManagement>

@@ -2,68 +2,73 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Prerequisites](#prerequisites)
-- [Deploy the application](#deploy-the-application)
-  * [Environment Setup](#environment-setup)
-  * [Mongo DB](#mongo-db)
-  * [Java Build](#java-build)
-  * [Docker Credential Helper Setup](#docker-credential-helper-setup)
-  * [Deploy to Local Kyma (Minikube)](#deploy-to-local-kyma--minikube-)
-  * [Deploy to "real" Kyma Cluster](#deploy-to--real--kyma-cluster)
-  * [Checks](#checks)
-  * [Try out on Kyma](#try-out-on-kyma)
-- [Connect your Service to Kyma as Extension Platform](#connect-your-service-to-kyma-as-extension-platform)
-  * [About](#about)
-  * [Create new Application Connector Instance on Kyma](#create-new-application-connector-instance-on-kyma)
-  * [Pair Person Service with Kyma Application Connector](#pair-person-service-with-kyma-application-connector)
-  * [Reconfigure Person Service](#reconfigure-person-service)
-  * [Checks](#checks-1)
-  * [Run the Scenario](#run-the-scenario)
-- [Extend your Person Service](#extend-your-person-service)
-  * [Intro](#intro)
-  * [Create Service Instance](#create-service-instance)
-  * [Develop your Lambda Function](#develop-your-lambda-function)
-  * [Deploy your Lambda Function](#deploy-your-lambda-function)
-  * [Test your Lambda](#test-your-lambda)
-- [Bind your Person Service to a brokered Redis Backing Service](#bind-your-person-service-to-a-brokered-redis-backing-service)
-  * [Intro](#intro-1)
-  * [Create Redis Service Instance and Bind it to the Person Service](#create-redis-service-instance-and-bind-it-to-the-person-service)
-  * [Update Kubernetes Deployment Configuration](#update-kubernetes-deployment-configuration)
-  * [Test the Service](#test-the-service)
-- [Protect the Service](#protect-the-service)
-  * [Intro](#intro-2)
-  * [Deploy OAuth2 Authorization Server](#deploy-oauth2-authorization-server)
-  * [Adapt Kubernetes Deployment](#adapt-kubernetes-deployment)
-  * [Optional: Create IDP Preset](#optional--create-idp-preset)
-  * [Secure your API](#secure-your-api)
-  * [Security For Lambdas (Not on Minikube)](#security-for-lambdas--not-on-minikube-)
-  * [Test the Service](#test-the-service-1)
-- [Operate your Service: Make it Self-Healing](#operate-your-service--make-it-self-healing)
-  * [Intro](#intro-3)
-  * [Preparation](#preparation)
-  * [Determining whether your service is alive](#determining-whether-your-service-is-alive)
-  * [Determining whether your service is ready to serve traffic](#determining-whether-your-service-is-ready-to-serve-traffic)
-  * [Deploying to Kyma](#deploying-to-kyma)
-  * [Testing](#testing)
-- [Operate your Service: Traces and Logs](#operate-your-service--traces-and-logs)
-  * [Intro](#intro-4)
-  * [Testing Tracing](#testing-tracing)
-  * [Testing Logging](#testing-logging)
-- [Operate your Service: Metrics](#operate-your-service--metrics)
-  * [Intro](#intro-5)
-  * [Collecting Metrics in Prometheus](#collecting-metrics-in-prometheus)
-  * [Creating a Dashboard](#creating-a-dashboard)
+- [A sample Application based on Spring Boot showing the features of Kyma](#a-sample-application-based-on-spring-boot-showing-the-features-of-kyma)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Prerequisites](#prerequisites)
+  - [Deploy the application](#deploy-the-application)
+    - [Environment Setup](#environment-setup)
+    - [Mongo DB](#mongo-db)
+    - [Java Build](#java-build)
+    - [Docker Credential Helper Setup](#docker-credential-helper-setup)
+    - [Deploy to Local Kyma (Minikube)](#deploy-to-local-kyma-minikube)
+    - [Deploy to "real" Kyma Cluster](#deploy-to-%22real%22-kyma-cluster)
+    - [Checks](#checks)
+    - [Try out on Kyma](#try-out-on-kyma)
+  - [Connect your Service to Kyma as Extension Platform](#connect-your-service-to-kyma-as-extension-platform)
+    - [About](#about)
+    - [Create new Application Connector Instance on Kyma](#create-new-application-connector-instance-on-kyma)
+    - [Pair Person Service with Kyma Application Connector](#pair-person-service-with-kyma-application-connector)
+    - [Reconfigure Person Service](#reconfigure-person-service)
+    - [Checks](#checks-1)
+    - [Run the Scenario](#run-the-scenario)
+  - [Extend your Person Service](#extend-your-person-service)
+    - [Intro](#intro)
+    - [Create Service Instance](#create-service-instance)
+    - [Develop your Lambda Function](#develop-your-lambda-function)
+    - [Deploy your Lambda Function](#deploy-your-lambda-function)
+    - [Test your Lambda](#test-your-lambda)
+  - [Bind your Person Service to a brokered Redis Backing Service](#bind-your-person-service-to-a-brokered-redis-backing-service)
+    - [Intro](#intro-1)
+    - [Create Redis Service Instance and Bind it to the Person Service](#create-redis-service-instance-and-bind-it-to-the-person-service)
+    - [Update Kubernetes Deployment Configuration](#update-kubernetes-deployment-configuration)
+    - [Test the Service](#test-the-service)
+  - [Protect the Service](#protect-the-service)
+    - [Intro](#intro-2)
+    - [Deploy OAuth2 Authorization Server](#deploy-oauth2-authorization-server)
+    - [Adapt Kubernetes Deployment](#adapt-kubernetes-deployment)
+    - [Optional: Create IDP Preset](#optional-create-idp-preset)
+    - [Secure your API](#secure-your-api)
+    - [Security For Lambdas (Not on Minikube)](#security-for-lambdas-not-on-minikube)
+    - [Test the Service](#test-the-service-1)
+  - [Operate your Service: Make it Self-Healing](#operate-your-service-make-it-self-healing)
+    - [Intro](#intro-3)
+    - [Preparation](#preparation)
+    - [Determining whether your service is alive](#determining-whether-your-service-is-alive)
+    - [Determining whether your service is ready to serve traffic](#determining-whether-your-service-is-ready-to-serve-traffic)
+    - [Deploying to Kyma](#deploying-to-kyma)
+    - [Testing](#testing)
+  - [Operate your Service: Traces and Logs](#operate-your-service-traces-and-logs)
+    - [Intro](#intro-4)
+    - [Testing Tracing](#testing-tracing)
+    - [Testing Logging](#testing-logging)
+  - [Operate your Service: Metrics](#operate-your-service-metrics)
+    - [Intro](#intro-5)
+    - [Collecting Metrics in Prometheus](#collecting-metrics-in-prometheus)
+    - [Creating a Dashboard](#creating-a-dashboard)
 
 ## Overview
 
-This sample application was created to give you a running end to end sample application implemented in Java / Spring Boot running on Kyma. In the end state it should make all the features Kyma delivers visible to you as developers. Also it should help you to get started and implement your own scenarios on Kyma. 
+This sample application was created to give you a running end to end sample application implemented in Java / Spring Boot running on Kyma. In the end state it should make all the features Kyma delivers visible to you as developers. Also it should help you to get started and implement your own scenarios on Kyma.
 
 > **NOTE:** This showcase is not meant to be Best Practice / Production ready code. Instead it is often kept simple with manual steps to make clear what actually happens. If you have issues/remarks while using it, please feel free to feedback.  
 
 ## Prerequisites
 
-This application runs on [Kyma](https://kyma-project.io) therefor to try out this example on your local machine you need to [install Kyma](https://kyma-project.io/docs/latest/root/kyma#getting-started-local-kyma-installation) first, or have access to Kyma cluster.
+This application runs on [Kyma](https://kyma-project.io). Therefore, to try out this example on your local machine you need to [install Kyma](https://kyma-project.io/docs/latest/root/kyma#getting-started-local-kyma-installation) first, or have access to Kyma cluster.  
+
+**![alt text](images/kyma_symbol_text.svg "Logo Title Text 1")  
+This example is tested and based on [Kyma 0.6.1](https://github.com/kyma-project/kyma/releases/tag/0.6.1). Compatibility with other versions is not guaranteed.**
 
 ## Deploy the application
 
@@ -71,41 +76,44 @@ This application runs on [Kyma](https://kyma-project.io) therefor to try out thi
 
 An Environment is a custom Kyma security and organizational unit based on the concept of Kubernetes Namespaces. Kyma Environments allow you to divide the cluster into smaller units to use for different purposes, such as development and testing. Learn more from official documentation about [Environments](https://kyma-project.io/docs/latest/root/kyma#details-environments)
 
-To setup environment for this showcase call this command: `kubectl apply -f environment.yaml`. Now, once you call `kubectl get namespaces -l=env=true` among other Environments you will see the one you just created.
+To setup the environment for this showcase call this command from the project root:
 
-Now issue the following commands to delete default resource constraints and re-create them a little more relaxed:
+`kubectl apply -f environment.yaml`
 
-```
-kubectl delete -n personservice LimitRange kyma-default
-kubectl delete -n personservice ResourceQuota kyma-default
+Now, once you call `kubectl get namespaces -l=env=true` among other environments you will see the one you just created.
 
-kubectl apply -f environment-resources.yaml  -n personservice
-```
+Issue the following commands to delete default resource constraints and re-create them a little more relaxed:
 
-This was to ensure we don't hit ceilings in terms of memory usage. (However on Minikube/Local installation this might be challenging). For more details read [Configure Default Memory Requests and Limits for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/)
+`kubectl delete -n personservice LimitRange kyma-default`  
+`kubectl delete -n personservice ResourceQuota kyma-default`  
+`kubectl apply -f environment-resources.yaml -n personservice`
+
+This was to ensure we don't hit ceilings in terms of memory usage (However, on Minikube/Local installation this might be challenging). For more details read [Configure Default Memory Requests and Limits for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/)
 
 ### Mongo DB
 
-To deploy Mongodb use Helm (https://helm.sh/). To install helm do the following:
+To deploy Mongodb use Helm (https://helm.sh). To install helm do the following:
 
-1. Innitialize Helm (if not already done, client-only option as kyma already comes with tiller installed):
-`helm init --client-only` 
-2. Then deploy Mongo DB:
+1. Initialize Helm (if not already done, client-only option as kyma already comes with tiller installed):  
+`helm init --client-only`
+
+2. Then deploy Mongo DB:  
 `helm install --name first-mongo --set persistence.size=2Gi stable/mongodb --namespace personservice`
 
 ### Java Build
 
-Project is built using: mvn clean package or mvn clean install. It uses jib (https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin) to build and push to a docker registry (which does not require a local docker install). You **must** use the following maven properties to adapt to your local installation: 
+Project is built using:  
+`mvn clean package`  
 
-* docker.repositoryname: Docker repository that the image will be published to
-* jib.credentialhelper: docker credential helper that will be used to acquire docker hub (adapt to YOUR Operating System, pass or secretservice for Linux, wincred for Windows and osxkeychain for Mac)
+It uses jib (https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin) to build and push to a docker registry (which does not require a local docker install). You **must** use the following maven properties to adapt your local installation:
 
+- docker.repositoryname: Docker repository that the image will be published to (just replace by username on docker hub)
+- jib.credentialhelper: Docker credential helper that will be used to acquire docker hub credentials (see: https://docs.docker.com/engine/reference/commandline/login/ heading: "Credential helper protocol") (adapt to YOUR OS, pass or secretservice for Linux, wincred for Windows and osxkeychain for Mac)
 
-You **can** use the following maven properties to adapt to your local installation: 
+You **can** use the following maven properties to adapt to your local installation:
 
-* project.version: Tag that will be assigned to docker image 
+* project.version: Tag that will be assigned to docker image
 * jib.version: Version of the jib plugin that will be used
-credentials (see: https://docs.docker.com/engine/reference/commandline/login/ heading: "Credential helper protocol")
 
 For editing the code I recommend either Eclipse with Spring plugins installed or Spring Tool Suite (https://spring.io/tools/sts/all). You will also need to install the Lombok plugin (https://projectlombok.org/setup/overview). Lombok is used to generate getters/setters and sometimes constructors. It keeps the code lean and neat.
 
@@ -118,8 +126,8 @@ To provide your credentials create a json file like the one below:
 ```
 { 
     "ServerURL": "registry.hub.docker.com",
-    "Username": "<username>", 
-    "Secret": "<password>" 
+    "Username": "<username>",
+    "Secret": "<password>"
 }
 ```
 
@@ -139,8 +147,6 @@ To read a set of credentials:
 
 `echo <ServerURL> | docker-credential-pass get`
 
-
-
 ### Deploy to Local Kyma (Minikube)
 
 Deployment to Kyma requires to upload a configmap and also a kubernetes deployment and a service.
@@ -150,10 +156,8 @@ Before deploying the attached files you need to adapt `mongo-kubernetes-local1.y
 
 The below commands do this: 
 
-```
-kubectl apply -f mongo-kubernetes-configmap-local1.yaml -n personservice
-kubectl apply -f mongo-kubernetes-local1.yaml -n personservice
-```
+`kubectl apply -f mongo-kubernetes-configmap-local1.yaml -n personservice`  
+`kubectl apply -f mongo-kubernetes-local1.yaml -n personservice`
 
 `mongo-kubernetes-local1.yaml` creates the following Kubernetes objects:
 
@@ -169,16 +173,14 @@ Also make sure you trust the self-signed kyma ssl server certificate in the brow
 
 Deployment to kyma requires to upload a configmap and also a kubernetes deployment and a service.
 
-Before deploying the attached files you need to adapt `mongo-kubernetes-cluster1.yaml` to your cluster. The parts that require attention are marked with `# changeme:` 
+Before deploying the attached files you need to adapt `mongo-kubernetes-cluster1.yaml` to your cluster. The parts that require attention are marked with `#changeme:`
 
-The below commands do this: 
+The below commands do this:
 
-```
-kubectl apply -f mongo-kubernetes-configmap-cluster1.yaml -n personservice
-kubectl apply -f mongo-kubernetes-cluster1.yaml -n personservice
-```
+`kubectl apply -f mongo-kubernetes-configmap-cluster1.yaml -n personservice`   
+`kubectl apply -f mongo-kubernetes-cluster1.yaml -n personservice`
 
-`mongo-kubernetes-configmap-cluster1.yaml` creates the following Kubernetes objects:
+`mongo-kubernetes-cluster1.yaml` creates the following Kubernetes objects:
 
 * Kubernetes Deployment for the Spring App (including Istio setup)
 * Kubernetes Service pointing towards the pods created by the Deployment
@@ -189,13 +191,15 @@ Your service should now be accessible on whatever you specified under `personser
 
 ### Checks
 
-To check whether everything is up and running please issue the following command: `kubectl get pods -n personservice`
+To check whether everything is up and running please issue the following command:  
+`kubectl get pods -n personservice`
 
-All pods should have status running. Otherwise repeat until this is the case.
+All pods should have status running. Otherwise wait and repeat until this is the case.
 
 ### Try out on Kyma
 
-After deployyment you can access the swagger documentation under https://personservice.{clusterhost}/swagger-ui.html. This also allows you to try it out. 
+After deployyment you can access and try out the swagger documentation under  
+`https://personservice.{clusterhost}/swagger-ui.html`
 
 If you don't like Open API (fka. Swagger) here is some other documentation:
 
@@ -223,7 +227,7 @@ The API is accessible using the following endpoints:
 {
 	"firstName":"Jack",
 }
-``` 
+```
 
 * POST /api/v1/person/search: Search for persons matching the following criteria:
 ```
@@ -243,49 +247,51 @@ Altough our Person Service application is running inside of Kyma, we will now tr
 
 ![Connect Remote Environment Response Screenshot](images/extensibility.png)
 
-1. Create/Deploy new Application Connector Instance on Kyma ==> This is to provide a dedicated Enpoint for the Person Service to connect to Kyma
-2. Pair Person Service with Kyma Application Connector ==> This is to establish secure connectivity from Person Service to Kyma (even over public networks)
-3. Register Personservice Metadata at the Application Connector ==> This is to fill the API and Event Catalog on Kyma
-4. Fire Events to the Kyma Event Bridge ==> This is to execute event driven logic/extensions on Kyma
+1. Create/Deploy new Application Connector Instance on Kyma &rarr; This is to provide a dedicated Enpoint for the Person Service to connect to Kyma
+2. Pair Person Service with Kyma Application Connector &rarr; This is to establish secure connectivity from Person Service to Kyma (even over public networks)
+3. Register Person Service Metadata at the Application Connector &rarr; This is to fill the API and Event Catalog on Kyma
+4. Fire Events to the Kyma Event Bridge &rarr; This is to execute event driven logic/extensions on Kyma
 
 Steps 3 and 4 are based on deploying additional configuration to the kyma instance.
 
-
 ### Create new Application Connector Instance on Kyma
 
-To connect external systems (so called remote environments) you need to use the application connector. For information see: https://kyma-project.io/docs/latest/components/application-connector.
+To connect external systems (called Applications) you need to use the application connector. For information see: https://kyma-project.io/docs/latest/components/application-connector.
 
-To create one, you need to issue the following command: `kubectl apply -f re-personservice.yaml`
+To create one, you need to issue the following command:  
+`kubectl apply -f app-personservice.yaml`
 
-To check whether the pods are up and running issue `kubectl get pod -l app=personservice-gateway -n kyma-integration`, result should look like:
+To check whether the pods are up and running issue  
+`kubectl get pod -l app=personservice-gateway -n kyma-integration`  
+
+The result should look like this:
 
 ```
 NAME                                     READY     STATUS    RESTARTS   AGE
 personservice-gateway-56ddb944b6-nw6m6   2/2       Running   0          21m
 ```
 
-After Pods are recreated, your new Environment shall show up as green in the Kyma Console under `Administration -> Remote Environments`
+After Pods are recreated, your new Application shall show up in the Kyma Console under `Integration -> Applications`
 
 ### Pair Person Service with Kyma Application Connector
 
 Now you need to pair the person service with the newly deployed application connector gateway instance. 
 
-1. Click on `Connect Remote Environment` and open the link you get on the screen in another browser tab
-![Connect Remote Environment Screenshot](images/remoteenvironmentpairing.png)
+1. Click on `Connect Application` and open the link in the popup box in another browser tab
+![Connect Remote Environment Screenshot](images/applicationpairing.png)
 
 2. Copy the `csrUrl` address
 ![Connect Remote Environment Response Screenshot](images/remoteenvironmentpairing2.png)
 
 3. Create a Certificate Signing request using OpenSSL (https://www.openssl.org/) a series of commands. Before doing this create a new directory called `security` and then go ahead with OpenSSL in the new dir.
 Create Key: 
-   ```
-   openssl genrsa -out personservicekubernetes.key 2048
-   openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekubernetes.key -subj "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes"
-   openssl base64 -in personservicekubernetes.csr
-   ```
-4. Use the REST client of your choice to create the following rest call to the full URL with token you copied previously:
+
+`openssl genrsa -out personservicekubernetes.key 2048`  
+`openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekubernetes.key -subj "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes"`  
+
+1. Encode the content of `personservicekubernetes.csr` (Base64) and use the REST client of your choice to create the following POST call to the full URL (csrUrl) with the token you copied previously:
 ![Connect Remote Environment CSR Screenshot](images/remoteenvironmentpairing3.png)
-5. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`.
+5. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`. The decoded response will contain separators with `BEGIN CERTIFICATE` and `END CERTIFICATE` respectively.
 6. Now you can use OpenSSL and java keytool (part of the jdk) to create a PKCS#12 (P12, also good for browser based testing) file and based on that create a Java Key Store (JKS, for the Person Service) for our service. **Do not change any passwords, except if you really know what you are doing!!!**
    ```
    openssl pkcs12 -export -name personservicekubernetes -in personservicekubernetes.crt -inkey personservicekubernetes.key -out personservicekubernetes.p12 -password pass:kyma-project
@@ -295,25 +301,24 @@ Create Key:
 
 
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. If you are running on locally on Minikube the port of the gateway needs to be determined separately. To do this, issue the following command:
-```
-kubectl -n kyma-system get svc core-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'
-```
+
+`kubectl -n kyma-system get svc core-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'`
 
 The use the resulting port in your URL, e.g.: https://gateway.{clusterhost}:{port}/personservicekubernetes/v1/metadata/services
 
 ### Reconfigure Person Service
 
-To start with we need to deploy the newly created keystore to the cluster. To do so change directory to `security` and then issue the following command:
+To start with we need to deploy the newly created keystore to the cluster. To do so issue the following command in the `security` directory:
 
 `kubectl create secret generic kyma-certificate --from-file=personservicekubernetes.jks -n personservice`
 
-After that you need to create a new config map which is containing a file with all details needed to register the Person Service at the Kyma Cluster. If you want to know more about this step, refer to https://kyma-project.io/docs/latest/components/application-connector#details-api. For simplicity all registration information is maintained in file `registration/registrationfile.json`. The contents of this file will be posted against the `/v1/metadata/services` endpoint. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
+After that you need to create a new config map contains a file with all details needed to register the Person Service at the Kyma Cluster. If you want to know more about this step, refer to https://kyma-project.io/docs/latest/components/application-connector#details-register-a-secured-api. For simplicity all registration information is maintained in file `registration/registrationfile.json`. The contents of this file will be posted against the `/v1/metadata/services` endpoint. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
 
 ```
 "api": {
     "targetUrl": "changeme",
     "spec": {}    	
-  },
+  }
 ```
 
 When running locally on Minikube you have to point targetUrl to http://personservice.personservice.svc.cluster.local:8080.
@@ -335,44 +340,35 @@ Now (based on your Kyma cluster type) you again need to update the fields marked
 
 ### Checks
 
-To check whether your changes are active, issue the following command until you again have **exactly** 2 Pods of `personservice-*-*` in status running: `kubectl get pods -n personservice`.
+To check whether your changes are active, issue the following command until you again have **exactly** 1 Pod of `personservice-*-*` in status running:  
+`kubectl get pods -n personservice`.
 
-After that issue a kubectl describe command for 1 of the pods (replacing '\*' with actual values): `kubectl describe pod -l app=personservice -n personservice`
+After that issue a kubectl describe command for 1 of the pods (replacing '\*' with actual values):  
+`kubectl describe pod -l app=personservice -n personservice`
 
 The output must look something like this ('..' depicts other content which I deleted):
 
 ```
 Name:           personservice-*-*
 Namespace:      personservice
-
 ..
-
 Init Containers:
   istio-init:
-  
    ..
-   
 Containers:
   personservice:
     Container ID:   
-    
     ..
-    
     Environment:
       .. 
-      
       personservicekubernetes_applicationconnetor_baseurl:  <set to the key 'connector_baseurl' of config map 'mongo-kubernetes-config'>        Optional: false
       spring_profiles_active:                               ApplicationConnector
-     
       ..
-    
     Mounts:
       /registration from registrationfile (ro)
       /security from kyma-certificate (ro)
-      /var/run/secrets/kubernetes.io/serviceaccount from default-token-6nb7x (ro)
-       
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-6nb7x (ro)   
   ..
-  
 Volumes:
   registrationfile:
     Type:      ConfigMap (a volume populated by a ConfigMap)
@@ -382,24 +378,23 @@ Volumes:
     Type:        Secret (a volume populated by a Secret)
     SecretName:  kyma-certificate
     Optional:    false
-
 ```
 
 ### Run the Scenario
 
 After deployment you can access the swagger documentation under https://{kymahost}/swagger-ui.html. Here you should execute the POST against `/api/v1/applicationconnector/registration`. This will perform step 3 of the pairing process.
 
-![Remote Environment Registration Screenshot](images/remoteenvironmentregistration.png)
+![Application Registration Screenshot](images/remoteenvironmentregistration.png)
 
-Now you should see the following under Remote Environments:
+Now you should see the following under Applications:
 
-![Remote Environment Registration Screenshot](images/remoteenvironmentregistration2.png)
+![Application Registration Screenshot](images/applicationregistration2.png)
 
-This means now you can bind this 'Remote Environment' to a 'Kyma Environment' and process events in Serverless Lambda functions. You can either use the UI or kubectl. On the UI, bind the Remote Environment 'personservicekubernetes' to the Kyma Environment 'personservice' by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f re-personservice-environment-map.yaml` to do the same.
+This means now you can bind this Application to a Kyma Namespace and process events in Serverless Lambda functions. You can either use the UI or kubectl. In the UI, bind the Application by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f app-personservice-environment-map.yaml` to do the same.
 
-Then go to the Kyma Environment personservice's 'Service Catalog' and explore the Service 'Person API'.
+Then navigate to the Namespace "personservice" and select the 'Catalog' and explore the Service 'Person API' (see screenshot).
 
-![Remote Environment Registration Screenshot](images/remoteenvironmentregistration3.png)
+![Application Registration Screenshot](images/applicationregistration3.png)
 
 Now you are ready to instantiate the service and bind it to Lambda's and deployments which implement your extension logic.
 
@@ -421,20 +416,18 @@ As always this function is not intended for productive use.
 
 A precondition for this scenario is that all steps mentioned in [Run the Scenario](#run-the-scenario) have been executed properly.
 
-In your Kyma Envirnoment ("Personservice") go to the Service Catalog and create a new service instance of the Person API:
+In your Kyma Namespace "Personservice" go to the Catalog and create a new service instance of the Person API:
 
 ![Service Instance Creation Screenshot](images/serviceinstance1.png)
 
-![Service Instance Creation Screenshot](images/serviceinstance2.png)
-
-After that verify your instance by going "Back" and clicking on "Service Instances":
+After that verify your instance by selecting "Instances" in the Service Catalog:
 
 ![Service Instance Creation Screenshot](images/serviceinstance3.png)
 
 
 ### Develop your Lambda Function
 
-When developing Lambda functions I like to start locally using the IDE of my choice. Kyma lambda functions are basically "normal" Node.js modules containing the containing the following snippet:
+When developing Lambda functions, I like to start locally using the IDE of my choice. Kyma lambda functions are basically "normal" Node.js modules containing the containing the following snippet:
 
 ```
 module.exports = { 
@@ -467,7 +460,7 @@ As soon as a Lambda requires NPM dependencies, it also require a package.json fi
 }
 ```
 
-Kyma injects service bindings (including Remote Environments) as Environment Variables to be able to mimic this behavior locally the package "dotenv" can be used. it basically converts the contents of a ".env" (no filename, literally ".env") to normal environment variables that can be accessed through `process.env.environment_variable_name` in your code. Sample for that would be (getting the internal URL of the API Connector pointing to the Remote Environment):
+Kyma injects service bindings (including Applications) as Environment Variables. To be able to mimic this behavior locally the package `dotenv` can be used. It basically converts the contents of a `.env` (no file extension, literally ".env") to normal environment variables that can be accessed through `process.env.environment_variable_name` in your code. Sample for that would be (getting the internal URL of the API Connector pointing to the Remote Environment):
 
 ```
 require('dotenv').config();
@@ -483,10 +476,7 @@ const personservice = require('./personservicemodule');
 var express = require('express');
 var app = express();
 
-
 console.log(`GATEWAY_URL = ${process.env.GATEWAY_URL}`);
-
-
 
 app.get("/", async function (req, res) {
     var event = {
@@ -494,12 +484,11 @@ app.get("/", async function (req, res) {
             "personid":req.query.personId
         },
         "extensions": {
-            "request": req,            
-            "response":res        
+            "request": req,
+            "response":res
         }
     };
-
-    await personservice.main(event,{});    
+    await personservice.main(event,{});
 });
 
 app.listen(3000, function () {
@@ -508,7 +497,7 @@ app.listen(3000, function () {
 ```
 
 
-The code for the sample Lambda function is contained in the "Lambda" folder. in order to run it locally, ensure you have a Node.js (https://nodejs.org/en/download/) environment (Version 8.x installed, to check, execute `node --version`). You also need to make a few changes to the ".env" file. Again you need to replace all occurrences of replaceme. "GATEWAY_URL" must have a value pointing to your deployment of personservice (only root, no "/" in the end).
+The code for the sample Lambda function is contained in the "Lambda" folder. in order to run it locally, ensure you have a Node.js (https://nodejs.org/en/download/) environment (Version 8.x+ installed, to check, execute `node --version`). You also need to make a few changes to the ".env" file. Again you need to replace all occurrences of replaceme. "GATEWAY_URL" must have a value pointing to your deployment of personservice (only root, no "/" in the end).
 The wrapper starts a local http server on port 3000 that uses the query parameter personId which must be the ID of a person in your mongo db (basically GET /api/v1/person/{PERSON_ID} must return a 200 status code). 
 
 Then install the dependencies: `npm install axios winston dotenv express`
@@ -521,12 +510,12 @@ This should give you a fair idea of how to develop Lambdas.
 
 ### Deploy your Lambda Function
 
-To deploy your Lambda you need to go to your "personservice" Kyma environment. Click on Lambdas and create a new one. Fill all the fields shown in the below screenshots and then save:
-
+To deploy your Lambda you need to go to your "personservice" Kyma namespace. Click on Lambdas and create a new one. Fill all the fields as shown in the below screenshots and then save:
 
 ![Lambda Creation Screenshot](images/lambda1.png)
 
 ![Lambda Creation Screenshot](images/lambda2.png)
+**Important:** Leave the prefix empty!
 
 ![Lambda Creation Screenshot](images/lambda3.png)
 
@@ -609,27 +598,23 @@ In this example we are going to address the issue with frequent callbacks of the
 
 ### Create Redis Service Instance and Bind it to the Person Service
 
-To create a service instance you need to go to the service catalog in your Kyma Environment ("personservice"). Navigate to Redis:
+To create a service instance you need to go to the service catalog in your Kyma Namespace ("personservice"). Navigate to Redis:
 
 ![Service Provisioning Screenshot](images/serviceprovisioning1.png)
 
-Add and configure a new instance to your environment:
+Add and configure a new instance to your namespace:
 
 ![Service Provisioning Screenshot](images/serviceprovisioning2.png)
 
-![Service Provisioning Screenshot](images/serviceprovisioning3.png)
-
-After you have created your instance you have to bind it to the Persons Service. To do that, go to Service Instances and navigate to your created instance.
+After you have created your instance you have to bind it to the Persons Service. To do that, go to Instances and navigate to your created instance.
 
 ![Service Binding Screenshot](images/servicebinding1.png)
 
-Create a new binding and click through the wizard:
+Bind a new application and click through the wizard:
 
 ![Service Binding Screenshot](images/servicebinding2.png)
 
 ![Service Binding Screenshot](images/servicebinding3.png)
-
-![Service Binding Screenshot](images/servicebinding4.png)
 
 After that, check whether your personservice pods are running: `kubectl get pods -n personservice -l app=personservice`
 
@@ -651,12 +636,12 @@ spec:
         name: redis-instance-binding
 ```
 
-To see the concrete values, issue the following command: `kubectl get secret -n d046471 -o yaml redis-instance-binding`. The values are base64 encoded.
+To see the concrete values, issue the following command: `kubectl get secret -o yaml <name_of_secret>`. You can find the name of the secret in the "secret" column of your "bound applications". The values are base64 encoded.
 
 
 ### Update Kubernetes Deployment Configuration
 
-In order for the personservice to properly connect to the redis cache, you need to set a couple of environment variables. To do so, `mongo-kubernetes-local3.yaml` or `mongo-kubernetes-cluster3.yaml` have been adapted. However you still need to replace the values depicted with `#changeme` to cater to your environment. Below the the changed values to bind to the service:
+In order for the personservice to properly connect to the redis cache, you need to set a couple of environment variables. To do so, `mongo-kubernetes-local3.yaml` or `mongo-kubernetes-cluster3.yaml` have been adapted. However you still need to replace the values depicted with `#changeme` to cater to your environment. Below the changed values to bind to the service:
 
 ```
               - name: spring_profiles_active
@@ -683,18 +668,13 @@ Now you can update your deployment and restart the pods:
 
 * Local:
 
-```
-kubectl apply -f mongo-kubernetes-local3.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-
-```
+`kubectl apply -f mongo-kubernetes-local3.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 * Cluster:
 
-```
-kubectl apply -f mongo-kubernetes-local3.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-```
+`kubectl apply -f mongo-kubernetes-cluster3.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 ### Test the Service
 
@@ -705,7 +685,7 @@ Now invoke GET /api/v1/person/{personid}. During the first call you should see s
 ```
 Entering public com.sap.demo.entity.Person com.sap.demo.service.PersonServiceCache.findPerson(java.lang.String) with Arguments:
 class java.lang.String: 5b8560dd4b2eaa0001897227
-2018-08-31 11:20:50.577 DEBUG 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84: Cache miss for Person ID: 5b8560dd4b2eaa0001897227
+2018-08-31 11:20:50.577 DEBUG 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84: Cache miss for Person ID: 5b8560dd4b2eaa0001897227 
 2018-08-31 11:20:50.577 TRACE 1 --- [nio-8080-exec-2] com.sap.demo.service.PersonServiceCache  : 2e8ff093-4c1c-9b1b-a274-5e8a63f1cc84:
 Exiting PersonServiceCache.findPerson(..) with result: Person(id=5b8560dd4b2eaa0001897227, firstName=John, lastName=Doe, streetAddress=Nymphenburger Str., houseNumber=86, zip=80636, city=Muenchen, extensionFields={duplicatePersons=[5b85601a8a50350001a0c160, 5b8560dd4b2eaa0001897227]})
 ```
@@ -721,7 +701,7 @@ Kyma (through Istio Authentication Policies) allows to add JWT protection to you
 This example uses the Dummy Authorization Server made available under https://github.com/akrausesap/jwt_issuer. Clone the repository and update the `kubernetes-kyma.yaml` file with your host (marked with `#changeme`): 
 
 ```
-apiVersion: gateway.kyma.cx/v1alpha2
+apiVersion: gateway.kyma-project.io/v1alpha2
 kind: Api
 metadata:
   name: tokenissuer
@@ -733,11 +713,13 @@ spec:
 
 ```
 
-Then deploy to your cluster: `kubectl apply -f kubernetes-kyma.yaml -n personservice`
+Then deploy to your cluster:  
+`kubectl apply -f kubernetes-kyma.yaml -n personservice`
 
-After that check whether the pod is running with: `kubectl get pods -n personservice -l app=tokenissuer`
+After that check whether the pod is running with:  
+`kubectl get pods -n personservice -l app=tokenissuer`
 
-Then you can go to `https://{hostname}/swagger-ui.html`. Test the following operations:
+Then you can go to `https://{hostname}/swagger-ui.html`. A restart of your personservice pod may be required (just delete the pod). Test the following operations:
 
 * GET /jwk: To get the public key used for validating the signature. Should return something like: 
 
@@ -771,8 +753,8 @@ If you are running on locally on Minikube you also need to adapt your hosts file
 In order for the person service API to validate JWT tokens, you need to flip an environment variable (Activate the Security Profile):
 
 ```
-              - name: spring_profiles_active
-                value: "ApplicationConnector,Cache,Security"
+          - name: spring_profiles_active
+            value: "ApplicationConnector,Cache,Security"
 ```
 
 This is already done in `mongo-kubernetes-local4.yaml` and `mongo-kubernetes-cluster4.yaml`, however you still need to update the `changeme` parts as depicted previously.
@@ -781,18 +763,13 @@ Now you can update your deployment, the api and restart the pods:
 
 * Local:
 
-```
-kubectl apply -f mongo-kubernetes-local4.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-
-```
+`kubectl apply -f mongo-kubernetes-local4.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 * Cluster:
 
-```
-kubectl apply -f mongo-kubernetes-cluster4.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-```
+`kubectl apply -f mongo-kubernetes-cluster4.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 Now you can test the spring application. When calling GET /api/v1/person you should receive the following 401 response:
 
@@ -870,7 +847,7 @@ Credits go to @eugenp and https://www.baeldung.com/spring-security-oauth-jwt for
 
 ### Optional: Create IDP Preset
 
-Kyma allows to persist configuration of trusted Token providers and re-use it upon API Exposure (In the UI). They basically serve as copy templates when exposing a new API. To do that, go to "Administration->IDP Presets" and choose "Create Preset". Now you can provide Name, Issuer and JWKS URI.
+Kyma allows to persist configuration of trusted Token providers and re-use it upon API Exposure (In the UI). They basically serve as copy templates when exposing a new API. To do that, go to the home screen select "IDP Presets" and choose "Create Preset". Now you can provide Name, Issuer and JWKS URI.
 
 * Name is just free Text (e.g. "my-dummy-issuer")
 * Issuer must be depicted as "iss" in your JWT Token. Kyma only accepts a URL or an email address. (see https://istio.io/docs/reference/config/istio.authentication.v1alpha1/). Recommendation is https://{hostname}/
@@ -882,10 +859,10 @@ See sample below:
 
 ### Secure your API
 
-To have Kyma / Istio deal with all the complexities of validating JWT Tokens, we need to change our definition of the API a little. Basically all we need to do, is to adapt the below snippet to your own environment:
+To have Kyma/Istio deal with all the complexities of validating JWT Tokens, we need to change our definition of the API a little. Basically all we need to do, is to adapt the below snippet to your own environment:
 
 ```
-apiVersion: gateway.kyma.cx/v1alpha2
+apiVersion: gateway.kyma-project.io/v1alpha2
 kind: Api
 metadata:
   name: personservice
@@ -915,7 +892,8 @@ Then adapt the `authentication` section to match the below sample (replacing par
         jwksUri: "{jwk_url}"
 ```
 
-Mind the values you have configured in (Deploy OAuth2 Authorization Server)[deploy-oauth2-authorization-server]. Also mind the restrictions for issuer mentioned in (Optional: Create IDP Preset)[optional:-create-idp-preset]. After that you can apply it: `kubectl apply -n personservice -f my-protected-personservice-api.yaml`
+Mind the values you have configured in [Deploy OAuth2 Authorization Server](#deploy-oauth2-authorization-server). Also mind the restrictions for issuer mentioned in (Optional: Create IDP Preset)[optional:-create-idp-preset]. After that you can apply it:  
+`kubectl apply -n personservice -f my-protected-personservice-api.yaml`
 
 Alternatively you can also use `kubectl edit api personservice -n personservice`
 
@@ -1021,21 +999,21 @@ personservice-755f847c9d-x5xks        2/2       Running   0          7h
 
 Spring Boot comes with a functionality called actuator. This lets you control and determine the status of the spring application. For the person service we have activated it and exposed it as REST API on port 8081. This nicely separates it from the externally exposed api and keeps it reachable only from within the cluster. The key endpoint for determining service health is the /actuator/health resource. It will return "UP" (HTTP 200) or "DOWN" (HTTP 503). Now we are going to exploit this in kubernetes.
 
-Basically we will make the Kubelet invoke this actuator periodically and based on the result 200 or 503 determine whether the service is up or down. If the service is down it should dispose it and start a new one to get back to the target state. To do so we need to look the deployment spec (mongo-kubernetes-cluster5.yml or mongo-kubernetes-local5.yml) and find the section for the lifenssProbe:
+Basically we will make the Kubelet invoke this actuator periodically and based on the result 200 or 503 determine whether the service is up or down. If the service is down it should dispose it and start a new one to get back to the target state. To do so we need to look the deployment spec (`mongo-kubernetes-cluster5.yaml` or `mongo-kubernetes-local5.yaml`) and find the section for the livenessProbe:
 
 ```
-             ports:
-              - containerPort: 8080
-                name: http
-              - containerPort: 8081
-                name: actuatorhttp
-             livenessProbe:
-                httpGet:
-                   path: /actuator/health
-                   port: 8081
-                initialDelaySeconds: 60
-                periodSeconds: 60
-                failureThreshold: 3  
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8081
+          name: actuatorhttp
+        livenessProbe:
+          httpGet:
+              path: /actuator/health
+              port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          failureThreshold: 3  
                     
 ```
 
@@ -1045,20 +1023,20 @@ Under ports we have exposed port 8081 with the name actuatorhttp. We have subseq
 
 Sometimes services are simply just too busy to serve traffic (e.g. whne executing batch loads, etc.). This is where kubernetes offers to remove a service from loadbalancing until it reports back. To support this `DemoReadinessIndicator.java` was implemented. It is a custom actuator that reports the readiness status. HTTP 200 means ready and HTTP 503 means not ready.
 
-To periodically invoke this endpoint the following section was added to the deployment manifest (mongo-kubernetes-cluster5.yml or mongo-kubernetes-local5.yml):
+To periodically invoke this endpoint the following section was added to the deployment manifest (`mongo-kubernetes-cluster5.yaml` or `mongo-kubernetes-local5.yaml`):
 
 ```
-             readinessProbe:
-                httpGet:
-                   path: /actuator/ready
-                   port: 8081
-                periodSeconds: 30
-                initialDelaySeconds: 20
-                failureThreshold: 1
-                successThreshold: 2  
+        readinessProbe:
+          httpGet:
+              path: /actuator/ready
+              port: 8081
+          periodSeconds: 30
+          initialDelaySeconds: 20
+          failureThreshold: 1
+          successThreshold: 2  
 ```
 
-We have Defined `readinessProbe` which periodically (every 30 seconds) makes a GET request to /actuator/ready. If it fails 1 time the pod will be excluded from loadbalancing. Only after 2 successful calls it will be again used for loadbalancing.
+We have defined `readinessProbe` which periodically (every 30 seconds) makes a GET request to /actuator/ready. If it fails 1 time the pod will be excluded from loadbalancing. Only after 2 successful calls it will be again used for loadbalancing.
 
 ### Deploying to Kyma
 
@@ -1066,18 +1044,13 @@ In order for the personservice to be self-healing, `mongo-kubernetes-local5.yaml
 
 * Local:
 
-```
-kubectl apply -f mongo-kubernetes-local5.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-
-```
+`kubectl apply -f mongo-kubernetes-local5.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 * Cluster:
 
-```
-kubectl apply -f mongo-kubernetes-local5.yaml -n personservice
-kubectl delete pods -n personservice -l app=personservice
-```
+`kubectl apply -f mongo-kubernetes-cluster5.yaml -n personservice`  
+`kubectl delete pods -n personservice -l app=personservice`
 
 The `kubectl get pods -n personservice` should after some time yield an output comparable to the one below:
 
@@ -1160,10 +1133,10 @@ Logs are just written to stdout so that they are accessible through `kubectl log
 To embed all of this into our Spring Boot Application, no coding is necessary. All we need to do is embed Spring Cloud Sleuth (https://cloud.spring.io/spring-cloud-sleuth/):
 
 ```
-		<dependency> 
-    			<groupId>org.springframework.cloud</groupId>
-    			<artifactId>spring-cloud-starter-zipkin</artifactId>
-		</dependency>
+<dependency> 
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-zipkin</artifactId>
+</dependency>
 ```
 
 This will ensure our App:
@@ -1175,8 +1148,7 @@ In our Spring app logging uses SLF4J and is mainly based on the `LoggingAspect.j
 
 ### Testing Tracing
 
-To test the tracing you need to launch the Jaeger UI. Details can be found under https://kyma-project.io/docs/latest/components/tracing. You can access the Jaeger UI either locally at https://jaeger.kyma.local or on a cluster at https://jaeger.{domain-of-kyma-cluster}.
-
+To test the tracing you need to launch the Jaeger UI. Details can be found under https://kyma-project.io/docs/latest/components/tracing. You can access the Jaeger UI either locally at `https://jaeger.kyma.local` or on a cluster at `https://jaeger.{domain-of-kyma-cluster}`.
 
 Now we send a simple GET to /api/v1/person. In Jaeger we will make the following selections:
 
@@ -1244,32 +1216,29 @@ There is also a commandline client available under https://github.com/oklog/oklo
 Kyma comes with a Prometheus Operator included. This means you can instrument your Services and scrape metrics as described in https://kyma-project.io/docs/latest/components/monitoring. In order to instrument the Person Service and get application level metrics I have added the following dependency to the Maven POM file:
 
 ```
-		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-registry-prometheus</artifactId>
-		</dependency>
+<dependency>
+  <groupId>io.micrometer</groupId>
+  <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
 ```
 
 Furthermore I have added the following lines of code to the `PersonServiceDefault` class:
 
 ```
-	@Autowired
-	public PersonServiceDefault(MeterRegistry registry, PersonRepository repository) {
-		this.repository = repository;
-		
-		Gauge.builder("personservice.persistency.repository.size", repository, PersonRepository::count)
-				.tag("Repository", "Persons").register(registry);
-		
-	}
-
+@Autowired
+public PersonServiceDefault(MeterRegistry registry, PersonRepository repository) {
+  this.repository = repository;
+  Gauge.builder("personservice.persistency.repository.size", repository, PersonRepository::count)
+      .tag("Repository", "Persons").register(registry);
+  
+}
 ```
 
 These add a metric called `personservice_persistency_repository_size` to the `/actuator/prometheus` endpoint so that we can plot them in a chart using Grafana.
 
 ### Collecting Metrics in Prometheus
 
-
-In oder to be able to collect the metrics from Prometheus the following Service was added to `mongo-kubernetes-local6.yaml`and `mongo-kubernetes-cluster6.yaml`:
+In oder to be able to collect the metrics from Prometheus the following Service was added to `mongo-kubernetes-local6.yaml` and `mongo-kubernetes-cluster6.yaml`:
 
 ```
 apiVersion: v1
@@ -1290,7 +1259,9 @@ spec:
     version: "0.0.3"
   type: ClusterIP
 ```
-Deploy them using `kubectl apply -n personservice -f mongo-kubernetes-cluster6.yaml` or `kubectl apply -n personservice -f mongo-kubernetes-local6.yaml`. 
+Deploy them using   
+`kubectl apply -n personservice -f mongo-kubernetes-cluster6.yaml` or  
+`kubectl apply -n personservice -f mongo-kubernetes-local6.yaml`
 
 Now you can configure Prometheus to scrape the metrics. To do so you need to create a resource of type ServiceMonitor. This needs to be part of the `kyma-system` namespace:
 
@@ -1301,7 +1272,7 @@ metadata:
   name: personservicekubernetes
   labels:
     app: personservice
-    prometheus: core #links to kyma prometheus instance
+    prometheus: monitoring #links to kyma prometheus instance
 spec:
   jobLabel: "Personservice"
   selector:
@@ -1315,13 +1286,13 @@ spec:
     path: "/actuator/prometheus" # enpoint of spring metrics actuator
 ```
 
-To create this resource issue: `kubectl apply -f ServiceMonitor.yaml -n kyma-system`.
+To create this resource issue: `kubectl apply -f ServiceMonitor.yaml -n kyma-system`
 
-Now you can check whether it is working in Prometheus. To do so you need to expose prometheus on your localhost using `kubectl port-forward -n kyma-system svc/prometheus-operated 9090:9090`. Now you can open http://localhost:9090/targets` in a browser. You should fin a target like in the screenshot below:
+Now you can check whether it is working in Prometheus. To do so you need to expose prometheus on your localhost using `kubectl port-forward -n kyma-system svc/prometheus-operated 9090:9090`. Now you can open http://localhost:9090/targets in a browser. You should find a target like in the screenshot below:
 
 ![Prometheus](images/prometheus1.png)
 
-Furthermore you can go to `http://localhost:9090/graph`and issue the following PromQl statement as a verification  `up{job="personservice-actuator"}`. This will should yield something along these lines:
+Furthermore you can go to `http://localhost:9090/graph` and issue the following PromQl statement as a verification  `up{job="personservice-actuator"}`. This will should yield something along these lines:
 
 ![Prometheus](images/prometheus2.png)
 
@@ -1352,6 +1323,3 @@ This will require to wire the dashboard to a datasource called `Prometheus`:
 After doing so your dashboard will look as follows:
 
 ![Dashboards](images/grafana4.png)
-
-
-

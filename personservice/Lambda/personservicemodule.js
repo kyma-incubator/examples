@@ -1,7 +1,6 @@
 const axios = require('axios');     //to invoke REST APIs
 const winston = require('winston'); //to support logging
 
-
 var logLevel = process.env.application_log_level // get Log level from environment variable
 
 if (logLevel === undefined) {
@@ -23,7 +22,7 @@ const traceHeaders = ['x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-paren
 module.exports = {
     main: async function (event, context) {
         console.log(`Log level '${logLevel}'`);
-
+        
         var traceCtxHeaders = extractTraceHeaders(event.extensions.request.headers);
 
         var personId = event.data.personid;
@@ -38,7 +37,6 @@ module.exports = {
                 headers: traceCtxHeaders,
                 responseType: 'json'
             });
-
 
             var personMaintained = response.data;
 
@@ -104,7 +102,6 @@ async function updateDuplicatePersonExtension(duplicatePersonsArray, traceCtxHea
 
         logger.log('debug', `Updating Person ${duplicatePersonsArray[counter]}, calling PATCH: ${url}`, { "data": data });
 
-
         var response = await axios.patch(url, data, {
             headers: traceCtxHeaders,
             responseType: 'json'
@@ -113,12 +110,10 @@ async function updateDuplicatePersonExtension(duplicatePersonsArray, traceCtxHea
         logger.log('info', `Person ${response.data.id} successfully updated`);
         logger.log('debug', `Person ${response.data.id} updated, `, { "responseData": response.data });
     }
-
 }
 
 async function findDuplicates(personToSearch, traceCtxHeaders) {
     var url = `${process.env.GATEWAY_URL}/api/v1/person/search`;
-
 
     logger.log('debug', `Calling POST: ${url}`, { "searchRequest": personToSearch });
 
@@ -155,4 +150,3 @@ function extractTraceHeaders(headers) {
     }
     return map;
 }
-
