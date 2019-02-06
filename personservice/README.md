@@ -277,10 +277,10 @@ After Pods are recreated, your new Application shall show up in the Kyma Console
 
 Now you need to pair the person service with the newly deployed application connector gateway instance. 
 
-1. Click on `Connect Application` and open the link in the popup box in another browser tab
+1. Click on `Connect Application` and **open the link in the popup box in another browser tab**
 ![Connect Remote Environment Screenshot](images/applicationpairing.png)
 
-2. Copy the `csrUrl` address
+2. Copy the `csrUrl` address (must contain the /client-certs endpoint)
 ![Connect Remote Environment Response Screenshot](images/remoteenvironmentpairing2.png)
 
 3. Create a Certificate Signing request using OpenSSL (https://www.openssl.org/) a series of commands. Before doing this create a new directory called `security` and then go ahead with OpenSSL in the new dir.
