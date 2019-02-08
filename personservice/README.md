@@ -262,7 +262,7 @@ To create one, you need to issue the following command:
 `kubectl apply -f app-personservice.yaml`
 
 To check whether the pods are up and running issue  
-`kubectl get pod -l app=personservice-gateway -n kyma-integration`  
+`kubectl get pod -n kyma-integration`  
 
 The result should look like this:
 
@@ -302,7 +302,7 @@ Create Key:
 
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. If you are running on locally on Minikube the port of the gateway needs to be determined separately. To do this, issue the following command:
 
-`kubectl -n kyma-system get svc core-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'`
+`kubectl -n kyma-system get svc application-connector-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'`
 
 The use the resulting port in your URL, e.g.: https://gateway.{clusterhost}:{port}/personservicekubernetes/v1/metadata/services
 
