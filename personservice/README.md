@@ -267,8 +267,9 @@ To check whether the pods are up and running issue
 The result should look like this:
 
 ```
-NAME                                     READY     STATUS    RESTARTS   AGE
-personservice-gateway-56ddb944b6-nw6m6   2/2       Running   0          21m
+NAME                                                        READY     STATUS    RESTARTS   AGE
+personservicekubernetes-application-proxy-78447c489d-d55fk   2/2     Running   0          45m
+personservicekubernetes-event-service-7466dc4c8f-2xfxf       2/2     Running   0          45
 ```
 
 After Pods are recreated, your new Application shall show up in the Kyma Console under `Integration -> Applications`
