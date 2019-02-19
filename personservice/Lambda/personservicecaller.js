@@ -15,7 +15,13 @@ app.get("/", async function (req, res) {
             "response":res        
         }
     };
-    await personservice.main(event,{});    
+    try {
+        await personservice.main(event,{});   
+        console.log("done");
+        res.sendStatus(200);
+    } catch (error) {
+        res.sendStatus(500);
+    }
 });
 
 app.listen(3000, function () {

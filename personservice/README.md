@@ -68,7 +68,7 @@ This sample application was created to give you a running end to end sample appl
 This application runs on [Kyma](https://kyma-project.io). Therefore, to try out this example on your local machine you need to [install Kyma](https://kyma-project.io/docs/latest/root/kyma#getting-started-local-kyma-installation) first, or have access to Kyma cluster.  
 
 **![alt text](images/kyma_symbol_text.svg "Logo Title Text 1")  
-This example is tested and based on [Kyma 0.6.1](https://github.com/kyma-project/kyma/releases/tag/0.6.1). Compatibility with other versions is not guaranteed.**
+This example is tested and based on [Kyma 0.7.0](https://github.com/kyma-project/kyma/releases/tag/0.7.0). Compatibility with other versions is not guaranteed.**
 
 ## Deploy the application
 
@@ -85,7 +85,7 @@ Now, once you call `kubectl get namespaces -l=env=true` among other environments
 Issue the following commands to delete default resource constraints and re-create them a little more relaxed:
 
 `kubectl delete -n personservice LimitRange kyma-default`  
-`kubectl delete -n personservice ResourceQuota kyma-default`  
+`kubectl delete -n personservice ResourceQuota gke-resource-quotas`  
 `kubectl apply -f environment-resources.yaml -n personservice`
 
 This was to ensure we don't hit ceilings in terms of memory usage (However, on Minikube/Local installation this might be challenging). For more details read [Configure Default Memory Requests and Limits for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/)
@@ -97,8 +97,9 @@ To deploy Mongodb use Helm (https://helm.sh). To install helm do the following:
 1. Initialize Helm (if not already done, client-only option as kyma already comes with tiller installed):  
 `helm init --client-only`
 
-2. Then deploy Mongo DB:  
-`helm install --name first-mongo --set persistence.size=2Gi stable/mongodb --namespace personservice`
+2. Then deploy Mongo DB: 
+`helm install --name first-mongo --set "podAnnotations.sidecar\.istio\.io/inject='false',persistence.size=2Gi" stable/mongodb --namespace personservice` 
+
 
 ### Java Build
 

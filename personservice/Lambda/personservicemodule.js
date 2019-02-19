@@ -55,10 +55,10 @@ module.exports = {
                 await updateDuplicatePersonExtension(foundPersonArray, traceCtxHeaders);
             }
 
-            event.extensions.response.status(200).json({"status":"OK"}).send();
+            return {"Status": "OK"};
             
         } catch (error) {
-            logAxiosError(error, event.extensions.response);
+            await logAxiosError(error, event.extensions.response);
         }
     }
 }
@@ -84,7 +84,7 @@ async function logAxiosError(error, response) {
         logger.log('error', `Unknown error`, errorDetail);
     }
 
-    response.status(500).json(errorDetail).send();
+    throw {"Status": errorDetail};
 }
 
 async function updateDuplicatePersonExtension(duplicatePersonsArray, traceCtxHeaders) {
