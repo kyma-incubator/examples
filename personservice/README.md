@@ -671,12 +671,11 @@ Now you can update your deployment and restart the pods:
 * Local:
 
 `kubectl apply -f mongo-kubernetes-local3.yaml -n personservice`  
-`kubectl delete pods -n personservice -l app=personservice`
 
 * Cluster:
 
 `kubectl apply -f mongo-kubernetes-cluster3.yaml -n personservice`  
-`kubectl delete pods -n personservice -l app=personservice`
+
 
 ### Test the Service
 
@@ -700,7 +699,7 @@ Kyma (through Istio Authentication Policies) allows to add JWT protection to you
 
 ### Deploy OAuth2 Authorization Server
 
-This example uses the Dummy Authorization Server made available under https://github.com/akrausesap/jwt_issuer. Clone the repository and update the `kubernetes-kyma.yaml` file with your host (marked with `#changeme`): 
+This example uses the Dummy Authorization Server made available under https://github.com/akrausesap/jwt_issuer. Either clone the repository and update the `kubernetes-kyma.yaml` file with your preferred host (marked with `#changeme`) or deploy as is: 
 
 ```
 apiVersion: gateway.kyma-project.io/v1alpha2
@@ -708,15 +707,20 @@ kind: Api
 metadata:
   name: tokenissuer
 spec:
-  hostname: #changeme
+  #changeme
+  hostname: tokenissuer
   service:
     name: tokenissuer
     port: 8080
 
 ```
 
-Then deploy to your cluster:  
+Then deploy to your cluster (custom host):  
 `kubectl apply -f kubernetes-kyma.yaml -n personservice`
+
+Or directly reference the the file from git:
+
+`kubectl apply -n personservice -f https://raw.githubusercontent.com/akrausesap/jwt_issuer/master/kubernetes-kyma.yaml`
 
 After that check whether the pod is running with:  
 `kubectl get pods -n personservice -l app=tokenissuer`
@@ -766,12 +770,10 @@ Now you can update your deployment, the api and restart the pods:
 * Local:
 
 `kubectl apply -f mongo-kubernetes-local4.yaml -n personservice`  
-`kubectl delete pods -n personservice -l app=personservice`
 
 * Cluster:
 
-`kubectl apply -f mongo-kubernetes-cluster4.yaml -n personservice`  
-`kubectl delete pods -n personservice -l app=personservice`
+`kubectl apply -f mongo-kubernetes-cluster4.yaml -n personservice` 
 
 Now you can test the spring application. When calling GET /api/v1/person you should receive the following 401 response:
 
@@ -986,16 +988,53 @@ Kubernetes (which Kyma is based on) is based on the assumption that you as a dev
 ### Preparation
 In order to free-up resources in your cluster, we need to change a couple of things. Basically we need to go back to an older version of our deployment which does not require a redis cache anymore or authentication and authorization. To do that go to your service catalog and first unbind your redis service instance from personservice and then delete the service instance. 
 
-Also delete the OAuth 2 Service from your cluster: `kubectl delete -f kubernetes-kyma.yaml -n personservice`
+Also delete the OAuth 2 Service from your cluster: `kubectl delete -f kubernetes-kyma.yaml -n personservice` or if you used the standard manifest `kubectl delete -n personservice -f https://raw.githubusercontent.com/akrausesap/jwt_issuer/master/kubernetes-kyma.yaml`.
 
 
 The `kubectl get pods -n personservice` should now yield an output comparable to the one below (ignoring whether the personservice is actually running or damaged):
 
 ```
-NAME                                  READY     STATUS    RESTARTS   AGE
-first-mongo-mongodb-b98bd6f8b-7dv5q   1/1       Running   0          7h
-personservice-755f847c9d-x5xks        2/2       Running   0          7h
+NAME                                      READY     STATUS    RESTARTS   AGE
+first-mongo-mongodb-d4575cb7d-jjk2w       1/1       Running   0          1d
+mark-duplicate-persons-84b974f549-8kwn9   2/2       Running   0          9m
+personservice-745849798f-w4f48            2/2       Running   0          32s
 ```
+
+Also ensure that Authentication is disabled on the personservice API. This can be ensured by removing ny traces to:
+
+```
+spec:
+    authentication:
+    - jwt:
+        issuer: https://tokenissuer.cluster.kyma.cx
+        jwksUri: https://tokenissuer.cluster.kyma.cx/jwk
+      type: JWT
+``` 
+
+This can be done either in the UI or using `kubectl edit  API -n personservice personservice` or alternatively the UI.
+
+Also if you updated the registration file ([Security For Lambdas (Not on Minikube)](#security-for-lambdas-not-on-minikube)), these changes need to be reversed. To do so, ensure that `registration/registrationfile.json` again looks like below (Credentials removed):
+
+```
+"api": {
+    "targetUrl": "https://personservice.<kymahost>/",
+    "spec":{swagger is here, but removed for readability}
+}
+```
+
+To update the system, do the following:
+
+
+```
+cd registration
+kubectl delete configmap -n personservice registrationfile
+kubectl create configmap -n personservice registrationfile --from-file=registrationfile.json -n personservice
+kubectl delete pod -n personservice -l app=personservice
+
+```
+
+After that again issue a POST against `/api/v1/applicationconnector/registration`.
+
 
 ### Determining whether your service is alive 
 
@@ -1047,27 +1086,27 @@ In order for the personservice to be self-healing, `mongo-kubernetes-local5.yaml
 * Local:
 
 `kubectl apply -f mongo-kubernetes-local5.yaml -n personservice`  
-`kubectl delete pods -n personservice -l app=personservice`
+
 
 * Cluster:
 
-`kubectl apply -f mongo-kubernetes-cluster5.yaml -n personservice`  
-`kubectl delete pods -n personservice -l app=personservice`
+`kubectl apply -f mongo-kubernetes-cluster5.yaml -n personservice` 
 
 The `kubectl get pods -n personservice` should after some time yield an output comparable to the one below:
 
 ```
-NAME                                  READY     STATUS    RESTARTS   AGE
-first-mongo-mongodb-b98bd6f8b-7dv5q   1/1       Running   0          7h
-personservice-755f847c9d-x5xks        2/2       Running   0          7h
-personservice-755f847c9d-x5z29        2/2       Running   0          7h
+NAME                                      READY     STATUS        RESTARTS   AGE
+first-mongo-mongodb-d4575cb7d-jjk2w       1/1       Running       0          1d
+mark-duplicate-persons-84b974f549-8kwn9   2/2       Running       0          17m
+personservice-7d6657fdc-g4mzs             2/2       Running       0          1m
+personservice-86c54fdc5b-2dt8l            2/2       Running       0          3m
 ```
 
 ### Testing
 
 First of all you should verify that both pods are serving traffic to you. In order to do that, call the `/api/v1/person` endpoint (GET) a couple of times and in the responses check the header `x-serving-host`. It should change frequently and give you back the pod names.
 
-Now we can start breaking the service. To see the results we first of all issue the following command `kubectl get pods -n personservice -w`. It will automaticylla refresh the status of the pods on the commandline.
+Now we can start breaking the service. To see the results we first of all issue the following command `kubectl get pods -n personservice -w`. It will automatically refresh the status of the pods on the commandline.
 
 To make one of the services appear not alive issue a POST Request to `/api/v1/monitoring/health?isUp=false`. This will show the following picture after some time (around 3 minutes):
 
@@ -1192,7 +1231,7 @@ Under View Options we select Trace JSON. This will provide access to the trace I
 
 ![Getting the Log](images/gettingthelog2.png)
 
-For the pod we found we will issue the following kubectl command to print the logs into a text file (replace `<podname>` with the name identified in the trace): `kubectl logs -n personservice -c personservice <podname> > logs.txt`
+For the pod we found we will issue the following kubectl command to print the logs into a text file: `kubectl logs -n personservice -l app=personservice -c personservice > logs.txt`
 
 Based on the trace ID we can now search the logfile and see what happened inside the pod:
 
@@ -1200,7 +1239,7 @@ Based on the trace ID we can now search the logfile and see what happened inside
 
 To make this more simple, Kyma comes with OK Log and Logspout (https://kyma-project.io/docs/latest/components/logging). These tools help to aggregate logs within the cluster. To access OK Log:
 
-1. `kubectl port-forward -n kyma-system svc/core-logging-oklog 7650:7650`
+1. `kubectl port-forward -n kyma-system svc/logging-oklog 7650:7650`
 2. Open `http://localhost:7650/ui` in a browser and paste the extracted Trace ID
 
 Then you will have a ui to search the aggregated logs. 
