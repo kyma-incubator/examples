@@ -106,7 +106,7 @@ spec:
                    configMapKeyRef:
                       name: mongo-kubernetes-config
                       key: mongodb_username
-              - name: personservicekubernetes_applicationconnetor_baseurl
+              - name: personservicekubernetes_applicationconnector_baseurl
                 valueFrom: 
                    configMapKeyRef:
                       name: mongo-kubernetes-config

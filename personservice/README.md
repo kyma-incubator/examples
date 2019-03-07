@@ -363,7 +363,7 @@ Containers:
     ..
     Environment:
       .. 
-      personservicekubernetes_applicationconnetor_baseurl:  <set to the key 'connector_baseurl' of config map 'mongo-kubernetes-config'>        Optional: false
+      personservicekubernetes_applicationconnector_baseurl:  <set to the key 'connector_baseurl' of config map 'mongo-kubernetes-config'>        Optional: false
       spring_profiles_active:                               ApplicationConnector
       ..
     Mounts:
