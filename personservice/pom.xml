@@ -22,7 +22,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 		<project.version>0.0.3</project.version>
-		<jib.version>1.0.0</jib.version>
+		<jib.version>1.0.2</jib.version>
 		<docker.repositoryname>arifcrtsap</docker.repositoryname>
 		<jib.credentialhelper>wincred</jib.credentialhelper>
 		<springfox.version>2.9.2</springfox.version>
@@ -148,6 +148,10 @@
 				<artifactId>jib-maven-plugin</artifactId>
 				<version>${jib.version}</version>
 				<configuration>
+					<!-- JUST DEBUGGING -->
+					<from>
+						<image>openjdk:8-slim</image>
+					</from>
 					<to>
 						<image>registry.hub.docker.com/${docker.repositoryname}/mongokubernetes:${project.version}</image>
 						<credHelper>${jib.credentialhelper}</credHelper>
