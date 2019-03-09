@@ -58,7 +58,7 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 The Node port will be used for making the calls to Kyma.
 
   ```
-  export NODE_PORT=$(kubectl get svc -n kyma-system application-connector-nginx-ingress-controller -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
+  export NODE_PORT=$(kubectl get svc -n kyma-system application-connector-ingress-nginx-ingress-controller -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
   ```
 
 ## Mock External solution
