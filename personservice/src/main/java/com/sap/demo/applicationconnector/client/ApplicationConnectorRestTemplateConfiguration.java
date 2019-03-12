@@ -5,6 +5,9 @@ import java.security.KeyStore;
 
 import javax.net.ssl.SSLContext;
 
+import com.sap.demo.exception.PersonServiceException;
+import com.sap.demo.log.NoLogging;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
@@ -19,16 +22,13 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-import com.sap.demo.exception.PersonServiceException;
-import com.sap.demo.log.NoLogging;
-
 @Profile("ApplicationConnector")
 @Configuration
 public class ApplicationConnectorRestTemplateConfiguration {
 
 	private RestTemplateBuilder restTemplateBuilder;
 
-	@Value("${personservicekubernetes.applicationconnector.keytorepassword}")
+	@Value("${personservicekubernetes.applicationconnector.keystorepassword}")
 	private String keyStorePassword = "set-me";
 
 	@Value("${personservicekubernetes.applicationconnector.baseurl}")
@@ -65,6 +65,7 @@ public class ApplicationConnectorRestTemplateConfiguration {
 					.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client))
 					.errorHandler(new RegistrationServiceRestTemplateResponseErrorHandler()).build();
 		} catch (Exception e) {
+			System.err.println(e.getMessage());
 			throw new PersonServiceException(e.getMessage(), e);
 		}
 	}
