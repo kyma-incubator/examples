@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.sap.demo.applicationconnector.client.RegistrationService;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -43,14 +44,16 @@ public class ApplicationConnectorApi {
 			+ "the Service to the configured Kyma environment")
 	public ResponseEntity<Map<String, String>> connectivityTest(@RequestBody ConnectUrl connectUrl) {
 		if (registrationService.createAndSaveKeyStore(connectUrl.getUrl())) {
-			// return new ResponseEntity<String>(HttpStatus.OK);
-			return new ResponseEntity<Map<String, String>>(
-					Collections.singletonMap("id", registrationService.registerWithKymaInstance()), HttpStatus.OK);
+			String registrationId = registrationService.registerWithKymaInstance();
+			if (StringUtils.isNotBlank(registrationId)) {
+				return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId), HttpStatus.OK);
+			} else {
+				return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId), HttpStatus.valueOf(500));
+			}
 		} else {
 			return new ResponseEntity<Map<String, String>>(
 					Collections.singletonMap("response", "Certificate generation failed. See logs."),
 					HttpStatus.valueOf(500));
-			// return new ResponseEntity<String>(HttpStatus.REQUEST_TIMEOUT);
 		}
 	}
 
