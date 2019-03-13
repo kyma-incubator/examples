@@ -38,7 +38,7 @@ public class ApplicationConnectorApi {
 				Collections.singletonMap("id", registrationService.registerWithKymaInstance()), HttpStatus.OK);
 	}
 
-	@PostMapping("/api/v1/applicationconnector/registration/tests")
+	@PostMapping("/api/v1/applicationconnector/registration/autoregister")
 	@ApiOperation(value = "Register to Kyma Environment", notes = "This Operation registers "
 			+ "the Service to the configured Kyma environment")
 	public ResponseEntity<Map<String, String>> connectivityTest(@RequestBody ConnectUrl connectUrl) {

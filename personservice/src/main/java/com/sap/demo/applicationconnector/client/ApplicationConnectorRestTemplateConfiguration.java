@@ -16,7 +16,6 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -42,7 +41,6 @@ public class ApplicationConnectorRestTemplateConfiguration {
 		this.restTemplateBuilder = restTemplateBuilder;
 	}
 
-	@Bean("ApplicationConnectorRestTemplate")
 	@NoLogging
 	public RestTemplate applicationConnectorRestTemplate() {
 
@@ -55,7 +53,7 @@ public class ApplicationConnectorRestTemplateConfiguration {
 					// Trust all strategy to deal with local Kyma certificate.
 					// Do not use in production!!!
 					.loadTrustMaterial(null, new TrustSelfSignedStrategy())
-					.loadKeyMaterial(clientCertificate, keyStorePassword.toCharArray())// new char[0])
+					.loadKeyMaterial(clientCertificate, keyStorePassword.toCharArray())
 					.build();
 			SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
 

@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.sap.demo.applicationconnector.client.ApplicationConnectorRestTemplateConfiguration;
 import com.sap.demo.event.PersonCreateEvent;
 import com.sap.demo.event.PersonDeleteEvent;
 import com.sap.demo.event.PersonEvent;
@@ -29,9 +30,11 @@ public abstract class AbstractApplicationConnectorEventBridge {
 	private static final String CHANGE_EVENT = "person.changed";
 	private static final String VERSION = "v1";
 	
+	@Autowired
+	private ApplicationConnectorRestTemplateConfiguration configuration;
+	
 	private RestTemplate restTemplate;
 	
-	@Autowired
 	public void setRestTemplate(RestTemplate restTemplate) {
 		this.restTemplate = restTemplate;
 	}
@@ -42,6 +45,7 @@ public abstract class AbstractApplicationConnectorEventBridge {
 		
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
 		
+		this.setRestTemplate(configuration.applicationConnectorRestTemplate());
 		
 		if(event instanceof PersonDeleteEvent) {
 			kymaEvent = new KymaEvent(DELETE_EVENT, VERSION, df.format(new Date()), 
@@ -56,7 +60,6 @@ public abstract class AbstractApplicationConnectorEventBridge {
 					 Collections.singletonMap("personid", 
 							 event.getPersonId()));	
 		}
-		
 		
 		ResponseEntity<String> response =  restTemplate.exchange
 				("/v1/events", HttpMethod.POST, new HttpEntity<KymaEvent>(kymaEvent)
