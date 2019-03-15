@@ -28,7 +28,17 @@ spec:
     app: personservice
     version: "0.0.3"
   type: NodePort
-
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: personservice-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -40,6 +50,7 @@ metadata:
       mf_version: "5"
    name: personservice   
 spec:
+   revisionHistoryLimit: 0
    replicas: 2
    selector:
       matchLabels:
@@ -123,17 +134,15 @@ spec:
               - mountPath: /registration
                 name: registrationfile
                 readOnly: true
-              - mountPath: /security
-                name: kyma-certificate
-                readOnly: true
+              - mountPath: /jks
+                name: jks-persistent
          volumes:
+          - name: jks-persistent
+            persistentVolumeClaim:
+               claimName: personservice-pvc
           - name: registrationfile
             configMap:
               name: registrationfile 
               items:
                - key: registrationfile.json
                  path: registrationfile.json
-          - name: kyma-certificate
-            secret:
-              secretName: kyma-certificate
-                                                          

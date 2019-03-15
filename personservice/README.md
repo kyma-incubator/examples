@@ -304,7 +304,7 @@ Create Key:
 
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. If you are running on locally on Minikube the port of the gateway needs to be determined separately. To do this, issue the following command:
 
-`kubectl -n kyma-system get svc application-connector-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'`
+`kubectl -n kyma-system get svc application-connector-ingress-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'`
 
 The use the resulting port in your URL, e.g.: https://gateway.{clusterhost}:{port}/personservicekubernetes/v1/metadata/services
 
@@ -312,7 +312,7 @@ The use the resulting port in your URL, e.g.: https://gateway.{clusterhost}:{por
 
 To start with we need to deploy the newly created keystore to the cluster. To do so issue the following command in the `security` directory:
 
-`kubectl create secret generic kyma-certificate --from-file=personservicekubernetes.jks -n personservice`
+`kubectl cp .\personservicekubernetes.jks personservice/<name_of_pod>:/jks/personservicekubernetes.jks`
 
 After that you need to create a new config map contains a file with all details needed to register the Person Service at the Kyma Cluster. If you want to know more about this step, refer to https://kyma-project.io/docs/latest/components/application-connector#details-register-a-secured-api. For simplicity all registration information is maintained in file `registration/registrationfile.json`. The contents of this file will be posted against the `/v1/metadata/services` endpoint. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
 

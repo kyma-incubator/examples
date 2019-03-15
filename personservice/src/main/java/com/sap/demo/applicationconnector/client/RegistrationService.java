@@ -148,24 +148,24 @@ public class RegistrationService {
 	}
 
 	public boolean createAndSaveKeyStore(String tokenUrl) {
-		// get csrUrl from response
 		RestTemplate rest = new RestTemplate();
 		ResponseEntity<ConnectServiceRequest> response = rest.getForEntity(tokenUrl, ConnectServiceRequest.class);
 		try {
 			String csrUrl = response.getBody().getCsrUrl();
 			String[] keyCmd = { "openssl", "genrsa", "-out", "/jks/personservicekubernetes.key", "2048"};
 			Process p = Runtime.getRuntime().exec(keyCmd);
-			System.out.println("[Generate RSA key] " + (p.waitFor() == 0 ? "Success" : "Failed" ));
+			logger.trace("[Generate RSA key] " + (p.waitFor() == 0 ? "Success" : "Failed" ));
 			
 			String[] csrCmd = { "openssl", "req", "-new", "-sha256", "-out", "/jks/personservicekubernetes.csr", "-key", "/jks/personservicekubernetes.key", "-subj", "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes" };
 			Process p2 = Runtime.getRuntime().exec(csrCmd);
-			System.out.println("[Create CSR] " + (p2.waitFor() == 0 ? "Success" : "Failed" ));
+			logger.trace("[Create CSR] " + (p2.waitFor() == 0 ? "Success" : "Failed" ));
 
 			byte[] encoded = Files.readAllBytes(Paths.get("/jks/personservicekubernetes.csr"));
 			String encodedCsrContent = new String(Base64.getEncoder().encode(encoded), StandardCharsets.UTF_8);
 
 			Map<String, String> csr = new HashMap<String, String>();
 			csr.put("csr", encodedCsrContent);
+			logger.trace("Calling: " + csrUrl);
 			ResponseEntity<CsrResponse> encodedCertificate = rest.postForEntity(csrUrl, csr, CsrResponse.class);
 
 			byte[] decodedCrt = Base64.getDecoder().decode(encodedCertificate.getBody().getCrt().getBytes());
@@ -176,18 +176,18 @@ public class RegistrationService {
 					"/jks/personservicekubernetes.crt", "-inkey", "/jks/personservicekubernetes.key", "-out",
 					"/jks/personservicekubernetes.p12", "-password", "pass:kyma-project" };
 			Process p3 = Runtime.getRuntime().exec(pkcs12Cmd);
-			System.out.println("[Create P12] " + (p3.waitFor() == 0 ? "Success" : "Failed" ));
+			logger.trace("[Create P12] " + (p3.waitFor() == 0 ? "Success" : "Failed" ));
 
 			String[] jksCmd = { "keytool", "-importkeystore", "-noprompt", "-destkeystore", "/jks/personservicekubernetes.jks",
 					"-srckeystore", "/jks/personservicekubernetes.p12", "-srcstoretype", "pkcs12", "-alias",
 					"personservicekubernetes", "-srcstorepass", "kyma-project", "-storepass", "kyma-project" };
 			Process p4 = Runtime.getRuntime().exec(jksCmd);
-			System.out.println("[Create JKS] " + (p4.waitFor() == 0 ? "Success" : "Failed" ));
+			logger.trace("[Create JKS] " + (p4.waitFor() == 0 ? "Success" : "Failed" ));
 
 			// successfully created jks
 			return true;
 		} catch (Exception e) {
-			System.err.println("Error " + e.getMessage());
+			logger.error("Error " + e.getMessage());
 			e.printStackTrace();
 		}
 
