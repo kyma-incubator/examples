@@ -47,7 +47,7 @@ public class RegistrationService {
 
 	private ServiceRegistrationRepository serviceRegistrationRepository;
 	private RestTemplate restTemplate;
-	
+
 	@Autowired
 	private ApplicationConnectorRestTemplateConfiguration configuration;
 
@@ -82,7 +82,7 @@ public class RegistrationService {
 		this.setRestTemplate(configuration.applicationConnectorRestTemplate());
 
 		logger.trace(String.format("Has persisted registration: %b", serviceRegistrations.hasNext()));
-		
+
 		if (serviceRegistrations.hasNext()) {
 			registrationId = serviceRegistrations.next().getServiceId();
 
@@ -147,57 +147,9 @@ public class RegistrationService {
 		return kymaRegistrations.getBody();
 	}
 
-	public boolean createAndSaveKeyStore(String tokenUrl) {
-		RestTemplate rest = new RestTemplate();
-		ResponseEntity<ConnectServiceRequest> response = rest.getForEntity(tokenUrl, ConnectServiceRequest.class);
-		try {
-			String csrUrl = response.getBody().getCsrUrl();
-			String[] keyCmd = { "openssl", "genrsa", "-out", "/jks/personservicekubernetes.key", "2048"};
-			Process p = Runtime.getRuntime().exec(keyCmd);
-			logger.trace("[Generate RSA key] " + (p.waitFor() == 0 ? "Success" : "Failed" ));
-			
-			String[] csrCmd = { "openssl", "req", "-new", "-sha256", "-out", "/jks/personservicekubernetes.csr", "-key", "/jks/personservicekubernetes.key", "-subj", "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes" };
-			Process p2 = Runtime.getRuntime().exec(csrCmd);
-			logger.trace("[Create CSR] " + (p2.waitFor() == 0 ? "Success" : "Failed" ));
-
-			byte[] encoded = Files.readAllBytes(Paths.get("/jks/personservicekubernetes.csr"));
-			String encodedCsrContent = new String(Base64.getEncoder().encode(encoded), StandardCharsets.UTF_8);
-
-			Map<String, String> csr = new HashMap<String, String>();
-			csr.put("csr", encodedCsrContent);
-			logger.trace("Calling: " + csrUrl);
-			ResponseEntity<CsrResponse> encodedCertificate = rest.postForEntity(csrUrl, csr, CsrResponse.class);
-
-			byte[] decodedCrt = Base64.getDecoder().decode(encodedCertificate.getBody().getCrt().getBytes());
-
-			Files.write(Paths.get("/jks/personservicekubernetes.crt"), decodedCrt);
-
-			String[] pkcs12Cmd = { "openssl", "pkcs12", "-export", "-name", "personservicekubernetes", "-in",
-					"/jks/personservicekubernetes.crt", "-inkey", "/jks/personservicekubernetes.key", "-out",
-					"/jks/personservicekubernetes.p12", "-password", "pass:kyma-project" };
-			Process p3 = Runtime.getRuntime().exec(pkcs12Cmd);
-			logger.trace("[Create P12] " + (p3.waitFor() == 0 ? "Success" : "Failed" ));
-
-			String[] jksCmd = { "keytool", "-importkeystore", "-noprompt", "-destkeystore", "/jks/personservicekubernetes.jks",
-					"-srckeystore", "/jks/personservicekubernetes.p12", "-srcstoretype", "pkcs12", "-alias",
-					"personservicekubernetes", "-srcstorepass", "kyma-project", "-storepass", "kyma-project" };
-			Process p4 = Runtime.getRuntime().exec(jksCmd);
-			logger.trace("[Create JKS] " + (p4.waitFor() == 0 ? "Success" : "Failed" ));
-
-			// successfully created jks
-			return true;
-		} catch (Exception e) {
-			logger.error("Error " + e.getMessage());
-			e.printStackTrace();
-		}
-
-		return false;
-	}
-
 	// Model for Registration Response
 	@Data
 	public static class RegistrationResponseModel {
-
 		private String id;
 	}
 
@@ -210,21 +162,4 @@ public class RegistrationService {
 		private String description;
 	}
 
-	@Data
-	public static class ConnectServiceRequest {
-		private String csrUrl;
-		private Map<String, Object> api = new HashMap<String, Object>();
-		private Map<String, Object> certificate = new HashMap<String, Object>();
-
-		public String getCsrUrl() {
-			return this.csrUrl;
-		}
-	}
-
-	@Data
-	public static class CsrResponse {
-		private String crt;
-		private String clientCrt;
-		private String caCrt;
-	}
 }

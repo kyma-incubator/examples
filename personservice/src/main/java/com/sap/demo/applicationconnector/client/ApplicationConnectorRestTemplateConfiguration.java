@@ -55,6 +55,7 @@ public class ApplicationConnectorRestTemplateConfiguration {
 					.loadTrustMaterial(null, new TrustSelfSignedStrategy())
 					.loadKeyMaterial(clientCertificate, keyStorePassword.toCharArray())
 					.build();
+					
 			SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
 
 			HttpClient client = HttpClients.custom().setSSLSocketFactory(socketFactory).build();

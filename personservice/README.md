@@ -18,7 +18,8 @@
   - [Connect your Service to Kyma as Extension Platform](#connect-your-service-to-kyma-as-extension-platform)
     - [About](#about)
     - [Create new Application Connector Instance on Kyma](#create-new-application-connector-instance-on-kyma)
-    - [Pair Person Service with Kyma Application Connector](#pair-person-service-with-kyma-application-connector)
+    - [Pair Person Service with Kyma Application Connector (automatically)](#pair-person-service-with-kyma-application-connector-automatically)
+    - [Pair Person Service with Kyma Application Connector (manually)](#pair-person-service-with-kyma-application-connector-manually)
     - [Reconfigure Person Service](#reconfigure-person-service)
     - [Checks](#checks-1)
     - [Run the Scenario](#run-the-scenario)
@@ -68,7 +69,7 @@ This sample application was created to give you a running end to end sample appl
 This application runs on [Kyma](https://kyma-project.io). Therefore, to try out this example on your local machine you need to [install Kyma](https://kyma-project.io/docs/latest/root/kyma#getting-started-local-kyma-installation) first, or have access to Kyma cluster.  
 
 **![alt text](images/kyma_symbol_text.svg "Logo Title Text 1")  
-This example is tested and based on [Kyma 0.7.0](https://github.com/kyma-project/kyma/releases/tag/0.7.0). Compatibility with other versions is not guaranteed.**
+This example is tested and based on [Kyma 0.8.0](https://github.com/kyma-project/kyma/releases/tag/0.8.0). Compatibility with other versions is not guaranteed.**
 
 ## Deploy the application
 
@@ -275,7 +276,15 @@ personservicekubernetes-event-service-7466dc4c8f-2xfxf       2/2     Running   0
 
 After Pods are recreated, your new Application shall show up in the Kyma Console under `Integration -> Applications`
 
-### Pair Person Service with Kyma Application Connector
+### Pair Person Service with Kyma Application Connector (automatically)
+
+Alternatively to the presented flow you can just use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL from Kyma into the JSON. The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
+
+![Insert connect URL in POST body](images/applicationpairing_auto.png)
+
+The request should succeed with a status code 200 and an ID in the response body.
+
+### Pair Person Service with Kyma Application Connector (manually)
 
 Now you need to pair the person service with the newly deployed application connector gateway instance. 
 
@@ -288,21 +297,25 @@ Now you need to pair the person service with the newly deployed application conn
 3. Create a Certificate Signing request using OpenSSL (https://www.openssl.org/) a series of commands. Before doing this create a new directory called `security` and then go ahead with OpenSSL in the new dir.
 Create Key: 
 
-`openssl genrsa -out personservicekubernetes.key 2048`  
-`openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekubernetes.key -subj "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes"`  
+```
+openssl genrsa -out personservicekubernetes.key 2048
+openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekubernetes.key -subj "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes"
+```
 
 1. Encode the content of `personservicekubernetes.csr` (Base64) and use the REST client of your choice to create the following POST call to the full URL (csrUrl) with the token you copied previously:
 ![Connect Remote Environment CSR Screenshot](images/remoteenvironmentpairing3.png)
-5. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`. The decoded response will contain separators with `BEGIN CERTIFICATE` and `END CERTIFICATE` respectively.
-6. Now you can use OpenSSL and java keytool (part of the jdk) to create a PKCS#12 (P12, also good for browser based testing) file and based on that create a Java Key Store (JKS, for the Person Service) for our service. **Do not change any passwords, except if you really know what you are doing!!!**
+2. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`. The decoded response will contain separators with `BEGIN CERTIFICATE` and `END CERTIFICATE` respectively.
+3. Now you can use OpenSSL and java keytool (part of the jdk) to create a PKCS#12 (P12, also good for browser based testing) file and based on that create a Java Key Store (JKS, for the Person Service) for our service. **Do not change any passwords, except if you really know what you are doing!!!**
    ```
    openssl pkcs12 -export -name personservicekubernetes -in personservicekubernetes.crt -inkey personservicekubernetes.key -out personservicekubernetes.p12 -password pass:kyma-project
    keytool -importkeystore -destkeystore personservicekubernetes.jks -srckeystore personservicekubernetes.p12 -srcstoretype pkcs12 -alias personservicekubernetes  -srcstorepass kyma-project -storepass kyma-project
    ```
-7. Now copy the resulting `personservicekubernetes.jks` file to `security` directory. 
+4. Now copy the resulting `personservicekubernetes.jks` file to `security` directory.
+5. To save the JKS persistently in the persistent volume of the Person Service you can issue the following command from your `security` directory:   
+   `kubectl cp personservicekubernetes.jks personservice/<POD_ID>:/jks/personservicekubernetes.jks`
+6. Use the POST `/applicationconnector/registration/manual` endpoint to register the application now.
 
-
-To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. If you are running on locally on Minikube the port of the gateway needs to be determined separately. To do this, issue the following command:
+To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. **If you are running on locally on Minikube** the port of the gateway needs to be determined separately. To do this, issue the following command:
 
 `kubectl -n kyma-system get svc application-connector-ingress-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'`
 
@@ -983,7 +996,7 @@ Through that you have seen how Kyma and your application complement each other w
 ## Operate your Service: Make it Self-Healing
 
 ### Intro 
-Kubernetes (which Kyma is based on) is based on the assumption that you as a developer declare a target state and kubernetes manages the way to get there. This means that e.g. you specify that your deployment should consist of 2 instances of personservice and kubernetes will ensure that there are always (if resources permit) 2 instances running. Sometimes however we need to get more granular as your service might appear running but is actually hanging and hence damaged, or it is simply to busy to serve traffic. his is where the Self-Healing which we are enabling in this section kicks in.
+Kubernetes (which Kyma is based on) is based on the assumption that you as a developer declare a target state and kubernetes manages the way to get there. This means that e.g. you specify that your deployment should consist of 2 instances of personservice and kubernetes will ensure that there are always (if resources permit) 2 instances running. Sometimes however we need to get more granular as your service might appear running but is actually hanging and hence damaged, or it is simply to busy to serve traffic. This is where the Self-Healing which we are enabling in this section kicks in.
 
 ### Preparation
 In order to free-up resources in your cluster, we need to change a couple of things. Basically we need to go back to an older version of our deployment which does not require a redis cache anymore or authentication and authorization. To do that go to your service catalog and first unbind your redis service instance from personservice and then delete the service instance. 
