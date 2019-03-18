@@ -30,15 +30,6 @@ public class ApplicationConnectorApi {
 	@Autowired
 	private RegistrationService registrationService;
 
-	// @PostMapping("/api/v1/applicationconnector/registration")
-	// @ApiOperation(value = "Register to Kyma Environment", notes = "This Operation registers "
-	// 		+ "the Service to the configured Kyma environment")
-	// public ResponseEntity<Map<String, String>> serviceRegistration() {
-
-	// 	return new ResponseEntity<Map<String, String>>(
-	// 			Collections.singletonMap("id", registrationService.registerWithKymaInstance()), HttpStatus.OK);
-	// }
-
 	@PostMapping("/api/v1/applicationconnector/registration")
 	@ApiOperation(value = "Register to Kyma Environment", notes = "This Operation registers "
 			+ "the Service to the configured Kyma environment")
