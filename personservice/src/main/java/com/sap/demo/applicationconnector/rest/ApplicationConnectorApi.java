@@ -1,12 +1,17 @@
 package com.sap.demo.applicationconnector.rest;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.sap.demo.applicationconnector.client.RegistrationService;
+import com.sap.demo.applicationconnector.pairing.PairingService;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -27,14 +32,19 @@ import lombok.Data;
 @RestController
 public class ApplicationConnectorApi {
 
+	Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	@Autowired
 	private RegistrationService registrationService;
+
+	@Autowired
+	private PairingService pairingService;
 
 	@PostMapping("/api/v1/applicationconnector/registration")
 	@ApiOperation(value = "Register to Kyma Environment", notes = "This Operation registers "
 			+ "the Service to the configured Kyma environment")
 	public ResponseEntity<Map<String, String>> connectivityTest(@RequestBody ConnectUrl connectUrl) {
-		if (registrationService.createAndSaveKeyStore(connectUrl.getUrl())) {
+		if (pairingService.executeInitialPairing(connectUrl)) {
 			String registrationId = registrationService.registerWithKymaInstance();
 			if (StringUtils.isNotBlank(registrationId)) {
 				return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId), HttpStatus.OK);

@@ -18,8 +18,8 @@
   - [Connect your Service to Kyma as Extension Platform](#connect-your-service-to-kyma-as-extension-platform)
     - [About](#about)
     - [Create new Application Connector Instance on Kyma](#create-new-application-connector-instance-on-kyma)
-    - [Pair Person Service with Kyma Application Connector (manually)](#pair-person-service-with-kyma-application-connector-manually)
     - [Pair Person Service with Kyma Application Connector (automatically)](#pair-person-service-with-kyma-application-connector-automatically)
+    - [Pair Person Service with Kyma Application Connector (manually)](#pair-person-service-with-kyma-application-connector-manually)
     - [Reconfigure Person Service](#reconfigure-person-service)
     - [Checks](#checks-1)
     - [Run the Scenario](#run-the-scenario)
@@ -276,6 +276,14 @@ personservicekubernetes-event-service-7466dc4c8f-2xfxf       2/2     Running   0
 
 After Pods are recreated, your new Application shall show up in the Kyma Console under `Integration -> Applications`
 
+### Pair Person Service with Kyma Application Connector (automatically)
+
+Alternatively to the presented flow you can just use the POST /applicationconnector/registration endpoint of the personservice where you insert the URL from Kyma into the JSON. The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
+
+![Insert connect URL in POST body](images/applicationpairing_alternative.png)
+
+The request should succeed with a status code 200 and an ID in the response body.
+
 ### Pair Person Service with Kyma Application Connector (manually)
 
 Now you need to pair the person service with the newly deployed application connector gateway instance. 
@@ -305,14 +313,6 @@ openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekube
 7. Now copy the resulting `personservicekubernetes.jks` file to `security` directory.
 8. To save the JKS persistently in the persistent volume of the Person Service you can issue the following command from your `security` directory:   
    `kubectl cp personservicekubernetes.jks personservice/<POD_ID>:/jks/personservicekubernetes.jks`
-
-### Pair Person Service with Kyma Application Connector (automatically)
-
-Alternatively to the presented flow you can just use the POST /applicationconnector/registration endpoint of the personservice where you insert the URL from Kyma into the JSON. The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
-
-![Insert connect URL in POST body](images/applicationpairing_alternative.png)
-
-The request should succeed with a status code 200 and an ID in the response body.
 
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. **If you are running on locally on Minikube** the port of the gateway needs to be determined separately. To do this, issue the following command:
 

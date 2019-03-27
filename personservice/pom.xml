@@ -88,26 +88,20 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.springframework.security.oauth</groupId>
 			<artifactId>spring-security-oauth2</artifactId>
 			<version>${oauth.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-jwt</artifactId>
 			<version>${jwt.version}</version>
 		</dependency>
-		
-		
-		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger2</artifactId>
@@ -118,8 +112,16 @@
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>${springfox.version}</version>
 		</dependency>
-		
-		
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>1.61</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpkix-jdk15on</artifactId>
+			<version>1.61</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
@@ -148,10 +150,10 @@
 				<artifactId>jib-maven-plugin</artifactId>
 				<version>${jib.version}</version>
 				<configuration>
-					<!-- JUST DEBUGGING -->
-					<from>
+					<!-- just for debugging the pvc -->
+					<!-- <from>
 						<image>openjdk:8-slim</image>
-					</from>
+					</from> -->
 					<to>
 						<image>registry.hub.docker.com/${docker.repositoryname}/mongokubernetes:${project.version}</image>
 						<credHelper>${jib.credentialhelper}</credHelper>
