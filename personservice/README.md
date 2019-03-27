@@ -280,7 +280,7 @@ After Pods are recreated, your new Application shall show up in the Kyma Console
 
 Alternatively to the presented flow you can just use the POST /applicationconnector/registration endpoint of the personservice where you insert the URL from Kyma into the JSON. The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
 
-![Insert connect URL in POST body](images/applicationpairing_alternative.png)
+![Insert connect URL in POST body](images/applicationpairing_auto.png)
 
 The request should succeed with a status code 200 and an ID in the response body.
 
