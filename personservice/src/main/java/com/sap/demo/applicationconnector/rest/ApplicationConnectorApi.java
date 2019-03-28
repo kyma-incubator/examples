@@ -1,7 +1,5 @@
 package com.sap.demo.applicationconnector.rest;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -18,11 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.ApiOperation;
@@ -40,10 +35,11 @@ public class ApplicationConnectorApi {
 	@Autowired
 	private PairingService pairingService;
 
-	@PostMapping("/api/v1/applicationconnector/registration")
+	@PostMapping("/api/v1/applicationconnector/registration/automatic")
 	@ApiOperation(value = "Register to Kyma Environment", notes = "This Operation registers "
 			+ "the Service to the configured Kyma environment")
 	public ResponseEntity<Map<String, String>> connectivityTest(@RequestBody ConnectUrl connectUrl) {
+
 		if (pairingService.executeInitialPairing(connectUrl)) {
 			String registrationId = registrationService.registerWithKymaInstance();
 			if (StringUtils.isNotBlank(registrationId)) {
@@ -55,6 +51,19 @@ public class ApplicationConnectorApi {
 			return new ResponseEntity<Map<String, String>>(
 					Collections.singletonMap("response", "Certificate generation failed. See logs."),
 					HttpStatus.valueOf(500));
+		}
+	}
+
+	@PostMapping("/api/v1/applicationconnector/registration/manual")
+	@ApiOperation(value = "Register to Kyma Environment", notes = "This Operation registers "
+			+ "the Service to the configured Kyma environment")
+	public ResponseEntity<Map<String, String>> connectivityTest() {
+
+		String registrationId = registrationService.registerWithKymaInstance();
+		if (StringUtils.isNotBlank(registrationId)) {
+			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId), HttpStatus.valueOf(500));
 		}
 	}
 

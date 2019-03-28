@@ -1,4 +1,4 @@
-package com.sap.demo.applicationconnector.client;
+package com.sap.demo.applicationconnector.pairing;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClients;

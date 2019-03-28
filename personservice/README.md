@@ -278,7 +278,7 @@ After Pods are recreated, your new Application shall show up in the Kyma Console
 
 ### Pair Person Service with Kyma Application Connector (automatically)
 
-Alternatively to the presented flow you can just use the POST /applicationconnector/registration endpoint of the personservice where you insert the URL from Kyma into the JSON. The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
+Alternatively to the presented flow you can just use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL from Kyma into the JSON. The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
 
 ![Insert connect URL in POST body](images/applicationpairing_auto.png)
 
@@ -304,15 +304,16 @@ openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekube
 
 1. Encode the content of `personservicekubernetes.csr` (Base64) and use the REST client of your choice to create the following POST call to the full URL (csrUrl) with the token you copied previously:
 ![Connect Remote Environment CSR Screenshot](images/remoteenvironmentpairing3.png)
-5. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`. The decoded response will contain separators with `BEGIN CERTIFICATE` and `END CERTIFICATE` respectively.
-6. Now you can use OpenSSL and java keytool (part of the jdk) to create a PKCS#12 (P12, also good for browser based testing) file and based on that create a Java Key Store (JKS, for the Person Service) for our service. **Do not change any passwords, except if you really know what you are doing!!!**
+2. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`. The decoded response will contain separators with `BEGIN CERTIFICATE` and `END CERTIFICATE` respectively.
+3. Now you can use OpenSSL and java keytool (part of the jdk) to create a PKCS#12 (P12, also good for browser based testing) file and based on that create a Java Key Store (JKS, for the Person Service) for our service. **Do not change any passwords, except if you really know what you are doing!!!**
    ```
    openssl pkcs12 -export -name personservicekubernetes -in personservicekubernetes.crt -inkey personservicekubernetes.key -out personservicekubernetes.p12 -password pass:kyma-project
    keytool -importkeystore -destkeystore personservicekubernetes.jks -srckeystore personservicekubernetes.p12 -srcstoretype pkcs12 -alias personservicekubernetes  -srcstorepass kyma-project -storepass kyma-project
    ```
-7. Now copy the resulting `personservicekubernetes.jks` file to `security` directory.
-8. To save the JKS persistently in the persistent volume of the Person Service you can issue the following command from your `security` directory:   
+4. Now copy the resulting `personservicekubernetes.jks` file to `security` directory.
+5. To save the JKS persistently in the persistent volume of the Person Service you can issue the following command from your `security` directory:   
    `kubectl cp personservicekubernetes.jks personservice/<POD_ID>:/jks/personservicekubernetes.jks`
+6. Use the POST `/applicationconnector/registration/manual` endpoint to register the application now.
 
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. **If you are running on locally on Minikube** the port of the gateway needs to be determined separately. To do this, issue the following command:
 

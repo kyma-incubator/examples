@@ -9,6 +9,7 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -59,8 +60,6 @@ public class PairingService {
 
     private CertificateService certService;
 
-    private RestTemplateBuilder restTemplateBuilder;
-
     @Value("${personservicekubernetes.applicationconnector.keystorepassword}")
     private char[] keystorePassword;
 
@@ -75,7 +74,6 @@ public class PairingService {
      */
     @Autowired
     public void setClientCertRestTemplateBuilder(RestTemplateBuilder restTemplateBuilder) {
-        this.restTemplateBuilder = restTemplateBuilder;
     }
 
     /**
@@ -158,7 +156,6 @@ public class PairingService {
             ks.store(out, keystorePassword);
             out.flush();
             out.close();
-            logger.trace("Babe, bin fertig!");
             
             return ks;
 
@@ -246,11 +243,17 @@ public class PairingService {
             KeyStore keyStore = getCertificateInternal(pairingTemplate, keystorePassword, connectInfo.getCsrUrl(),
             csr.getCsr(), csr.getKeypair());
             
-            if (keyStore != null) {
+            if (keyStore.getKey("extension-factory-key", keystorePassword) != null) {
                 return true;
             }
             
         } catch (URISyntaxException e) {
+            throw new ApplicationConnectorException(e.getMessage(), e);
+        } catch (KeyStoreException e) {
+            throw new ApplicationConnectorException(e.getMessage(), e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new ApplicationConnectorException(e.getMessage(), e);
+        } catch (UnrecoverableKeyException e) {
             throw new ApplicationConnectorException(e.getMessage(), e);
         }
 

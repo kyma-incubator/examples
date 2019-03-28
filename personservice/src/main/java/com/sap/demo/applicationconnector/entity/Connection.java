@@ -1,6 +1,5 @@
 package com.sap.demo.applicationconnector.entity;
 
-
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
