@@ -1,4 +1,4 @@
-package com.sap.demo.applicationconnector.util;
+package com.sap.demo.applicationconnector.client;
 
 import java.io.IOException;
 import java.security.KeyPair;

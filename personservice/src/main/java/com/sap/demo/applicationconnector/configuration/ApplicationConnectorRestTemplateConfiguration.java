@@ -1,10 +1,11 @@
-package com.sap.demo.applicationconnector.client;
+package com.sap.demo.applicationconnector.configuration;
 
 import java.io.FileInputStream;
 import java.security.KeyStore;
 
 import javax.net.ssl.SSLContext;
 
+import com.sap.demo.applicationconnector.RegistrationServiceRestTemplateResponseErrorHandler;
 import com.sap.demo.exception.PersonServiceException;
 import com.sap.demo.log.NoLogging;
 

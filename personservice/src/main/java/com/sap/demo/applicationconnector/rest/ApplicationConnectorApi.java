@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.sap.demo.applicationconnector.client.PairingService;
 import com.sap.demo.applicationconnector.client.RegistrationService;
-import com.sap.demo.applicationconnector.pairing.PairingService;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -13,14 +13,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.Data;
 
 @Profile("ApplicationConnector")
@@ -36,8 +40,8 @@ public class ApplicationConnectorApi {
 	private PairingService pairingService;
 
 	@PostMapping("/api/v1/applicationconnector/registration/automatic")
-	@ApiOperation(value = "Register to Kyma Environment", notes = "This Operation registers "
-			+ "the Service to the configured Kyma environment")
+	@ApiOperation(value = "Register to Kyma Environment automatically", notes = "This Operation registers "
+			+ "the Service to the configured Kyma environment automatically")
 	public ResponseEntity<Map<String, String>> connectivityTest(@RequestBody ConnectUrl connectUrl) {
 
 		if (pairingService.executeInitialPairing(connectUrl)) {
@@ -55,9 +59,10 @@ public class ApplicationConnectorApi {
 	}
 
 	@PostMapping("/api/v1/applicationconnector/registration/manual")
-	@ApiOperation(value = "Register to Kyma Environment", notes = "This Operation registers "
-			+ "the Service to the configured Kyma environment")
-	public ResponseEntity<Map<String, String>> connectivityTest() {
+	@ApiOperation(value = "Register to Kyma Environment manually", notes = "This Operation registers "
+			+ "the Service to the configured Kyma environment using on the JKS that was created manually", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<Map<String, String>> connectivityTest(@ApiParam(name = "jksFile", value = "Upload the generated JKS file", required = true)
+	@RequestPart("jksFile") MultipartFile jksFile) {
 
 		String registrationId = registrationService.registerWithKymaInstance();
 		if (StringUtils.isNotBlank(registrationId)) {

@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
+import com.sap.demo.applicationconnector.configuration.ApplicationConnectorRestTemplateConfiguration;
 import com.sap.demo.applicationconnector.entity.ServiceRegistration;
 import com.sap.demo.applicationconnector.repository.ServiceRegistrationRepository;
 import com.sap.demo.exception.PersonServiceException;

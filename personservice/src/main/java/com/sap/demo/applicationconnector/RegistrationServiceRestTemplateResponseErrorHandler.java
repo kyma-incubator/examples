@@ -1,4 +1,4 @@
-package com.sap.demo.applicationconnector.client;
+package com.sap.demo.applicationconnector;
 
 import java.io.IOException;
 

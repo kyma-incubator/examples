@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sap.demo.applicationconnector.client.ApplicationConnectorRestTemplateConfiguration;
+import com.sap.demo.applicationconnector.configuration.ApplicationConnectorRestTemplateConfiguration;
 import com.sap.demo.event.PersonCreateEvent;
 import com.sap.demo.event.PersonDeleteEvent;
 import com.sap.demo.event.PersonEvent;
