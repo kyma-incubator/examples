@@ -9,45 +9,42 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-
 /**
-* Spring Configurations relevant for the "pairing step"
-* 
-* @author Andreas Krause
-* @see RestTemplate
-* @see RestTemplateBuilder
-* @see HttpClient
-*/
+ * Spring Configurations relevant for the "pairing step"
+ * 
+ * @author Andreas Krause
+ * @see RestTemplate
+ * @see RestTemplateBuilder
+ * @see HttpClient
+ */
 @Configuration
 public class PairingServiceConfiguration {
-	
+
 	private RestTemplateBuilder restTemplateBuilder;
-	
+
 	/**
 	 * Sets the {@link RestTemplateBuilder} to be used by this object
 	 * 
-	 * @param restTemplateBuilder {@link RestTemplateBuilder} to be used by this Object 
+	 * @param restTemplateBuilder {@link RestTemplateBuilder} to be used by this
+	 *                            Object
 	 */
 	@Autowired
 	public void setRestTemplateBuilder(RestTemplateBuilder restTemplateBuilder) {
 		this.restTemplateBuilder = restTemplateBuilder;
 	}
-	
+
 	/**
-	 * Creates the {@link RestTemplate} Bean with default {@link HttpClient} for consistency
+	 * Creates the {@link RestTemplate} Bean with default {@link HttpClient} for
+	 * consistency
 	 * 
 	 * @return generic {@link RestTemplate} based on {@link HttpClient}
 	 */
 	@Bean("PairingTemplate")
 	public RestTemplate pairingRestTemplate() {
-		
+
 		HttpClient client = HttpClients.createDefault();
-		return restTemplateBuilder
-				.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client))
-				.build();
-		
+		return restTemplateBuilder.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client)).build();
+
 	}
-	
-	
 
 }

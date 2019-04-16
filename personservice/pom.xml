@@ -150,10 +150,6 @@
 				<artifactId>jib-maven-plugin</artifactId>
 				<version>${jib.version}</version>
 				<configuration>
-					<!-- just for debugging the pvc -->
-					<!-- <from>
-						<image>openjdk:8-slim</image>
-					</from> -->
 					<to>
 						<image>registry.hub.docker.com/${docker.repositoryname}/mongokubernetes:${project.version}</image>
 						<credHelper>${jib.credentialhelper}</credHelper>

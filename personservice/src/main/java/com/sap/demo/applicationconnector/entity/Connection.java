@@ -1,5 +1,7 @@
 package com.sap.demo.applicationconnector.entity;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -10,9 +12,12 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import com.sap.demo.applicationconnector.exception.ApplicationConnectorException;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import lombok.Data;
 
 
@@ -24,6 +29,7 @@ import lombok.Data;
  * @author Andreas Krause
  */
 @Data
+@Document
 public class Connection {
 	
 	private String applicationName;
@@ -34,8 +40,10 @@ public class Connection {
 	
 	private String certificateSubject;
 	private String certificateAlgorithm;
-	
-	
+
+	// Instead of persisting the KeyStore object, the byte[] of it is stored
+	private byte[] sslKeyStream;
+	@Transient
 	private KeyStore sslKey;
 	private char[] keystorePass;
 	private List<URI> eventsURLs = new ArrayList<URI>();
@@ -84,10 +92,36 @@ public class Connection {
 				return null;
 			}
 			
-			
 		} catch (KeyStoreException e) {
 			throw new ApplicationConnectorException(e.getMessage(), e);
 		} catch (CertificateEncodingException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		}
+	}
+
+	public KeyStore getSslKey(){
+		try {
+			this.sslKey = KeyStore.getInstance("JKS");
+			System.out.println(this.sslKeyStream);
+			this.sslKey.load(new ByteArrayInputStream(this.sslKeyStream), this.keystorePass);
+			System.out.println("SSLKey available?: " + this.sslKey.getType());
+			
+			return sslKey;
+		} catch (Exception e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		}
+	}
+
+	public void setSslKey(KeyStore keystore){
+		try {
+			this.sslKey = keystore;
+
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			keystore.store(output, this.keystorePass);
+
+			this.sslKeyStream = output.toByteArray();
+			System.out.println("SSLKeyStream is set: " + new String(this.sslKeyStream));
+		} catch (Exception e) {
 			throw new ApplicationConnectorException(e.getMessage(), e);
 		}
 	}

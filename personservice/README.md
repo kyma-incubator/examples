@@ -278,15 +278,15 @@ After Pods are recreated, your new Application shall show up in the Kyma Console
 
 ### Pair Person Service with Kyma Application Connector (automatically)
 
-Alternatively to the presented flow you can just use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL from Kyma into the JSON. The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
+To pair the Person Service with Kyma we will present two approaches. This section describes the "automatic" approach where the application takes care of the requests and certificates. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma "Connect URL" button into the JSON (see manual process step 1). The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
 
 ![Insert connect URL in POST body](images/applicationpairing_auto.png)
 
-The request should succeed with a status code 200 and an ID in the response body.
+The request should succeed with a status code 200 and an ID in the response body. You can now see the registered Person Service in the Kyma Application.
 
 ### Pair Person Service with Kyma Application Connector (manually)
 
-Now you need to pair the person service with the newly deployed application connector gateway instance. 
+An alternative approach is to manually issue the necessary requests and handle the certificates. This will allow you to fully understand the steps of how applications register to Kyma. At the end of this section we will manually upload the JKS to the pod and trigger the registration.
 
 1. Click on `Connect Application` and **open the link in the popup box in another browser tab**
 ![Connect Remote Environment Screenshot](images/applicationpairing.png)

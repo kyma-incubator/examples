@@ -39,7 +39,7 @@ public class CertificateService {
 		try {
 			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(2048, new SecureRandom());
-			
+
 			return keyGen.generateKeyPair();
 		} catch (NoSuchAlgorithmException e) {
 			throw new ApplicationConnectorException(String.format("Error generating Keypair: %s", e.getMessage()), e);
@@ -87,10 +87,7 @@ public class CertificateService {
 	@Data
 	@AllArgsConstructor
 	public static class CsrResult {
-
 		private KeyPair keypair;
 		private byte[] csr;
-
 	}
-
 }
