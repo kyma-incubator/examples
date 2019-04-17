@@ -128,6 +128,8 @@ public class RegistrationService {
 
 	public void deleteRegistrations() {
 		serviceRegistrationRepository.deleteAll();
+
+		this.setRestTemplate(restTemplateBuilder.applicationConnectorRestTemplate());
 		ParameterizedTypeReference<List<RegistrationQueryResponse>> responseType = new ParameterizedTypeReference<List<RegistrationQueryResponse>>() {
 		};
 		ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate
@@ -149,7 +151,7 @@ public class RegistrationService {
 		ParameterizedTypeReference<List<RegistrationQueryResponse>> responseType = new ParameterizedTypeReference<List<RegistrationQueryResponse>>() {
 		};
 
-		// this.setRestTemplate(configuration.applicationConnectorRestTemplate());
+		this.setRestTemplate(restTemplateBuilder.applicationConnectorRestTemplate());
 
 		ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate
 				.exchange("/v1/metadata/services", HttpMethod.GET, null, responseType);

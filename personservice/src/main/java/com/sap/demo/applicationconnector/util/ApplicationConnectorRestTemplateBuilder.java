@@ -87,19 +87,16 @@ public class ApplicationConnectorRestTemplateBuilder {
 
 	public RestTemplate applicationConnectorRestTemplate() {
 		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
-		System.out.println("Connection available?: " + connectionRegistrations.hasNext());
-
-		Connection conn = connectionRegistrations.next();
-		System.out.println("Content of Connection?: " + conn.toString());
 		
-		KeyStore clientCertificate = connectionRegistrations.next().getSslKey();
+		Connection connection = connectionRegistrations.next();
+
+		KeyStore clientCertificate = connection.getSslKey();
 
 		String certificateFingerprint = getCertificateFingerprint(clientCertificate);
 		
 		RestTemplate result = cache.getIfPresent(certificateFingerprint);
 		
 		if (result == null) {
-
 			try {
 				SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword.toCharArray())
 						.build();

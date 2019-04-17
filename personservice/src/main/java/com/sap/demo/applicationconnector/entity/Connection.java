@@ -102,9 +102,7 @@ public class Connection {
 	public KeyStore getSslKey(){
 		try {
 			this.sslKey = KeyStore.getInstance("JKS");
-			System.out.println(this.sslKeyStream);
 			this.sslKey.load(new ByteArrayInputStream(this.sslKeyStream), this.keystorePass);
-			System.out.println("SSLKey available?: " + this.sslKey.getType());
 			
 			return sslKey;
 		} catch (Exception e) {
@@ -120,7 +118,6 @@ public class Connection {
 			keystore.store(output, this.keystorePass);
 
 			this.sslKeyStream = output.toByteArray();
-			System.out.println("SSLKeyStream is set: " + new String(this.sslKeyStream));
 		} catch (Exception e) {
 			throw new ApplicationConnectorException(e.getMessage(), e);
 		}
