@@ -9,6 +9,7 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -17,6 +18,7 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Collections;
+import java.util.Enumeration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sap.demo.applicationconnector.client.CertificateService.CsrResult;
@@ -132,7 +134,7 @@ public class PairingService {
 			Certificate[] certificateChain = new X509Certificate[2];
 
 			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-
+			
 			certificateChain[0] = cf.generateCertificate(
 					new ByteArrayInputStream(base64Decoder.decode(response.getBody().getClientCrt())));
 
@@ -267,12 +269,29 @@ public class PairingService {
 		return connection;
 	}
 
-	public Connection executeManualPairing(URI infoUrl, KeyStore keyStore, String certificateAlgorithm, String certificateSubject) {
-		Connection connection = getInfo(infoUrl, this.keyStorePassword.toCharArray(), keyStore, certificateAlgorithm, certificateSubject);
-		
-		connectionRepository.save(connection);
-
-		return connection;
+	public Connection executeManualPairing(URI infoUrl, KeyStore keyStore) {
+		try {
+			Enumeration<String> aliases = keyStore.aliases();
+			
+			if (aliases.hasMoreElements()) {
+				String alias = aliases.nextElement();
+				X509Certificate cert = (X509Certificate) keyStore.getCertificate(alias);
+				
+				String certificateSubject = cert.getSubjectX500Principal().getName();
+				String certificateAlgorithm = cert.getPublicKey().getAlgorithm();
+				
+				Connection connection = getInfo(infoUrl, this.keyStorePassword.toCharArray(), keyStore, certificateAlgorithm, certificateSubject);
+				
+				connectionRepository.save(connection);
+				
+				return connection;
+			}
+			
+			//TODO
+			return null;
+		} catch (Exception e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);	
+		}
 	}
 
 	public KeyStore createKeyStoreFromFile(MultipartFile file) {

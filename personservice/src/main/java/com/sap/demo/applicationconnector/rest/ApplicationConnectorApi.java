@@ -76,14 +76,13 @@ public class ApplicationConnectorApi {
 	@ApiOperation(value = "Register to Kyma Application manually", notes = "This Operation registers "
 			+ "the Service to the configured Kyma Application using the JKS that was created manually", consumes = MediaType.ALL_VALUE)
 	public ResponseEntity<Map<String, String>> connectivityTest(@RequestParam String infoUrl,
-			@RequestParam String certificateSubject, @RequestParam String certificateAlgorithm,
 			@ApiParam(name = "jksFile", value = "Upload the generated JKS file", required = true) @RequestParam("jksFile") MultipartFile jksFile) {
 
 		KeyStore keyStore = pairingService.createKeyStoreFromFile(jksFile);
 		URI info = URI.create(infoUrl);
 
-		Connection connection = pairingService.executeManualPairing(info, keyStore, certificateAlgorithm,
-				certificateSubject);
+		Connection connection = pairingService.executeManualPairing(info, keyStore);
+		
 		String registrationId = registrationService.registerWithKymaInstance();
 
 		if (StringUtils.isNotBlank(registrationId)) {
