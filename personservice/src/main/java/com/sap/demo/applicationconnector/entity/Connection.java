@@ -67,7 +67,6 @@ public class Connection {
 				return null;
 			}
 			
-			
 		} catch (KeyStoreException e) {
 			throw new ApplicationConnectorException(e.getMessage(), e);
 		}
@@ -99,6 +98,8 @@ public class Connection {
 		}
 	}
 
+	// This getter returns a KeyStore object which is loaded from the sslKeyStream byte[]
+	// Only the byte[] is persisted to we need to create the KeyStore object ad hoc
 	public KeyStore getSslKey(){
 		try {
 			this.sslKey = KeyStore.getInstance("JKS");
@@ -110,6 +111,7 @@ public class Connection {
 		}
 	}
 
+	// This setter saves the OutputStream of the KeyStore object into the byte[] to persist it in that way
 	public void setSslKey(KeyStore keystore){
 		try {
 			this.sslKey = keystore;

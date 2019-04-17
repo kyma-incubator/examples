@@ -1,6 +1,8 @@
 package com.sap.demo.applicationconnector.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.security.KeyPair;
@@ -31,6 +33,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -153,7 +156,6 @@ public class PairingService {
 		} catch (IOException e) {
 			throw new ApplicationConnectorException(e.getMessage(), e);
 		}
-
 	}
 
 	/**
@@ -254,15 +256,42 @@ public class PairingService {
 		CsrResult csr = certService.createCSR(connectInfo.getCertificate().getSubject(),
 				connectInfo.getCertificate().getKeyAlgorithm());
 
-		KeyStore keyStore = getCertificateInternal(pairingTemplate, keyStorePassword.toCharArray(),
+		KeyStore keyStore = getCertificateInternal(pairingTemplate, this.keyStorePassword.toCharArray(),
 				connectInfo.getCsrUrl(), csr.getCsr(), csr.getKeypair());
 
-		Connection connection = getInfo(connectInfo.getApi().getInfoUrl(), keyStorePassword.toCharArray(), keyStore,
+		Connection connection = getInfo(connectInfo.getApi().getInfoUrl(), this.keyStorePassword.toCharArray(), keyStore,
 				connectInfo.getCertificate().getKeyAlgorithm(), connectInfo.getCertificate().getSubject());
 
 		connectionRepository.save(connection);
 
 		return connection;
+	}
+
+	public Connection executeManualPairing(URI infoUrl, KeyStore keyStore, String certificateAlgorithm, String certificateSubject) {
+		Connection connection = getInfo(infoUrl, this.keyStorePassword.toCharArray(), keyStore, certificateAlgorithm, certificateSubject);
+		
+		connectionRepository.save(connection);
+
+		return connection;
+	}
+
+	public KeyStore createKeyStoreFromFile(MultipartFile file) {
+		try {
+
+			KeyStore keyStore = KeyStore.getInstance("JKS");
+			
+			keyStore.load(file.getInputStream(), this.keyStorePassword.toCharArray());
+			
+			return keyStore;
+		} catch (KeyStoreException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		} catch (CertificateException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		} catch (NoSuchAlgorithmException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		} catch (IOException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		}
 	}
 
 	public void deleteConnections() {
@@ -271,7 +300,6 @@ public class PairingService {
 
 	@Data
 	private static class ConnectInfo {
-
 		private URI csrUrl;
 		private Api api;
 		private CertificateSpecification certificate;
@@ -280,7 +308,6 @@ public class PairingService {
 
 	@Data
 	private static class Api {
-
 		private URI metadataUrl;
 		private URI certificatesUrl;
 		private URI infoUrl;
@@ -291,7 +318,6 @@ public class PairingService {
 
 	@Data
 	private static class CertificateSpecification {
-
 		private String subject;
 		private String extensions;
 
@@ -316,7 +342,6 @@ public class PairingService {
 
 	@Data
 	private static class InfoResponse {
-
 		private ClientIdentity clientIdentity;
 		private Urls urls;
 	}
@@ -328,7 +353,6 @@ public class PairingService {
 
 	@Data
 	private static class Urls {
-
 		private URI eventsUrl;
 		private URI metadataUrl;
 		private URI renewCertUrl;

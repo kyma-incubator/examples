@@ -29,17 +29,6 @@ spec:
     version: "0.0.3"
   type: NodePort
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: personservice-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -112,25 +101,18 @@ spec:
               - name: management_health_redis_enabled
                 value: "false"                      
              volumeMounts:
-              - mountPath: /jks
-                name: jks-persistent
+              # - mountPath: /jks
+              #   name: jks-persistent
               - mountPath: /registration
                 name: registrationfile
                 readOnly: true
-              # - mountPath: /security
-                #name: kyma-certificate
-                #readOnly: true
          volumes:
-          - name: jks-persistent
-            persistentVolumeClaim:
-               claimName: personservice-pvc
+          # - name: jks-persistent
+          #   persistentVolumeClaim:
+          #      claimName: personservice-pvc
           - name: registrationfile
             configMap:
               name: registrationfile 
               items:
                - key: registrationfile.json
-                 path: registrationfile.json
-          #- name: kyma-certificate
-            #secret:
-              #secretName: kyma-certificate
-                                                          
+                 path: registrationfile.json 

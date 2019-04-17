@@ -29,17 +29,6 @@ spec:
     version: "0.0.3"
   type: NodePort
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: personservice-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -62,17 +51,6 @@ spec:
          annotations:
             sidecar.istio.io/inject: "true"
       spec:
-      # ensure that all pods of this deployment are on the same node because pvc only allows one-node-access
-         affinity:
-            podAffinity:
-               requiredDuringSchedulingIgnoredDuringExecution:
-               - labelSelector:
-                  matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                     - personservice
-                 topologyKey: "kubernetes.io/hostname"
          containers:
            - name: personservice
          # changeme: Replace with pointer to your docker repository/container
@@ -144,12 +122,12 @@ spec:
               - mountPath: /registration
                 name: registrationfile
                 readOnly: true
-              - mountPath: /jks
-                name: jks-persistent
+            #   - mountPath: /jks
+            #     name: jks-persistent
          volumes:
-          - name: jks-persistent
-            persistentVolumeClaim:
-               claimName: personservice-pvc
+         #  - name: jks-persistent
+         #    persistentVolumeClaim:
+         #       claimName: personservice-pvc
           - name: registrationfile
             configMap:
               name: registrationfile 

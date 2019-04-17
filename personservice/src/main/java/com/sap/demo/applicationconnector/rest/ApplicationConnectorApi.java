@@ -1,6 +1,8 @@
 package com.sap.demo.applicationconnector.rest;
 
 import java.net.URI;
+import java.net.URL;
+import java.security.KeyStore;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,10 +49,12 @@ public class ApplicationConnectorApi {
 
 	@PostMapping("/api/v1/applicationconnector/registration/automatic")
 	@ApiOperation(value = "Register to Kyma Application automatically", notes = "This Operation registers "
-			+ "the Service to the configured Kyma environment automatically")
+			+ "the Service to the configured Kyma Application automatically")
 	public ResponseEntity<Map<String, String>> connectivityTest(@RequestBody ConnectUrl connectUrl) {
 
-		Connection connection = pairingService.executeInitialPairing(URI.create(connectUrl.getUrl()));
+		URI connectionURI = URI.create(connectUrl.getUrl());
+
+		Connection connection = pairingService.executeInitialPairing(connectionURI);
 
 		if (connection != null) {
 			String registrationId = registrationService.registerWithKymaInstance();
@@ -62,18 +67,23 @@ public class ApplicationConnectorApi {
 			}
 		} else {
 			return new ResponseEntity<Map<String, String>>(
-					Collections.singletonMap("response", "Certificate generation failed. See logs."),
+					Collections.singletonMap("response", "Pairing with Kyma application failed. Please see logs."),
 					HttpStatus.valueOf(500));
 		}
 	}
 
 	@PostMapping("/api/v1/applicationconnector/registration/manual")
 	@ApiOperation(value = "Register to Kyma Application manually", notes = "This Operation registers "
-			+ "the Service to the configured Kyma Application using the JKS that was created manually", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<Map<String, String>> connectivityTest(@RequestPart MetaInformation meta,
-			@RequestPart String infoUrl, @RequestPart String certificateSubject,
-			@ApiParam(name = "jksFile", value = "Upload the generated JKS file", required = true) @RequestPart("jksFile") MultipartFile jksFile) {
+			+ "the Service to the configured Kyma Application using the JKS that was created manually", consumes = MediaType.ALL_VALUE)
+	public ResponseEntity<Map<String, String>> connectivityTest(@RequestParam String infoUrl,
+			@RequestParam String certificateSubject, @RequestParam String certificateAlgorithm,
+			@ApiParam(name = "jksFile", value = "Upload the generated JKS file", required = true) @RequestParam("jksFile") MultipartFile jksFile) {
 
+		KeyStore keyStore = pairingService.createKeyStoreFromFile(jksFile);
+		URI info = URI.create(infoUrl);
+
+		Connection connection = pairingService.executeManualPairing(info, keyStore, certificateAlgorithm,
+				certificateSubject);
 		String registrationId = registrationService.registerWithKymaInstance();
 
 		if (StringUtils.isNotBlank(registrationId)) {

@@ -29,17 +29,6 @@ spec:
     version: "0.0.3"
   type: NodePort
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: personservice-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -119,15 +108,15 @@ spec:
               - name: spring_redis_password
                 value: "${REDIS_PASSWORD}"           
              volumeMounts:
-              - mountPath: /jks
-                name: jks-persistent
+              # - mountPath: /jks
+              #   name: jks-persistent
               - mountPath: /registration
                 name: registrationfile
                 readOnly: true
          volumes:
-          - name: jks-persistent
-            persistentVolumeClaim:
-               claimName: personservice-pvc
+          # - name: jks-persistent
+          #   persistentVolumeClaim:
+          #      claimName: personservice-pvc
           - name: registrationfile
             configMap:
               name: registrationfile 

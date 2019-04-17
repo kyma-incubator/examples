@@ -15,7 +15,6 @@ import javax.net.ssl.SSLContext;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.sap.demo.applicationconnector.RegistrationServiceRestTemplateResponseErrorHandler;
 import com.sap.demo.applicationconnector.entity.Connection;
 import com.sap.demo.applicationconnector.exception.RestTemplateCustomizerException;
 import com.sap.demo.applicationconnector.repository.ConnectionRepository;
@@ -23,7 +22,6 @@ import com.sap.demo.applicationconnector.repository.ConnectionRepository;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +37,6 @@ public class ApplicationConnectorRestTemplateBuilder {
 			.expireAfterAccess(10, TimeUnit.MINUTES).build();
 
 	private ConnectionRepository connectionRepository;
-
 	private RestTemplateBuilder restTemplateBuilder;
 
 	@Value("${personservicekubernetes.applicationconnector.keystorepassword}")
@@ -47,7 +44,6 @@ public class ApplicationConnectorRestTemplateBuilder {
 	
 	@Value("${personservicekubernetes.applicationconnector.baseurl}")
 	private String connectorBaseUrl;
-
 
 	@Autowired
 	public void setConnectionRepository(ConnectionRepository connectionRepository) {
@@ -85,6 +81,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 		}
 	}
 
+	// Returns a RestTemplate from the Connection object saved in the database (or from the cache)
 	public RestTemplate applicationConnectorRestTemplate() {
 		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
 		
@@ -126,6 +123,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 		}
 	}
 
+	// Returns a RestTemplate from the KeyStore object (or from cache)
 	public RestTemplate applicationConnectorRestTemplate(KeyStore clientCertificate) {
 		String certificateFingerprint = getCertificateFingerprint(clientCertificate);
 		

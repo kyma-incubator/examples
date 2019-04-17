@@ -33,7 +33,7 @@ public class CertificateService {
 	private KeyPair generateKeyPair(String algorithm) {
 
 		if (!algorithm.equals("rsa2048")) {
-			throw new ApplicationConnectorException(String.format("Key Algorith %s not supported", algorithm));
+			throw new ApplicationConnectorException(String.format("Key Algorithm %s not supported", algorithm));
 		}
 
 		try {
