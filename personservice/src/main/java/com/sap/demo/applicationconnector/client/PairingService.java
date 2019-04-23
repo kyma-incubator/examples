@@ -58,8 +58,7 @@ public class PairingService {
 	private ApplicationConnectorRestTemplateBuilder restTemplateBuilder;
 	private ConnectionRepository connectionRepository;
 
-	@Value("${personservicekubernetes.applicationconnector.keystorepassword}")
-	private String keyStorePassword = "set-me";
+	private String keyStorePassword = "kyma-password";
 
 	@Autowired
 	public void setConnectionRepository(ConnectionRepository connectionRepository) {
@@ -186,7 +185,7 @@ public class PairingService {
 		KeyStore newKey = getCertificateInternal(restTemplate, newKeyStorePassword, currentConnection.getRenewCertUrl(),
 				csr.getCsr(), csr.getKeypair());
 
-		result.setKeystorePass(newKeyStorePassword);
+		result.setKeyStorePassword(newKeyStorePassword);
 		result.setSslKey(newKey);
 
 		return result;
@@ -204,7 +203,7 @@ public class PairingService {
 	 *                                         {@link RestTemplate}
 	 */
 	public Connection getInfo(Connection currentConnection) {
-		return getInfo(currentConnection.getInfoUrl(), currentConnection.getKeystorePass(),
+		return getInfo(currentConnection.getInfoUrl(), currentConnection.getKeyStorePassword(),
 				currentConnection.getSslKey(), currentConnection.getCertificateAlgorithm(),
 				currentConnection.getCertificateSubject());
 	}
@@ -212,7 +211,7 @@ public class PairingService {
 	private Connection getInfo(URI infoUrl, char[] keyStorePassword, KeyStore keyStore, String certificateAlgorithm,
 			String certificateSubject) {
 
-		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate(keyStore);
+		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate(keyStore, keyStorePassword);
 		try {
 			ResponseEntity<InfoResponse> response = restTemplate.getForEntity(infoUrl, InfoResponse.class);
 
@@ -228,7 +227,7 @@ public class PairingService {
 			result.setMetadataUrl(response.getBody().getUrls().getMetadataUrl());
 			result.setRenewCertUrl(response.getBody().getUrls().getRenewCertUrl());
 			result.setRevocationCertUrl(response.getBody().getUrls().getRevocationCertUrl());
-			result.setKeystorePass(keyStorePassword);
+			result.setKeyStorePassword(keyStorePassword);
 			result.setSslKey(keyStore);
 			result.setCertificateAlgorithm(certificateAlgorithm);
 			result.setCertificateSubject(certificateSubject);
@@ -246,7 +245,6 @@ public class PairingService {
 	 * Establishes the initial connection to Kyma / Extension Factory and returns an
 	 * object {@link Connection} with all needed details.
 	 * 
-	 * @param keystorePassword password to be provided for the keystore
 	 * @param connectUri       with valid one time token from Connector Services
 	 * @return {@link Connection} that contains all info related to the connection
 	 * @throws ApplicationConnectorException if anything fails
@@ -272,7 +270,6 @@ public class PairingService {
 	public Connection executeManualPairing(URI infoUrl, KeyStore keyStore) {
 		try {
 			Enumeration<String> aliases = keyStore.aliases();
-			
 			if (aliases.hasMoreElements()) {
 				String alias = aliases.nextElement();
 				X509Certificate cert = (X509Certificate) keyStore.getCertificate(alias);
@@ -285,33 +282,14 @@ public class PairingService {
 				connectionRepository.save(connection);
 				
 				return connection;
+			} else {
+				throw new ApplicationConnectorException("KeyStore is defect");	
 			}
-			
-			//TODO
-			return null;
-		} catch (Exception e) {
-			throw new ApplicationConnectorException(e.getMessage(), e);	
-		}
-	}
-
-	public KeyStore createKeyStoreFromFile(MultipartFile file) {
-		try {
-
-			KeyStore keyStore = KeyStore.getInstance("JKS");
-			
-			keyStore.load(file.getInputStream(), this.keyStorePassword.toCharArray());
-			
-			return keyStore;
 		} catch (KeyStoreException e) {
-			throw new ApplicationConnectorException(e.getMessage(), e);
-		} catch (CertificateException e) {
-			throw new ApplicationConnectorException(e.getMessage(), e);
-		} catch (NoSuchAlgorithmException e) {
-			throw new ApplicationConnectorException(e.getMessage(), e);
-		} catch (IOException e) {
-			throw new ApplicationConnectorException(e.getMessage(), e);
+			throw new ApplicationConnectorException("KeyStore is defect");
 		}
 	}
+
 
 	public void deleteConnections() {
 		connectionRepository.deleteAll();

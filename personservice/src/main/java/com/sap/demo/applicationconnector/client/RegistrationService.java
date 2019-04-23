@@ -36,6 +36,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.sap.demo.applicationconnector.entity.Connection;
 import com.sap.demo.applicationconnector.entity.ServiceRegistration;
+import com.sap.demo.applicationconnector.exception.RestTemplateCustomizerException;
 import com.sap.demo.applicationconnector.repository.ServiceRegistrationRepository;
 import com.sap.demo.applicationconnector.util.ApplicationConnectorRestTemplateBuilder;
 import com.sap.demo.exception.PersonServiceException;
@@ -49,14 +50,10 @@ public class RegistrationService {
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private ServiceRegistrationRepository serviceRegistrationRepository;
-	private RestTemplate restTemplate;
 	private ApplicationConnectorRestTemplateBuilder restTemplateBuilder;
 
 	@Value("${personservicekubernetes.applicationconnector.registrationfilelocation}")
 	private String registrationFileLocation;
-
-	@Value("${personservicekubernetes.applicationconnector.keystorepassword}")
-	private String keyStorePassword = "set-me";
 
 	@Autowired
 	public void setServiceRegistrationRepository(ServiceRegistrationRepository serviceRegistrationRepository) {
@@ -66,10 +63,6 @@ public class RegistrationService {
 	@Autowired
 	public void setRestTemplateBuilder(ApplicationConnectorRestTemplateBuilder restTemplateBuilder) {
 		this.restTemplateBuilder = restTemplateBuilder;
-	}
-
-	public void setRestTemplate(RestTemplate restTemplate) {
-		this.restTemplate = restTemplate;
 	}
 
 	private String getServiceModelForRegistration() {
@@ -88,7 +81,7 @@ public class RegistrationService {
 
 		Iterator<ServiceRegistration> serviceRegistrations = serviceRegistrationRepository.findAll().iterator();
 
-		this.setRestTemplate(restTemplateBuilder.applicationConnectorRestTemplate());
+		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
 
 		logger.trace(String.format("Has persisted registration: %b", serviceRegistrations.hasNext()));
 
@@ -129,7 +122,7 @@ public class RegistrationService {
 	public void deleteRegistrations() {
 		serviceRegistrationRepository.deleteAll();
 
-		this.setRestTemplate(restTemplateBuilder.applicationConnectorRestTemplate());
+		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
 		ParameterizedTypeReference<List<RegistrationQueryResponse>> responseType = new ParameterizedTypeReference<List<RegistrationQueryResponse>>() {
 		};
 		ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate
@@ -150,12 +143,18 @@ public class RegistrationService {
 	public List<RegistrationQueryResponse> getExistingRegistrations() {
 		ParameterizedTypeReference<List<RegistrationQueryResponse>> responseType = new ParameterizedTypeReference<List<RegistrationQueryResponse>>() {
 		};
+		try {
 
-		this.setRestTemplate(restTemplateBuilder.applicationConnectorRestTemplate());
-
-		ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate
-				.exchange("/v1/metadata/services", HttpMethod.GET, null, responseType);
-		return kymaRegistrations.getBody();
+			RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
+			
+			ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate
+			.exchange("/v1/metadata/services", HttpMethod.GET, null, responseType);
+			return kymaRegistrations.getBody();
+		} catch (RestTemplateCustomizerException e) {
+			// No registrations available
+			System.out.println(String.format("Error: %s", e.getMessage()));
+			return null;
+		}
 	}
 
 	// Model for Registration Response

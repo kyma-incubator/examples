@@ -15,10 +15,14 @@ import java.util.List;
 import com.sap.demo.applicationconnector.exception.ApplicationConnectorException;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 
 /**
@@ -32,6 +36,12 @@ import lombok.Data;
 @Document
 public class Connection {
 	
+	@Id
+	@Getter(AccessLevel.NONE)
+	@Setter(AccessLevel.NONE)
+	// This will always be a fixed value to prevent more than one instance on the database
+	private String id = "kyma";
+
 	private String applicationName;
 	private URI metadataUrl;
 	private URI renewCertUrl;
@@ -43,9 +53,7 @@ public class Connection {
 
 	// Instead of persisting the KeyStore object, the byte[] of it is stored
 	private byte[] sslKeyStream;
-	@Transient
-	private KeyStore sslKey;
-	private char[] keystorePass;
+	private char[] keyStorePassword;
 	private List<URI> eventsURLs = new ArrayList<URI>();
 	
 	/**
@@ -56,11 +64,11 @@ public class Connection {
 	 */
 	public Date getCertificateExpirationDate() {
 		try {
-			Enumeration<String> aliases = sslKey.aliases();
+			Enumeration<String> aliases = getSslKey().aliases();
 			
 			if (aliases.hasMoreElements()) {
 				String alias = aliases.nextElement();
-				X509Certificate cert = (X509Certificate) sslKey.getCertificate(alias);
+				X509Certificate cert = (X509Certificate) getSslKey().getCertificate(alias);
 				
 				return cert.getNotAfter();
 			} else {
@@ -80,11 +88,11 @@ public class Connection {
 	 */
 	public String getCertificateFingerprint() {
 		try {
-			Enumeration<String> aliases = sslKey.aliases();
+			Enumeration<String> aliases = getSslKey().aliases();
 			
 			if (aliases.hasMoreElements()) {
 				String alias = aliases.nextElement();
-				X509Certificate cert = (X509Certificate) sslKey.getCertificate(alias);
+				X509Certificate cert = (X509Certificate) getSslKey().getCertificate(alias);
 				
 				return DigestUtils.sha1Hex(cert.getEncoded());
 			} else {
@@ -102,8 +110,8 @@ public class Connection {
 	// Only the byte[] is persisted to we need to create the KeyStore object ad hoc
 	public KeyStore getSslKey(){
 		try {
-			this.sslKey = KeyStore.getInstance("JKS");
-			this.sslKey.load(new ByteArrayInputStream(this.sslKeyStream), this.keystorePass);
+			KeyStore sslKey = KeyStore.getInstance("JKS");
+			sslKey.load(new ByteArrayInputStream(this.sslKeyStream), this.keyStorePassword);
 			
 			return sslKey;
 		} catch (Exception e) {
@@ -114,10 +122,8 @@ public class Connection {
 	// This setter saves the OutputStream of the KeyStore object into the byte[] to persist it in that way
 	public void setSslKey(KeyStore keystore){
 		try {
-			this.sslKey = keystore;
-
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			keystore.store(output, this.keystorePass);
+			keystore.store(output, this.keyStorePassword);
 
 			this.sslKeyStream = output.toByteArray();
 		} catch (Exception e) {
@@ -125,4 +131,9 @@ public class Connection {
 		}
 	}
 	
+	@Override
+	public String toString() {
+		String result = this.certificateAlgorithm + " | " + this.certificateSubject + " | " + String.valueOf(keyStorePassword);
+		return result;
+	}
 }
