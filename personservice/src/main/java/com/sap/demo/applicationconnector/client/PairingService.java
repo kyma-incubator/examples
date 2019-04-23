@@ -58,7 +58,7 @@ public class PairingService {
 	private ApplicationConnectorRestTemplateBuilder restTemplateBuilder;
 	private ConnectionRepository connectionRepository;
 
-	private String keyStorePassword = "kyma-password";
+	private String keyStorePassword = "kyma-project";
 
 	@Autowired
 	public void setConnectionRepository(ConnectionRepository connectionRepository) {
@@ -267,7 +267,7 @@ public class PairingService {
 		return connection;
 	}
 
-	public Connection executeManualPairing(URI infoUrl, KeyStore keyStore) {
+	public Connection executeManualPairing(URI infoUrl, KeyStore keyStore, String keyStorePassword) {
 		try {
 			Enumeration<String> aliases = keyStore.aliases();
 			if (aliases.hasMoreElements()) {
@@ -277,13 +277,13 @@ public class PairingService {
 				String certificateSubject = cert.getSubjectX500Principal().getName();
 				String certificateAlgorithm = cert.getPublicKey().getAlgorithm();
 				
-				Connection connection = getInfo(infoUrl, this.keyStorePassword.toCharArray(), keyStore, certificateAlgorithm, certificateSubject);
+				Connection connection = getInfo(infoUrl, keyStorePassword.toCharArray(), keyStore, certificateAlgorithm, certificateSubject);
 				
 				connectionRepository.save(connection);
 				
 				return connection;
 			} else {
-				throw new ApplicationConnectorException("KeyStore is defect");	
+				throw new ApplicationConnectorException("KeyStore has no aliases");	
 			}
 		} catch (KeyStoreException e) {
 			throw new ApplicationConnectorException("KeyStore is defect");

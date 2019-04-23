@@ -38,9 +38,6 @@ public class ApplicationConnectorRestTemplateBuilder {
 
 	private ConnectionRepository connectionRepository;
 	private RestTemplateBuilder restTemplateBuilder;
-
-	@Value("${personservicekubernetes.applicationconnector.keystorepassword}")
-		private String keyStorePassword = "set-me";
 	
 	@Value("${personservicekubernetes.applicationconnector.baseurl}")
 	private String connectorBaseUrl;
@@ -85,7 +82,12 @@ public class ApplicationConnectorRestTemplateBuilder {
 	public RestTemplate applicationConnectorRestTemplate() {
 		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
 		
+		if (!connectionRegistrations.hasNext()) {
+			throw new RestTemplateCustomizerException("No connection registered.");
+		}
+
 		Connection connection = connectionRegistrations.next();
+		char[] keyStorePassword = connection.getKeyStorePassword();
 
 		KeyStore clientCertificate = connection.getSslKey();
 
@@ -95,7 +97,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 		
 		if (result == null) {
 			try {
-				SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword.toCharArray())
+				SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword)
 						.build();
 
 				SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
@@ -124,7 +126,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 	}
 
 	// Returns a RestTemplate from the KeyStore object (or from cache)
-	public RestTemplate applicationConnectorRestTemplate(KeyStore clientCertificate) {
+	public RestTemplate applicationConnectorRestTemplate(KeyStore clientCertificate, char[] keyStorePassword) {
 		String certificateFingerprint = getCertificateFingerprint(clientCertificate);
 		
 		RestTemplate result = cache.getIfPresent(certificateFingerprint);
@@ -132,7 +134,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 		if (result == null) {
 
 			try {
-				SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword.toCharArray())
+				SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword)
 						.build();
 
 				SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);

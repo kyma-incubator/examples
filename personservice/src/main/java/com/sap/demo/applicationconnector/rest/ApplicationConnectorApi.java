@@ -1,8 +1,12 @@
 package com.sap.demo.applicationconnector.rest;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +16,7 @@ import javax.validation.Valid;
 import com.sap.demo.applicationconnector.client.PairingService;
 import com.sap.demo.applicationconnector.client.RegistrationService;
 import com.sap.demo.applicationconnector.entity.Connection;
+import com.sap.demo.applicationconnector.exception.ApplicationConnectorException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -50,24 +55,19 @@ public class ApplicationConnectorApi {
 	@PostMapping("/api/v1/applicationconnector/registration/automatic")
 	@ApiOperation(value = "Register to Kyma Application automatically", notes = "This Operation registers "
 			+ "the Service to the configured Kyma Application automatically")
-	public ResponseEntity<Map<String, String>> connectivityTest(@RequestBody ConnectUrl connectUrl) {
+	public ResponseEntity<Map<String, String>> createRegistrationAutomatic(@RequestBody ConnectUrl connectUrl) {
 
 		URI connectionURI = URI.create(connectUrl.getUrl());
 
-		Connection connection = pairingService.executeInitialPairing(connectionURI);
+		pairingService.executeInitialPairing(connectionURI);
 
-		if (connection != null) {
-			String registrationId = registrationService.registerWithKymaInstance();
-			if (StringUtils.isNotBlank(registrationId)) {
-				return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
-						HttpStatus.OK);
-			} else {
-				return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
-						HttpStatus.valueOf(500));
-			}
+		String registrationId = registrationService.registerWithKymaInstance();
+		
+		if (StringUtils.isNotBlank(registrationId)) {
+			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
+					HttpStatus.OK);
 		} else {
-			return new ResponseEntity<Map<String, String>>(
-					Collections.singletonMap("response", "Pairing with Kyma application failed. Please see logs."),
+			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
 					HttpStatus.valueOf(500));
 		}
 	}
@@ -75,13 +75,13 @@ public class ApplicationConnectorApi {
 	@PostMapping("/api/v1/applicationconnector/registration/manual")
 	@ApiOperation(value = "Register to Kyma Application manually", notes = "This Operation registers "
 			+ "the Service to the configured Kyma Application using the JKS that was created manually", consumes = MediaType.ALL_VALUE)
-	public ResponseEntity<Map<String, String>> connectivityTest(@RequestParam String infoUrl,
+	public ResponseEntity<Map<String, String>> createRegistrationManual(@RequestParam String infoUrl, @RequestParam String keyStorePassword, 
 			@ApiParam(name = "jksFile", value = "Upload the generated JKS file", required = true) @RequestParam("jksFile") MultipartFile jksFile) {
 
-		KeyStore keyStore = pairingService.createKeyStoreFromFile(jksFile);
+		KeyStore keyStore = createKeyStoreFromFile(jksFile, keyStorePassword);
 		URI info = URI.create(infoUrl);
 
-		Connection connection = pairingService.executeManualPairing(info, keyStore);
+		Connection connection = pairingService.executeManualPairing(info, keyStore, keyStorePassword);
 		
 		String registrationId = registrationService.registerWithKymaInstance();
 
@@ -107,11 +107,30 @@ public class ApplicationConnectorApi {
 	@GetMapping("/api/v1/applicationconnector/registration")
 	@ApiOperation(value = "Read Kyma Application registrations", notes = "This Operation reads all Application registration information.")
 	public ResponseEntity<List<RegistrationService.RegistrationQueryResponse>> readServiceRegistrations() {
-
+		
 		return new ResponseEntity<List<RegistrationService.RegistrationQueryResponse>>(
 				registrationService.getExistingRegistrations(), HttpStatus.OK);
 	}
 
+	
+	private KeyStore createKeyStoreFromFile(MultipartFile file, String keyStorePassword) {
+		try {
+			KeyStore keyStore = KeyStore.getInstance("JKS");
+			
+			keyStore.load(file.getInputStream(), keyStorePassword.toCharArray());
+			
+			return keyStore;
+		} catch (KeyStoreException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		} catch (CertificateException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		} catch (NoSuchAlgorithmException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		} catch (IOException e) {
+			throw new ApplicationConnectorException(e.getMessage(), e);
+		}
+	}
+	
 	// Model for Get Response
 	@Data
 	public static class ConnectUrl {
