@@ -30,15 +30,10 @@ public abstract class AbstractApplicationConnectorEventBridge {
 	private static final String VERSION = "v1";
 
 	private ApplicationConnectorRestTemplateBuilder restTemplateBuilder;
-	private RestTemplate restTemplate;
 
 	@Autowired
 	public void setRestTemplateBuilder(ApplicationConnectorRestTemplateBuilder restTemplateBuilder) {
 		this.restTemplateBuilder = restTemplateBuilder;
-	}
-
-	public void setRestTemplate(RestTemplate restTemplate) {
-		this.restTemplate = restTemplate;
 	}
 
 	protected void writePersonEvent(PersonEvent event) {
@@ -47,7 +42,7 @@ public abstract class AbstractApplicationConnectorEventBridge {
 
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
 
-		this.setRestTemplate(restTemplateBuilder.applicationConnectorRestTemplate());
+		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
 
 		if (event instanceof PersonDeleteEvent) {
 			kymaEvent = new KymaEvent(DELETE_EVENT, VERSION, df.format(new Date()),

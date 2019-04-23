@@ -144,7 +144,6 @@ public class RegistrationService {
 		ParameterizedTypeReference<List<RegistrationQueryResponse>> responseType = new ParameterizedTypeReference<List<RegistrationQueryResponse>>() {
 		};
 		try {
-
 			RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
 			
 			ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate

@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -38,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.models.Response;
 import lombok.Data;
 
 @Profile("ApplicationConnector")
@@ -67,14 +69,13 @@ public class ApplicationConnectorApi {
 			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
 					HttpStatus.OK);
 		} else {
-			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
-					HttpStatus.valueOf(500));
+			return new ResponseEntity<Map<String, String>>(HttpStatus.valueOf(500));
 		}
 	}
 
 	@PostMapping("/api/v1/applicationconnector/registration/manual")
 	@ApiOperation(value = "Register to Kyma Application manually", notes = "This Operation registers "
-			+ "the Service to the configured Kyma Application using the JKS that was created manually", consumes = MediaType.ALL_VALUE)
+			+ "the Service to the configured Kyma Application using the JKS that was created manually", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<Map<String, String>> createRegistrationManual(@RequestParam String infoUrl, @RequestParam String keyStorePassword, 
 			@ApiParam(name = "jksFile", value = "Upload the generated JKS file", required = true) @RequestParam("jksFile") MultipartFile jksFile) {
 
@@ -89,8 +90,24 @@ public class ApplicationConnectorApi {
 			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
 					HttpStatus.OK);
 		} else {
+			return new ResponseEntity<Map<String, String>>(HttpStatus.valueOf(500));
+		}
+	}
+
+	@PutMapping("/api/v1/applicationconnector/registration/renew")
+	@ApiOperation(value = "Renew certificate for Kyma Application registration", notes = "This Operation renews the certificate corresponding to an Application registration.")
+	public ResponseEntity<Map<String, String>> renewRegistrationCertificate(@RequestParam String keyStorePassword) {
+		//How to get the only connection? Maybe in the pairingService
+		//pairingService.getInfo(currentConnection);
+		//pairingService.renewCertificate(connectionURI);
+
+		String registrationId = registrationService.registerWithKymaInstance();
+		
+		if (StringUtils.isNotBlank(registrationId)) {
 			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
-					HttpStatus.valueOf(500));
+					HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Map<String, String>>(HttpStatus.valueOf(500));
 		}
 	}
 

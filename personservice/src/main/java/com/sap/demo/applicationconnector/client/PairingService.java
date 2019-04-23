@@ -19,11 +19,13 @@ import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Iterator;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sap.demo.applicationconnector.client.CertificateService.CsrResult;
 import com.sap.demo.applicationconnector.entity.Connection;
 import com.sap.demo.applicationconnector.exception.ApplicationConnectorException;
+import com.sap.demo.applicationconnector.exception.RestTemplateCustomizerException;
 import com.sap.demo.applicationconnector.repository.ConnectionRepository;
 import com.sap.demo.applicationconnector.util.ApplicationConnectorRestTemplateBuilder;
 
@@ -133,7 +135,7 @@ public class PairingService {
 			Certificate[] certificateChain = new X509Certificate[2];
 
 			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-			
+
 			certificateChain[0] = cf.generateCertificate(
 					new ByteArrayInputStream(base64Decoder.decode(response.getBody().getClientCrt())));
 
@@ -173,16 +175,24 @@ public class PairingService {
 	 * @throws RestTemplateCustomizerException if anything fails with acquiring the
 	 *                                         {@link RestTemplate}
 	 */
-	public Connection renewCertificate(Connection currentConnection, char[] newKeyStorePassword) {
+	public Connection renewCertificate(char[] newKeyStorePassword) {
 
-		Connection result = getInfo(currentConnection);
+		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
+		
+		if (!connectionRegistrations.hasNext()) {
+			throw new RestTemplateCustomizerException("No connection found");
+		}
 
-		CsrResult csr = certService.createCSR(currentConnection.getCertificateSubject(),
-				currentConnection.getCertificateAlgorithm());
+		Connection connection = connectionRegistrations.next();
+		
+		Connection result = getInfo(connection);
+
+		CsrResult csr = certService.createCSR(connection.getCertificateSubject(),
+		connection.getCertificateAlgorithm());
 
 		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
 
-		KeyStore newKey = getCertificateInternal(restTemplate, newKeyStorePassword, currentConnection.getRenewCertUrl(),
+		KeyStore newKey = getCertificateInternal(restTemplate, newKeyStorePassword, connection.getRenewCertUrl(),
 				csr.getCsr(), csr.getKeypair());
 
 		result.setKeyStorePassword(newKeyStorePassword);
@@ -245,7 +255,7 @@ public class PairingService {
 	 * Establishes the initial connection to Kyma / Extension Factory and returns an
 	 * object {@link Connection} with all needed details.
 	 * 
-	 * @param connectUri       with valid one time token from Connector Services
+	 * @param connectUri with valid one time token from Connector Services
 	 * @return {@link Connection} that contains all info related to the connection
 	 * @throws ApplicationConnectorException if anything fails
 	 */
@@ -259,8 +269,8 @@ public class PairingService {
 		KeyStore keyStore = getCertificateInternal(pairingTemplate, this.keyStorePassword.toCharArray(),
 				connectInfo.getCsrUrl(), csr.getCsr(), csr.getKeypair());
 
-		Connection connection = getInfo(connectInfo.getApi().getInfoUrl(), this.keyStorePassword.toCharArray(), keyStore,
-				connectInfo.getCertificate().getKeyAlgorithm(), connectInfo.getCertificate().getSubject());
+		Connection connection = getInfo(connectInfo.getApi().getInfoUrl(), this.keyStorePassword.toCharArray(),
+				keyStore, connectInfo.getCertificate().getKeyAlgorithm(), connectInfo.getCertificate().getSubject());
 
 		connectionRepository.save(connection);
 
@@ -273,23 +283,23 @@ public class PairingService {
 			if (aliases.hasMoreElements()) {
 				String alias = aliases.nextElement();
 				X509Certificate cert = (X509Certificate) keyStore.getCertificate(alias);
-				
+
 				String certificateSubject = cert.getSubjectX500Principal().getName();
 				String certificateAlgorithm = cert.getPublicKey().getAlgorithm();
-				
-				Connection connection = getInfo(infoUrl, keyStorePassword.toCharArray(), keyStore, certificateAlgorithm, certificateSubject);
-				
+
+				Connection connection = getInfo(infoUrl, keyStorePassword.toCharArray(), keyStore, certificateAlgorithm,
+						certificateSubject);
+
 				connectionRepository.save(connection);
-				
+
 				return connection;
 			} else {
-				throw new ApplicationConnectorException("KeyStore has no aliases");	
+				throw new ApplicationConnectorException("KeyStore has no aliases");
 			}
 		} catch (KeyStoreException e) {
 			throw new ApplicationConnectorException("KeyStore is defect");
 		}
 	}
-
 
 	public void deleteConnections() {
 		connectionRepository.deleteAll();
