@@ -91,11 +91,6 @@ spec:
                    configMapKeyRef:
                       name: mongo-kubernetes-config
                       key: mongodb_username
-              - name: personservicekubernetes_applicationconnector_baseurl
-                valueFrom: 
-                   configMapKeyRef:
-                      name: mongo-kubernetes-config
-                      key: connector_baseurl
               - name: spring_profiles_active
                 value: "ApplicationConnector" 
               - name: management_health_redis_enabled

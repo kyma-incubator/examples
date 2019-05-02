@@ -18,11 +18,10 @@
   - [Connect your Service to Kyma as Extension Platform](#connect-your-service-to-kyma-as-extension-platform)
     - [About](#about)
     - [Create new Application Connector Instance on Kyma](#create-new-application-connector-instance-on-kyma)
-    - [Pair Person Service with Kyma Application Connector (automatically)](#pair-person-service-with-kyma-application-connector-automatically)
-    - [Pair Person Service with Kyma Application Connector (manually)](#pair-person-service-with-kyma-application-connector-manually)
-    - [Reconfigure Person Service](#reconfigure-person-service)
+    - [Pair Person Service with Kyma Application Connector](#pair-person-service-with-kyma-application-connector)
+    - [Manual Pairing with Kym](#manual-pairing-with-kym)
+    - [Automatic Pairing with Kyma](#automatic-pairing-with-kyma)
     - [Checks](#checks-1)
-    - [Run the Scenario](#run-the-scenario)
   - [Extend your Person Service](#extend-your-person-service)
     - [Intro](#intro)
     - [Create Service Instance](#create-service-instance)
@@ -183,7 +182,7 @@ Before deploying the attached files you need to adapt `mongo-kubernetes-cluster1
 
 The below commands do this:
 
-`kubectl apply -f mongo-kubernetes-configmap-cluster1.yaml -n personservice`  
+`kubectl apply -f mongo-kubernetes-configmap-cluster.yaml -n personservice`  
 `kubectl apply -f mongo-kubernetes-cluster1.yaml -n personservice`
 
 `mongo-kubernetes-cluster1.yaml` creates the following Kubernetes objects:
@@ -279,24 +278,38 @@ personservicekubernetes-event-service-7466dc4c8f-2xfxf         2/2       Running
 ```
 
 After Pods are recreated, your new Application shall show up in the Kyma Console under `Integration -> Applications`
+###  Pair Person Service with Kyma Application Connector  
+To pair the Person Service with Kyma we will present two approaches.  
+In the [automatic flow](#Automatic-Pairing-with-Kyma)  you pass the URL generated in Kyma to the Person Service and the certificate requests and actual registration is handled by the service itself. This is the easiest way to get along with this example if you are not interested in the details of Application Connectivity in Kyma.  
+The [manual flow](#Manual-Pairing-with-Kyma) gives you full control of the steps and guides you through the requests to generate a certificate and register at Kyma. This includes more work but provides a deeper insight into the mechanics of Application Connectivity.  
+First, you need to update the application to enable the Application Connector profile. This will show you the REST endpoints for the automatic and manual flow.
 
-### Pair Person Service with Kyma Application Connector (automatically)
+We first create a configmap with the registrationfile that the Person Service posts against Kyma to register its API and events. The contents of this file will be posted against the `/v1/metadata/services` endpoint. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
 
-TODO: ONLY WORKS AFTER REDEPLOY
-To pair the Person Service with Kyma we will present two approaches. This section describes the "automatic" approach where the application takes care of the requests and certificates. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma "Connect URL" button into the JSON (see manual process step 1). The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
+```
+"api": {
+    "targetUrl": "changeme",
+    "spec": {}    	
+  }
+```
 
-![Insert connect URL in POST body](images/applicationpairing_auto.png)
+After that execute the following command:  
+`kubectl create configmap registrationfile --from-file=registrationfile.json -n personservice`
 
-The request should succeed with a status code 200 and an ID in the response body. You can now see the registered Person Service in the Kyma Application.
+To enable the Application Connector endpoints we reconfigure our service:  
 
-### Pair Person Service with Kyma Application Connector (manually)
+* Cluster: `kubectl apply -f mongo-kubernetes-cluster2.yaml -n personservice`
+* Minikube: `kubectl apply -f mongo-kubernetes-local2.yaml -n personservice`
 
-An alternative approach is to manually issue the necessary requests and handle the certificates. This will allow you to fully understand the steps of how applications register to Kyma. At the end of this section we will manually upload the JKS to the pod and trigger the registration.
+Make sure the new pod is created (otherwise delete the old pod, Kubernetes will recreate one).
+
+### Manual Pairing with Kym
+This sub chapter describes how to manually issue the necessary requests and handle the certificates. This will allow you to fully understand the steps of how applications register to Kyma. At the end of this section we will manually upload the JKS to our "manual" endpoint.
 
 1. Click on `Connect Application` and **open the link in the popup box in another browser tab**
 ![Connect Remote Environment Screenshot](images/applicationpairing.png)
 
-2. Copy the `csrUrl` address (must contain the /client-certs endpoint)
+2. Copy the `csrUrl` address and make sure to save the `infoUrl` somewhere. We will need it for the REST request in the last step.
 ![Connect Remote Environment Response Screenshot](images/remoteenvironmentpairing2.png)
 
 3. Create a Certificate Signing request using OpenSSL (https://www.openssl.org/) a series of commands. Before doing this create a new directory called `security` and then go ahead with OpenSSL in the new dir.
@@ -316,47 +329,20 @@ openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekube
    keytool -importkeystore -destkeystore personservicekubernetes.jks -srckeystore personservicekubernetes.p12 -srcstoretype pkcs12 -alias personservicekubernetes  -srcstorepass kyma-project -storepass kyma-project
    ```
 4. Now copy the resulting `personservicekubernetes.jks` file to `security` directory.
-5. To save the JKS persistently in the persistent volume of the Person Service you can issue the following command from your `security` directory:   
-   `kubectl cp personservicekubernetes.jks personservice/<POD_ID>:/jks/personservicekubernetes.jks`
-6. Use the POST `/applicationconnector/registration/manual` endpoint to register the application now.
+5. Use the POST `/applicationconnector/registration/manual` endpoint to register the application now. You need to pass the `infoUrl` the password we used for the JKS (`kyma-project`) and the JKS file.
+
+![Connect Remote Environment Manual Endpoint](images/remoteenvironmentpairing4.png)
 
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. **If you are running on locally on Minikube** the port of the gateway needs to be determined separately. To do this, issue the following command:
 
-`kubectl -n kyma-system get svc application-connector-ingress-nginx-ingress-controller -o 'jsonpath={.spec.ports[?(@.port==443)].nodePort}'`
-
-The use the resulting port in your URL, e.g.: https://gateway.{clusterhost}:{port}/personservicekubernetes/v1/metadata/services
-
-### Reconfigure Person Service
-
-To start with we need to deploy the newly created keystore to the cluster. To do so issue the following command in the `security` directory:
-
-`kubectl cp .\personservicekubernetes.jks personservice/<name_of_pod>:/jks/personservicekubernetes.jks`
-
-After that you need to create a new config map contains a file with all details needed to register the Person Service at the Kyma Cluster. If you want to know more about this step, refer to https://kyma-project.io/docs/latest/components/application-connector#details-register-a-secured-api. For simplicity all registration information is maintained in file `registration/registrationfile.json`. The contents of this file will be posted against the `/v1/metadata/services` endpoint. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
-
-```
-"api": {
-    "targetUrl": "changeme",
-    "spec": {}    	
-  }
-```
-
-When running locally on Minikube you have to point targetUrl to http://personservice.personservice.svc.cluster.local:8080.
-
-After updating the file, upload it to Kyma as another configmap:
-
-`kubectl create configmap registrationfile --from-file=registrationfile.json -n personservice`
-
-To make the service aware of the gateway you need to update fields marked with `# changeme:` in `mongo-kubernetes-configmap-local2.yaml` or `mongo-kubernetes-configmap-cluster2.yaml`. Then apply as follows:
-
-* Minikube: `kubectl apply -f mongo-kubernetes-configmap-local2.yaml -n personservice`
-* Cluster: `kubectl apply -f mongo-kubernetes-configmap-cluster2.yaml -n personservice`
 
 
-Now (based on your Kyma cluster type) you again need to update the fields marked with `# changeme:` in `mongo-kubernetes-cluster2.yaml` or `mongo-kubernetes-local2.yaml` and issue the following command:
+### Automatic Pairing with Kyma
+This section describes the "automatic" approach where the application takes care of the requests and certificates. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma "Connect URL" button into the JSON (see manual process step 1). The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
 
-* Minikube: `kubectl apply -f mongo-kubernetes-local2.yaml -n personservice`
-* Cluster: `kubectl apply -f mongo-kubernetes-cluster2.yaml -n personservice`
+![Insert connect URL in POST body](images/applicationpairing_auto.png)
+
+The request should succeed with a status code 200 and an ID in the response body. You can now see the registered Person Service in the Kyma Application.
 
 ### Checks
 
@@ -400,14 +386,7 @@ Volumes:
     Optional:    false
 ```
 
-### Run the Scenario
-
-After deployment you can access the swagger documentation under https://{kymahost}/swagger-ui.html. Here you should execute the POST against `/api/v1/applicationconnector/registration`. This will perform step 3 of the pairing process.
-
-![Application Registration Screenshot](images/remoteenvironmentregistration.png)
-
-Now you should see the following under Applications:
-
+After either the manual or automatic flow you should be able to see the following under Applications:  
 ![Application Registration Screenshot](images/applicationregistration2.png)
 
 This means now you can bind this Application to a Kyma Namespace and process events in Serverless Lambda functions. You can either use the UI or kubectl. In the UI, bind the Application by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f app-personservice-environment-map.yaml` to do the same.
