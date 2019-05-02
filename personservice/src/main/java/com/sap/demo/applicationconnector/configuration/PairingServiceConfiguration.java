@@ -53,8 +53,6 @@ public class PairingServiceConfiguration {
 	@Bean("PairingTemplate")
 	public RestTemplate pairingRestTemplate() throws KeyStoreException, KeyManagementException, NoSuchAlgorithmException {
 
-		// HttpClient client = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
-
 		SSLContextBuilder builder = new SSLContextBuilder();
 		builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
 	

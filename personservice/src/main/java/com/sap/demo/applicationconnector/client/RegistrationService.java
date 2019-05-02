@@ -127,7 +127,7 @@ public class RegistrationService {
 		ParameterizedTypeReference<List<RegistrationQueryResponse>> responseType = new ParameterizedTypeReference<List<RegistrationQueryResponse>>() {
 		};
 		ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate
-				.exchange("/v1/metadata/services", HttpMethod.GET, null, responseType);
+				.exchange("/", HttpMethod.GET, null, responseType);
 
 		for (RegistrationQueryResponse response : kymaRegistrations.getBody()) {
 			try {

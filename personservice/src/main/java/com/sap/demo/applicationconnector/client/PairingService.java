@@ -245,8 +245,6 @@ public class PairingService {
 			result.setCertificateAlgorithm(certificateAlgorithm);
 			result.setCertificateSubject(certificateSubject);
 			result.setEventsUrl(response.getBody().getUrls().getEventsUrl());
-			// if (response.getBody().getUrls().getEventsUrl() != null)
-			// 	result.setEventsURLs(Collections.singletonList(response.getBody().getUrls().getEventsUrl()));
 
 			return result;
 		} catch (RestClientException e) {
