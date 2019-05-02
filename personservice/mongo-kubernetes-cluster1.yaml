@@ -28,7 +28,6 @@ spec:
     app: personservice
     version: "0.0.3"
   type: NodePort
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -65,7 +64,6 @@ spec:
                 name: http
               - containerPort: 8081
                 name: actuatorhttp                
-
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 
@@ -95,5 +93,4 @@ spec:
               - name: management_health_redis_enabled
                 value: "false" 
               - name: spring_profiles_active
-                value: Default 
-                             
+                value: Default

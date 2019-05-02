@@ -19,7 +19,7 @@
     - [About](#about)
     - [Create new Application Connector Instance on Kyma](#create-new-application-connector-instance-on-kyma)
     - [Pair Person Service with Kyma Application Connector](#pair-person-service-with-kyma-application-connector)
-    - [Manual Pairing with Kym](#manual-pairing-with-kym)
+    - [Manual Pairing with Kyma](#manual-pairing-with-kyma)
     - [Automatic Pairing with Kyma](#automatic-pairing-with-kyma)
     - [Checks](#checks-1)
   - [Extend your Person Service](#extend-your-person-service)
@@ -74,7 +74,7 @@ This example is tested and based on [Kyma 1.0.0](https://github.com/kyma-project
 
 ### Namespace Setup
 
-An Namespace is a custom Kyma security and organizational unit based on the concept of Kubernetes Namespaces. Kyma Namespaces allow you to divide the cluster into smaller units to use for different purposes, such as development and testing. Learn more from official documentation about [Namespaces](https://kyma-project.io/docs/latest/root/kyma/#details-namespaces).
+A Namespace is a custom Kyma security and organizational unit based on the concept of Kubernetes Namespaces. Kyma Namespaces allow you to divide the cluster into smaller units to use for different purposes, such as development and testing. Learn more from official documentation about [Namespaces](https://kyma-project.io/docs/latest/root/kyma/#details-namespaces).
 
 To setup the namespace for this showcase call this command from the project root:
 
@@ -155,7 +155,7 @@ To read a set of credentials:
 
 Deploying Kyma requires to upload a configmap and also a kubernetes deployment and a service.
 
-Before deploying the attached files you need to adapt `mongo-kubernetes-local1.yaml` to your cluster. The parts that require attention are marked with `# changeme:` and instructions are available in the comments.
+Before deploying the attached files you need to adapt `mongo-kubernetes-local1.yaml` to your cluster. The parts that require attention are marked with `#changeme:` and instructions are available in the comments.
 
 The below commands do this: 
 
@@ -278,11 +278,12 @@ After Pods are recreated, your new Application shall show up in the Kyma Console
 
 ###  Pair Person Service with Kyma Application Connector  
 To pair the Person Service with Kyma we will present two approaches.  
-In the [automatic flow](#Automatic-Pairing-with-Kyma)  you pass the URL generated in Kyma to the Person Service and the certificate requests and actual registration is handled by the service itself. This is the easiest way to get along with this example if you are not interested in the details of Application Connectivity in Kyma.  
+In the [automatic flow](#Automatic-Pairing-with-Kyma)  you pass the URL generated in Kyma to the Person Service and the certificate requests and actual registration is handled by the service itself. This is the easy way and lets you move on fast.  
 The [manual flow](#Manual-Pairing-with-Kyma) gives you full control of the steps and guides you through the requests to generate a certificate and register at Kyma. This includes more work but provides a deeper insight into the mechanics of Application Connectivity.  
+
 First, you need to update the application to enable the Application Connector profile. This will show you the REST endpoints for the automatic and manual flow.
 
-We first create a configmap with the registrationfile that the Person Service posts against Kyma to register its API and events. The contents of this file will be posted against the `/v1/metadata/services` endpoint. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
+We first create a configmap with the registrationfile that the Person Service posts against Kyma to register its API and events. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
 
 ```
 "api": {
@@ -291,7 +292,7 @@ We first create a configmap with the registrationfile that the Person Service po
   }
 ```
 
-After that execute the following command:  
+After that execute the following command from the `/registration` directory:  
 `kubectl create configmap registrationfile --from-file=registrationfile.json -n personservice`
 
 To enable the Application Connector endpoints we reconfigure our service:  
@@ -299,12 +300,13 @@ To enable the Application Connector endpoints we reconfigure our service:
 * Cluster: `kubectl apply -f mongo-kubernetes-cluster2.yaml -n personservice`
 * Minikube: `kubectl apply -f mongo-kubernetes-local2.yaml -n personservice`
 
-Make sure the new pod is created (otherwise delete the old pod, Kubernetes will recreate one).
+Make sure the new pod is created (otherwise delete the old pod, Kubernetes will recreate one). To check whether your changes are active, issue the following command until you again have **exactly** 1 Pod of `personservice-*-*` in status running:  
+`kubectl get pods -n personservice`
 
-### Manual Pairing with Kym
+### Manual Pairing with Kyma
 This sub chapter describes how to manually issue the necessary requests and handle the certificates. This will allow you to fully understand the steps of how applications register to Kyma. At the end of this section we will manually upload the JKS to our "manual" endpoint.
 
-1. Click on `Connect Application` and **open the link in the popup box in another browser tab**
+1. Click on `Connect Application` and **open the link in the popup box in another browser tab**.
 ![Connect Remote Environment Screenshot](images/applicationpairing.png)
 
 2. Copy the `csrUrl` address and make sure to save the `infoUrl` somewhere. We will need it for the REST request in the last step.
@@ -318,25 +320,23 @@ openssl genrsa -out personservicekubernetes.key 2048
 openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekubernetes.key -subj "/OU=OrgUnit/O=Organization/L=Waldorf/ST=Waldorf/C=DE/CN=personservicekubernetes"
 ```
 
-1. Encode the content of `personservicekubernetes.csr` (Base64) and use the REST client of your choice to create the following POST call to the full URL (csrUrl) with the token you copied previously:
+4. Encode the content of `personservicekubernetes.csr` (Base64) and use the REST client of your choice to create the following POST call to the full URL (csrUrl) with the token you copied previously:
 ![Connect Remote Environment CSR Screenshot](images/remoteenvironmentpairing3.png)
-2. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`. The decoded response will contain separators with `BEGIN CERTIFICATE` and `END CERTIFICATE` respectively.
-3. Now you can use OpenSSL and java keytool (part of the jdk) to create a PKCS#12 (P12, also good for browser based testing) file and based on that create a Java Key Store (JKS, for the Person Service) for our service. **Do not change any passwords, except if you really know what you are doing!!!**
+5. After sending you will receive a base 64 encoded signed certificate. Decode the response and save as `personservicekubernetes.crt`. The decoded response will contain separators with `BEGIN CERTIFICATE` and `END CERTIFICATE` respectively.
+6. Now you can use OpenSSL and java keytool (part of the jdk) to create a PKCS#12 (P12, also good for browser based testing) file and based on that create a Java Key Store (JKS, for the Person Service) for our service. **Do not change any passwords, except if you really know what you are doing!!!**
    ```
    openssl pkcs12 -export -name personservicekubernetes -in personservicekubernetes.crt -inkey personservicekubernetes.key -out personservicekubernetes.p12 -password pass:kyma-project
    keytool -importkeystore -destkeystore personservicekubernetes.jks -srckeystore personservicekubernetes.p12 -srcstoretype pkcs12 -alias personservicekubernetes  -srcstorepass kyma-project -storepass kyma-project
    ```
-4. Now copy the resulting `personservicekubernetes.jks` file to `security` directory.
-5. Use the POST `/applicationconnector/registration/manual` endpoint to register the application now. You need to pass the `infoUrl` the password we used for the JKS (`kyma-project`) and the JKS file.
+7. Now copy the resulting `personservicekubernetes.jks` file to `security` directory.
+8. Use the POST `/applicationconnector/registration/manual` endpoint to register the application now. You need to pass the `infoUrl` the password we used for the JKS (`kyma-project`) and the JKS file.
 
 ![Connect Remote Environment Manual Endpoint](images/remoteenvironmentpairing4.png)
 
-To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON. **If you are running on locally on Minikube** the port of the gateway needs to be determined separately. To do this, issue the following command:
-
-
+To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON.
 
 ### Automatic Pairing with Kyma
-This section describes the "automatic" approach where the application takes care of the requests and certificates. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma "Connect URL" button into the JSON (see manual process step 1). The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
+This section describes the "automatic" approach where the application takes care of the requests and certificates. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma "Connect URL" button into the JSON (see manual process step 1). The service will create the CSR itself, get the certificate from Kyma and store an object in the mongodb.
 
 ![Insert connect URL in POST body](images/applicationpairing_auto.png)
 
@@ -344,52 +344,12 @@ The request should succeed with a status code 200 and an ID in the response body
 
 ### Checks
 
-To check whether your changes are active, issue the following command until you again have **exactly** 1 Pod of `personservice-*-*` in status running:  
-`kubectl get pods -n personservice`.
-
-After that issue a kubectl describe command for 1 of the pods (replacing '\*' with actual values):  
-`kubectl describe pod -l app=personservice -n personservice`
-
-The output must look something like this ('..' depicts other content which I deleted):
-
-```
-Name:           personservice-*-*
-Namespace:      personservice
-..
-Init Containers:
-  istio-init:
-   ..
-Containers:
-  personservice:
-    Container ID:   
-    ..
-    Environment:
-      .. 
-      personservicekubernetes_applicationconnector_baseurl:  <set to the key 'connector_baseurl' of config map 'mongo-kubernetes-config'>        Optional: false
-      spring_profiles_active:                               ApplicationConnector
-      ..
-    Mounts:
-      /registration from registrationfile (ro)
-      /security from kyma-certificate (ro)
-      /var/run/secrets/kubernetes.io/serviceaccount from default-token-6nb7x (ro)   
-  ..
-Volumes:
-  registrationfile:
-    Type:      ConfigMap (a volume populated by a ConfigMap)
-    Name:      registrationfile
-    Optional:  false
-  kyma-certificate:
-    Type:        Secret (a volume populated by a Secret)
-    SecretName:  kyma-certificate
-    Optional:    false
-```
-
 After either the manual or automatic flow you should be able to see the following under Applications:  
 ![Application Registration Screenshot](images/applicationregistration2.png)
 
 This means now you can bind this Application to a Kyma Namespace and process events in Serverless Lambda functions. You can either use the UI or kubectl. In the UI, bind the Application by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f app-personservice-namespace-map.yaml` to do the same.
 
-Then navigate to the Namespace "personservice" and select the 'Catalog' and explore the Service 'Person API' (see screenshot).
+Then navigate to the Namespace "personservice" and select the "Catalog" and explore the Service 'Person API' (see screenshot).
 
 ![Application Registration Screenshot](images/applicationregistration3.png)
 
@@ -411,7 +371,7 @@ As always this function is not intended for productive use.
 
 ### Create Service Instance
 
-A precondition for this scenario is that all steps mentioned in [Run the Scenario](#run-the-scenario) have been executed properly.
+A precondition for this scenario is that all steps mentioned in [Pair Person Service with Kyma](#Pair-Person-Service-with-Kyma-Application-Connector) have been executed properly (manually or automatically).
 
 In your Kyma Namespace "Personservice" go to the Catalog and create a new service instance of the Person API:
 
@@ -435,8 +395,7 @@ module.exports = {
 
 ```
 
-The meaning and contents of the event and context object is described in https://kyma-project.io/docs/latest/components/serverless#model-model. 
-
+The meaning and contents of the event and context object is described in https://kyma-project.io/docs/latest/components/serverless.  
 As soon as a Lambda requires NPM dependencies, it also require a package.json file (easiest way to create a skeleton is `npm init`). Dependencies are then managed in the dependencies section:
 
 ```
@@ -520,7 +479,10 @@ To deploy your Lambda you need to go to your "personservice" Kyma namespace. Cli
 
 ![Lambda Creation Screenshot](images/lambda5.png)
 
-Now the command `kubectl get pods -n personservice -l app=mark-duplicate-persons` should return a pod in status running (might take several repetions though). Now you can issue the following command to inspect the logs: `kubectl logs -n personservice -l app=mark-duplicate-persons -c mark-duplicate-persons`. As nothing is happening, you should only see the periodic health checks:
+Now the command `kubectl get pods -n personservice -l app=mark-duplicate-persons` should return a pod in status running (might take several repetions though). Now you can issue the following command to inspect the logs:  
+`kubectl logs -n personservice -l app=mark-duplicate-persons -c mark-duplicate-persons`  
+
+As nothing is happening, you should only see the periodic health checks:
 
 ```
 ::ffff:127.0.0.1 - - [28/Aug/2018:14:37:48 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
@@ -531,12 +493,6 @@ Now the command `kubectl get pods -n personservice -l app=mark-duplicate-persons
 ::ffff:127.0.0.1 - - [28/Aug/2018:14:38:13 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
 ::ffff:127.0.0.1 - - [28/Aug/2018:14:38:18 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
 ::ffff:127.0.0.1 - - [28/Aug/2018:14:38:23 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
-::ffff:127.0.0.1 - - [28/Aug/2018:14:38:28 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
-::ffff:127.0.0.1 - - [28/Aug/2018:14:38:33 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
-::ffff:127.0.0.1 - - [28/Aug/2018:14:38:38 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
-::ffff:127.0.0.1 - - [28/Aug/2018:14:38:43 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
-::ffff:127.0.0.1 - - [28/Aug/2018:14:38:48 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
-::ffff:127.0.0.1 - - [28/Aug/2018:14:38:53 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
 ```
 
 ### Test your Lambda
@@ -621,7 +577,7 @@ Then invoke the environment api of the person service (this is returning a json 
 * PORT
 * REDIS_PASSWORD
 
-If you don't find them, restart your pods and try again: `kubectl delete pods -n personservice -l app=personservice` (Deployment controller will recreate them ;-)).
+If you don't find them, restart your pods and try again: `kubectl delete pods -n personservice -l app=personservice`.
 
 The variables are injected through the Binding (details are available in the documentation).
 
@@ -674,7 +630,8 @@ Now you can update your deployment and restart the pods:
 
 ### Test the Service
 
-To test this you will have to stream the logs of your personservice. To do this issue the following command: `kubectl logs -n personservice {your pod}  personservice --follow` (replace "{your pod}" with the name of your pod).
+To test this you will have to stream the logs of your personservice. To do this issue the following command:  
+`kubectl logs -n personservice {your pod}  personservice --follow` (replace "{your pod}" with the name of your pod).
 
 Now invoke GET /api/v1/person/{personid}. During the first call you should see something along the lines of the below example. All subsequent calls will not appear as they will be directly fetched from the cache.
 
