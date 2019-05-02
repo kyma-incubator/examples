@@ -53,7 +53,7 @@ public class Connection {
 	// Instead of persisting the KeyStore object, the byte[] of it is stored
 	private byte[] sslKeyStream;
 	private char[] keyStorePassword;
-	private List<URI> eventsURLs = new ArrayList<URI>();
+	private URI eventsUrl;
 	
 	/**
 	 * Returns the expiry date of the application certificate contained in the keystore 

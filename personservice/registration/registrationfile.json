@@ -3,7 +3,7 @@
     "name":"Person API",
     "description":"Local Service for managing Persons",
     "api":{  
-       "targetUrl":"http://personservice.ace.cluster.extend.sap.cx:8080",
+       "targetUrl":"https://personservice.personservice.svc.cluster.local",
        "spec":{  
           "swagger":"2.0",
           "info":{  

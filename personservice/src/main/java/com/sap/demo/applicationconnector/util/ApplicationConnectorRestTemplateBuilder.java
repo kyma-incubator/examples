@@ -27,10 +27,12 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+@Profile("ApplicationConnector")
 @Service
 public class ApplicationConnectorRestTemplateBuilder {
     private static Cache<String, RestTemplate> cache = CacheBuilder.newBuilder().maximumSize(100)
@@ -38,9 +40,6 @@ public class ApplicationConnectorRestTemplateBuilder {
 
 	private ConnectionRepository connectionRepository;
 	private RestTemplateBuilder restTemplateBuilder;
-	
-	@Value("${personservicekubernetes.applicationconnector.baseurl}")
-	private String connectorBaseUrl;
 
 	@Autowired
 	public void setConnectionRepository(ConnectionRepository connectionRepository) {
@@ -78,6 +77,73 @@ public class ApplicationConnectorRestTemplateBuilder {
 		}
 	}
 
+	public RestTemplate getEventEndpointRestTemplate() {
+		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
+		
+		if (!connectionRegistrations.hasNext()) {
+			throw new RestTemplateCustomizerException("No connection registered.");
+		}
+
+		Connection connection = connectionRegistrations.next();
+		String baseUri = connection.getEventsUrl().toString();
+
+		return getRestTemplate(connection, baseUri);
+	}
+
+	// Returns a RestTemplate where the baseUrl is set to the metadata URL of the connection (/v1/metadata/services)
+	public RestTemplate getMetadataEndpointRestTemplate() {
+		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
+		
+		if (!connectionRegistrations.hasNext()) {
+			throw new RestTemplateCustomizerException("No connection registered.");
+		}
+
+		Connection connection = connectionRegistrations.next();
+		String baseUri = connection.getMetadataUrl().toString();
+
+		return getRestTemplate(connection, baseUri);
+	}
+
+	public RestTemplate getRestTemplate(Connection connection, String baseUri) {
+		
+		char[] keyStorePassword = connection.getKeyStorePassword();
+
+		KeyStore clientCertificate = connection.getSslKey();
+
+		String certificateFingerprint = getCertificateFingerprint(clientCertificate);
+		
+		RestTemplate result = cache.getIfPresent(certificateFingerprint);
+		
+		if (result == null) {
+			try {
+				SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword)
+						.build();
+
+				SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
+
+				HttpClient client = HttpClients.custom().setSSLSocketFactory(socketFactory).build();
+
+				result = restTemplateBuilder.rootUri(baseUri)
+						.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client)).build();
+				
+				cache.put(certificateFingerprint, result);
+				
+				return result;
+				
+			} catch (KeyManagementException e) {
+				throw new RestTemplateCustomizerException(e.getMessage(), e);
+			} catch (UnrecoverableKeyException e) {
+				throw new RestTemplateCustomizerException(e.getMessage(), e);
+			} catch (NoSuchAlgorithmException e) {
+				throw new RestTemplateCustomizerException(e.getMessage(), e);
+			} catch (KeyStoreException e) {
+				throw new RestTemplateCustomizerException(e.getMessage(), e);
+			}
+		} else {
+			return result;
+		}
+	}
+
 	// Returns a RestTemplate from the Connection object saved in the database (or from the cache)
 	public RestTemplate applicationConnectorRestTemplate() {
 		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
@@ -104,7 +170,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 
 				HttpClient client = HttpClients.custom().setSSLSocketFactory(socketFactory).build();
 
-				result = restTemplateBuilder.rootUri(connectorBaseUrl)
+				result = restTemplateBuilder
 						.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client)).build();
 				
 				cache.put(certificateFingerprint, result);
@@ -141,7 +207,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 
 				HttpClient client = HttpClients.custom().setSSLSocketFactory(socketFactory).build();
 
-				result = restTemplateBuilder.rootUri(connectorBaseUrl)
+				result = restTemplateBuilder
 						.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client)).build();
 				
 				cache.put(certificateFingerprint, result);

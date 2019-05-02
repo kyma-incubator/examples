@@ -135,7 +135,7 @@ async function findDuplicates(personToSearch, traceCtxHeaders) {
 
 function extractTraceHeaders(headers) {
 
-    logger.log('debug', `Number of headers found: ${headers.length}`, { "headers": headers });
+    logger.log('debug', `Number of headers found: ${Object.keys(headers).length}`, { "headers": headers });
 
     var map = {};
 

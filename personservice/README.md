@@ -69,7 +69,7 @@ This sample application was created to give you a running end to end sample appl
 This application runs on [Kyma](https://kyma-project.io). Therefore, to try out this example on your local machine you need to [install Kyma](https://kyma-project.io/docs/latest/root/kyma#getting-started-local-kyma-installation) first, or have access to Kyma cluster.  
 
 **![alt text](images/kyma_symbol_text.svg "Logo Title Text 1")  
-This example is tested and based on [Kyma 0.8.0](https://github.com/kyma-project/kyma/releases/tag/0.8.0). Compatibility with other versions is not guaranteed.**
+This example is tested and based on [Kyma 1.0.0](https://github.com/kyma-project/kyma/releases/tag/1.0.0). Compatibility with other versions is not guaranteed.**
 
 ## Deploy the application
 
@@ -86,7 +86,7 @@ Now, once you call `kubectl get namespaces -l=env=true` among other environments
 Issue the following commands to delete default resource constraints and re-create them a little more relaxed:
 
 `kubectl delete -n personservice LimitRange kyma-default`  
-`kubectl delete -n personservice ResourceQuota gke-resource-quotas`  
+`kubectl delete -n personservice ResourceQuota kyma-default`  
 `kubectl apply -f environment-resources.yaml -n personservice`
 
 This was to ensure we don't hit ceilings in terms of memory usage (However, on Minikube/Local installation this might be challenging). For more details read [Configure Default Memory Requests and Limits for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/)
@@ -95,12 +95,16 @@ This was to ensure we don't hit ceilings in terms of memory usage (However, on M
 
 To deploy Mongodb use Helm (https://helm.sh). To install helm do the following:
 
-1. Initialize Helm (if not already done, client-only option as kyma already comes with tiller installed):  
+1. First we need to fetch certificates from our cluster to have a secure communication via helm. Navigate to your `~/.helm` directory and get the certificates:  
+`kubectl get -n kyma-installer secret helm-secret -o jsonpath="{.data['global\.helm\.ca\.crt']}" | base64 --decode > "ca.pem"`  
+`kubectl get -n kyma-installer secret helm-secret -o jsonpath="{.data['global\.helm\.tls\.crt']}" | base64 --decode > "cert.pem"`  
+`kubectl get -n kyma-installer secret helm-secret -o jsonpath="{.data['global\.helm\.tls\.key']}" | base64 --decode > "key.pem"`
+
+2. Initialize Helm (if not already done, client-only option as kyma already comes with tiller installed):  
 `helm init --client-only`
 
-2. Then deploy Mongo DB: 
-`helm install --name first-mongo --set "podAnnotations.sidecar\.istio\.io/inject='false',persistence.size=2Gi" stable/mongodb --namespace personservice` 
-
+2. Then deploy Mongo DB:  
+`helm install --tls --name first-mongo --set "persistence.size=2Gi" stable/mongodb --namespace personservice` 
 
 ### Java Build
 
@@ -179,7 +183,7 @@ Before deploying the attached files you need to adapt `mongo-kubernetes-cluster1
 
 The below commands do this:
 
-`kubectl apply -f mongo-kubernetes-configmap-cluster1.yaml -n personservice`   
+`kubectl apply -f mongo-kubernetes-configmap-cluster1.yaml -n personservice`  
 `kubectl apply -f mongo-kubernetes-cluster1.yaml -n personservice`
 
 `mongo-kubernetes-cluster1.yaml` creates the following Kubernetes objects:
@@ -269,15 +273,16 @@ To check whether the pods are up and running issue
 The result should look like this:
 
 ```
-NAME                                                        READY     STATUS    RESTARTS   AGE
-personservicekubernetes-application-proxy-78447c489d-d55fk   2/2     Running   0          45m
-personservicekubernetes-event-service-7466dc4c8f-2xfxf       2/2     Running   0          45
+NAME                                                           READY     STATUS    RESTARTS   AGE
+personservicekubernetes-application-gateway-78447c489d-d55fk   2/2       Running   0          45m
+personservicekubernetes-event-service-7466dc4c8f-2xfxf         2/2       Running   0          45
 ```
 
 After Pods are recreated, your new Application shall show up in the Kyma Console under `Integration -> Applications`
 
 ### Pair Person Service with Kyma Application Connector (automatically)
 
+TODO: ONLY WORKS AFTER REDEPLOY
 To pair the Person Service with Kyma we will present two approaches. This section describes the "automatic" approach where the application takes care of the requests and certificates. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma "Connect URL" button into the JSON (see manual process step 1). The service will create the CSR itself, get the certificate from Kyma and store it in the persistent volume.
 
 ![Insert connect URL in POST body](images/applicationpairing_auto.png)
@@ -738,7 +743,7 @@ Or directly reference the the file from git:
 After that check whether the pod is running with:  
 `kubectl get pods -n personservice -l app=tokenissuer`
 
-Then you can go to `https://{hostname}/swagger-ui.html`. A restart of your personservice pod may be required (just delete the pod). Test the following operations:
+Then you can go to `https://tokenissuer.{hostname}/swagger-ui.html`. A restart of your personservice pod may be required (just delete the pod). Test the following operations:
 
 * GET /jwk: To get the public key used for validating the signature. Should return something like: 
 

@@ -1,6 +1,15 @@
 package com.sap.demo.applicationconnector.configuration;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+
 import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContextBuilder;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -38,11 +47,20 @@ public class PairingServiceConfiguration {
 	 * consistency
 	 * 
 	 * @return generic {@link RestTemplate} based on {@link HttpClient}
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
 	 */
 	@Bean("PairingTemplate")
-	public RestTemplate pairingRestTemplate() {
+	public RestTemplate pairingRestTemplate() throws KeyStoreException, KeyManagementException, NoSuchAlgorithmException {
 
-		HttpClient client = HttpClients.createDefault();
+		// HttpClient client = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
+
+		SSLContextBuilder builder = new SSLContextBuilder();
+		builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+	
+		SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build());
+		CloseableHttpClient client = HttpClients.custom().setSSLSocketFactory(sslsf).build();
+
 		return restTemplateBuilder.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client)).build();
 
 	}

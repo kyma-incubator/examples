@@ -32,6 +32,7 @@ import com.sap.demo.applicationconnector.util.ApplicationConnectorRestTemplateBu
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,7 @@ import lombok.Data;
  * @author Andreas Krause
  * @see Connection
  */
+@Profile("ApplicationConnector")
 @Service
 public class PairingService {
 
@@ -60,6 +62,7 @@ public class PairingService {
 	private ApplicationConnectorRestTemplateBuilder restTemplateBuilder;
 	private ConnectionRepository connectionRepository;
 
+	// Just for educational purposes. Don't do this in production environments!
 	private String keyStorePassword = "kyma-project";
 
 	@Autowired
@@ -241,9 +244,9 @@ public class PairingService {
 			result.setSslKey(keyStore);
 			result.setCertificateAlgorithm(certificateAlgorithm);
 			result.setCertificateSubject(certificateSubject);
-
-			if (response.getBody().getUrls().getEventsUrl() != null)
-				result.setEventsURLs(Collections.singletonList(response.getBody().getUrls().getEventsUrl()));
+			result.setEventsUrl(response.getBody().getUrls().getEventsUrl());
+			// if (response.getBody().getUrls().getEventsUrl() != null)
+			// 	result.setEventsURLs(Collections.singletonList(response.getBody().getUrls().getEventsUrl()));
 
 			return result;
 		} catch (RestClientException e) {

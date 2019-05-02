@@ -42,7 +42,7 @@ public abstract class AbstractApplicationConnectorEventBridge {
 
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
 
-		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
+		RestTemplate restTemplate = restTemplateBuilder.getEventEndpointRestTemplate();
 
 		if (event instanceof PersonDeleteEvent) {
 			kymaEvent = new KymaEvent(DELETE_EVENT, VERSION, df.format(new Date()),
@@ -55,9 +55,10 @@ public abstract class AbstractApplicationConnectorEventBridge {
 					Collections.singletonMap("personid", event.getPersonId()));
 		}
 
-		ResponseEntity<String> response = restTemplate.exchange("/v1/events", HttpMethod.POST,
+		ResponseEntity<String> response = restTemplate.exchange("/", HttpMethod.POST,
 				new HttpEntity<KymaEvent>(kymaEvent), String.class);
-
+		System.out.println("Eventid: " + event.getPersonId());
+		System.out.println("Wrote event: " + response.getStatusCode() + response.getHeaders().toString() + response.getBody().toString());
 		if (!response.getStatusCode().is2xxSuccessful()) {
 			throw new PersonServiceException("Event replication to Kyma unsuccessful");
 		}

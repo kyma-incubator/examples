@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.client.RootUriTemplateHandler;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -81,7 +82,7 @@ public class RegistrationService {
 
 		Iterator<ServiceRegistration> serviceRegistrations = serviceRegistrationRepository.findAll().iterator();
 
-		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
+		RestTemplate restTemplate = restTemplateBuilder.getMetadataEndpointRestTemplate();
 
 		logger.trace(String.format("Has persisted registration: %b", serviceRegistrations.hasNext()));
 
@@ -91,7 +92,7 @@ public class RegistrationService {
 			logger.trace(String.format("Persisted registration: %s", registrationId));
 
 			ResponseEntity<Object> registrationStatus = restTemplate
-					.getForEntity("/v1/metadata/services/{registrationId}", Object.class, registrationId);
+					.getForEntity("/{registrationId}", Object.class, registrationId);
 
 			logger.trace(String.format("Response Code GET %s registration: %d", registrationId,
 					registrationStatus.getStatusCode().value()));
@@ -103,10 +104,10 @@ public class RegistrationService {
 
 		if (isRegistered) {
 			logger.trace("PUT Call");
-			restTemplate.put("/v1/metadata/services/{serviceId}", getServiceModelForRegistration(), registrationId);
+			restTemplate.put("/{serviceId}", getServiceModelForRegistration(), registrationId);
 		} else {
 			logger.trace("POST Call");
-			ResponseEntity<RegistrationResponseModel> response = restTemplate.postForEntity("/v1/metadata/services",
+			ResponseEntity<RegistrationResponseModel> response = restTemplate.postForEntity("/",
 					getServiceModelForRegistration(), RegistrationResponseModel.class);
 
 			logger.trace(String.format("Response Code POST: %s", response.getBody().toString()));
@@ -122,7 +123,7 @@ public class RegistrationService {
 	public void deleteRegistrations() {
 		serviceRegistrationRepository.deleteAll();
 
-		RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
+		RestTemplate restTemplate = restTemplateBuilder.getMetadataEndpointRestTemplate();
 		ParameterizedTypeReference<List<RegistrationQueryResponse>> responseType = new ParameterizedTypeReference<List<RegistrationQueryResponse>>() {
 		};
 		ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate
@@ -130,7 +131,7 @@ public class RegistrationService {
 
 		for (RegistrationQueryResponse response : kymaRegistrations.getBody()) {
 			try {
-				restTemplate.exchange("/v1/metadata/services/{registrationId}", HttpMethod.DELETE, null, String.class,
+				restTemplate.exchange("/{registrationId}", HttpMethod.DELETE, null, String.class,
 						response.getId());
 				logger.trace(String.format("Deleted %s from Kyma", response.getId()));
 				// Do nothing, delete all you can
@@ -144,10 +145,10 @@ public class RegistrationService {
 		ParameterizedTypeReference<List<RegistrationQueryResponse>> responseType = new ParameterizedTypeReference<List<RegistrationQueryResponse>>() {
 		};
 		try {
-			RestTemplate restTemplate = restTemplateBuilder.applicationConnectorRestTemplate();
+			RestTemplate restTemplate = restTemplateBuilder.getMetadataEndpointRestTemplate();
 			
 			ResponseEntity<List<RegistrationQueryResponse>> kymaRegistrations = restTemplate
-			.exchange("/v1/metadata/services", HttpMethod.GET, null, responseType);
+			.exchange("/", HttpMethod.GET, null, responseType);
 			return kymaRegistrations.getBody();
 		} catch (RestTemplateCustomizerException e) {
 			// No registrations available

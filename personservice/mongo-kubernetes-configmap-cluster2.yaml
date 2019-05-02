@@ -11,4 +11,4 @@ data:
   authentication_database: admin
   mongodb_username: root
 # # changeme: Replace with your Gateway URL from previous step (including port)
-  connector_baseurl: https://gateway.ace.cluster.extend.sap.cx:30203/personservicekubernetes
+  connector_baseurl: https://gateway.acdemo.cluster.extend.cx.cloud.sap/personservicekubernetes

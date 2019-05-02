@@ -45,7 +45,7 @@ spec:
          app: personservice
    template:
       metadata:
-         labels:    
+         labels:
             app: personservice
             version: "0.0.3"
          annotations:
@@ -58,7 +58,7 @@ spec:
              resources:
                 limits:
                    memory: 1Gi
-             imagePullPolicy: Always              
+             imagePullPolicy: Always
              ports:
               - containerPort: 8080
                 name: http
@@ -100,23 +100,18 @@ spec:
               - name: logging_level_com_sap_demo_service
                 value: "TRACE"
               - name: management_health_redis_enabled
-                value: "false" 
+                value: "false"
               - name: spring_redis_host
-                value: "${HOST}"   
+                value: "${HOST}"
               - name: spring_redis_port
                 value: "${PORT}"
               - name: spring_redis_password
-                value: "${REDIS_PASSWORD}"           
+                value: "${REDIS_PASSWORD}"
              volumeMounts:
-              # - mountPath: /jks
-              #   name: jks-persistent
               - mountPath: /registration
                 name: registrationfile
                 readOnly: true
          volumes:
-          # - name: jks-persistent
-          #   persistentVolumeClaim:
-          #      claimName: personservice-pvc
           - name: registrationfile
             configMap:
               name: registrationfile 
