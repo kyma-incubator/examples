@@ -7,12 +7,12 @@
   - [Overview](#overview)
   - [Prerequisites](#prerequisites)
   - [Deploy the application](#deploy-the-application)
-    - [Environment Setup](#environment-setup)
+    - [Namespace Setup](#namespace-setup)
     - [Mongo DB](#mongo-db)
     - [Java Build](#java-build)
     - [Docker Credential Helper Setup](#docker-credential-helper-setup)
-    - [Deploy to Local Kyma (Minikube)](#deploy-to-local-kyma-minikube)
-    - [Deploy to "real" Kyma Cluster](#deploy-to-%22real%22-kyma-cluster)
+    - [Deploy Kyma locally (Minikube)](#deploy-kyma-locally-minikube)
+    - [Deploy Kyma in a cluster](#deploy-kyma-in-a-cluster)
     - [Checks](#checks)
     - [Try out on Kyma](#try-out-on-kyma)
   - [Connect your Service to Kyma as Extension Platform](#connect-your-service-to-kyma-as-extension-platform)
@@ -72,21 +72,21 @@ This example is tested and based on [Kyma 1.0.0](https://github.com/kyma-project
 
 ## Deploy the application
 
-### Environment Setup
+### Namespace Setup
 
-An Environment is a custom Kyma security and organizational unit based on the concept of Kubernetes Namespaces. Kyma Environments allow you to divide the cluster into smaller units to use for different purposes, such as development and testing. Learn more from official documentation about [Environments](https://kyma-project.io/docs/latest/root/kyma#details-environments)
+An Namespace is a custom Kyma security and organizational unit based on the concept of Kubernetes Namespaces. Kyma Namespaces allow you to divide the cluster into smaller units to use for different purposes, such as development and testing. Learn more from official documentation about [Namespaces](https://kyma-project.io/docs/latest/root/kyma/#details-namespaces).
 
-To setup the environment for this showcase call this command from the project root:
+To setup the namespace for this showcase call this command from the project root:
 
-`kubectl apply -f environment.yaml`
+`kubectl apply -f namespace.yaml`
 
-Now, once you call `kubectl get namespaces -l=env=true` among other environments you will see the one you just created.
+Now, once you call `kubectl get namespaces -l=env=true` among other namespaces you will see the one you just created.
 
 Issue the following commands to delete default resource constraints and re-create them a little more relaxed:
 
 `kubectl delete -n personservice LimitRange kyma-default`  
 `kubectl delete -n personservice ResourceQuota kyma-default`  
-`kubectl apply -f environment-resources.yaml -n personservice`
+`kubectl apply -f namespace-resources.yaml -n personservice`
 
 This was to ensure we don't hit ceilings in terms of memory usage (However, on Minikube/Local installation this might be challenging). For more details read [Configure Default Memory Requests and Limits for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/)
 
@@ -106,7 +106,6 @@ To deploy Mongodb use Helm (https://helm.sh). To install helm do the following:
 `helm install --tls --name first-mongo --set "persistence.size=2Gi" stable/mongodb --namespace personservice` 
 
 ### Java Build
-
 Project is built using:  
 `mvn clean package`  
 
@@ -152,12 +151,11 @@ To read a set of credentials:
 
 `echo <ServerURL> | docker-credential-pass get`
 
-### Deploy to Local Kyma (Minikube)
+### Deploy Kyma locally (Minikube)
 
-Deployment to Kyma requires to upload a configmap and also a kubernetes deployment and a service.
+Deploying Kyma requires to upload a configmap and also a kubernetes deployment and a service.
 
 Before deploying the attached files you need to adapt `mongo-kubernetes-local1.yaml` to your cluster. The parts that require attention are marked with `# changeme:` and instructions are available in the comments.
-
 
 The below commands do this: 
 
@@ -174,7 +172,7 @@ To make the API accessible from your browser, you need to add the following entr
 
 Also make sure you trust the self-signed kyma ssl server certificate in the browser.
 
-### Deploy to "real" Kyma Cluster
+### Deploy Kyma in a cluster
 
 Deployment to kyma requires to upload a configmap and also a kubernetes deployment and a service.
 
@@ -206,7 +204,7 @@ All pods should have status running. Otherwise wait and repeat until this is the
 After deployyment you can access and try out the swagger documentation under  
 `https://personservice.{clusterhost}/swagger-ui.html`
 
-If you don't like Open API (fka. Swagger) here is some other documentation:
+If you don't like Open API (fka. Swagger) here is some other documentation:  
 
 The API is accessible using the following endpoints:
 
@@ -247,8 +245,7 @@ The API is accessible using the following endpoints:
 ## Connect your Service to Kyma as Extension Platform
 
 ### About
-
-Altough our Person Service application is running inside of Kyma, we will now treat it like any other external application (hence you can also try this outside of your Kyma instance). This is just to demonstrate what you would do with your legacy application to hook it up to Kyma. The below picture highlights what we are going to do:
+Altough our Person Service application is running inside of Kyma, we will now treat it like any other external application (hence you can also try this outside of your Kyma instance). This is just to demonstrate what you would do with your legacy application to hook it up to Kyma. The below picture highlights what we are going to do:  
 
 ![Connect Remote Environment Response Screenshot](images/extensibility.png)
 
@@ -277,7 +274,8 @@ personservicekubernetes-application-gateway-78447c489d-d55fk   2/2       Running
 personservicekubernetes-event-service-7466dc4c8f-2xfxf         2/2       Running   0          45
 ```
 
-After Pods are recreated, your new Application shall show up in the Kyma Console under `Integration -> Applications`
+After Pods are recreated, your new Application shall show up in the Kyma Console under `Integration -> Applications`.  
+
 ###  Pair Person Service with Kyma Application Connector  
 To pair the Person Service with Kyma we will present two approaches.  
 In the [automatic flow](#Automatic-Pairing-with-Kyma)  you pass the URL generated in Kyma to the Person Service and the certificate requests and actual registration is handled by the service itself. This is the easiest way to get along with this example if you are not interested in the details of Application Connectivity in Kyma.  
@@ -288,7 +286,7 @@ We first create a configmap with the registrationfile that the Person Service po
 
 ```
 "api": {
-    "targetUrl": "changeme",
+    "targetUrl": "#changeme",
     "spec": {}    	
   }
 ```
@@ -389,7 +387,7 @@ Volumes:
 After either the manual or automatic flow you should be able to see the following under Applications:  
 ![Application Registration Screenshot](images/applicationregistration2.png)
 
-This means now you can bind this Application to a Kyma Namespace and process events in Serverless Lambda functions. You can either use the UI or kubectl. In the UI, bind the Application by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f app-personservice-environment-map.yaml` to do the same.
+This means now you can bind this Application to a Kyma Namespace and process events in Serverless Lambda functions. You can either use the UI or kubectl. In the UI, bind the Application by clicking `Create Binding`. On kubectl issue kubectl apply `kubectl apply -f app-personservice-namespace-map.yaml` to do the same.
 
 Then navigate to the Namespace "personservice" and select the 'Catalog' and explore the Service 'Person API' (see screenshot).
 
