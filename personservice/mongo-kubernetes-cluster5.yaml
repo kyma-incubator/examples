@@ -117,12 +117,7 @@ spec:
               - mountPath: /registration
                 name: registrationfile
                 readOnly: true
-            #   - mountPath: /jks
-            #     name: jks-persistent
          volumes:
-         #  - name: jks-persistent
-         #    persistentVolumeClaim:
-         #       claimName: personservice-pvc
           - name: registrationfile
             configMap:
               name: registrationfile 
