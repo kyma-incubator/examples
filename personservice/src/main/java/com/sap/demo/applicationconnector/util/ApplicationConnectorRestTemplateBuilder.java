@@ -5,18 +5,10 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
-import java.util.Enumeration;
 import java.util.Iterator;
 
 import javax.net.ssl.SSLContext;
 
-import com.sap.demo.applicationconnector.entity.Connection;
-import com.sap.demo.applicationconnector.exception.RestTemplateCustomizerException;
-import com.sap.demo.applicationconnector.repository.ConnectionRepository;
-
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
@@ -27,6 +19,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import com.sap.demo.applicationconnector.entity.Connection;
+import com.sap.demo.applicationconnector.exception.RestTemplateCustomizerException;
+import com.sap.demo.applicationconnector.repository.ConnectionRepository;
 
 @Profile("ApplicationConnector")
 @Service
@@ -43,26 +39,6 @@ public class ApplicationConnectorRestTemplateBuilder {
 	@Autowired
 	public void setRestTemplateBuilder(RestTemplateBuilder restTemplateBuilder) {
 		this.restTemplateBuilder = restTemplateBuilder;
-	}
-
-	private String getCertificateFingerprint(KeyStore keyStore) {
-		try {
-			Enumeration<String> aliases = keyStore.aliases();
-
-			if (aliases.hasMoreElements()) {
-				String alias = aliases.nextElement();
-				X509Certificate cert = (X509Certificate) keyStore.getCertificate(alias);
-
-				return DigestUtils.sha1Hex(cert.getEncoded());
-			} else {
-				throw new RestTemplateCustomizerException(
-						"Key Store invalid, could not determine certificate fingerprint");
-			}
-		} catch (KeyStoreException e) {
-			throw new RestTemplateCustomizerException(e.getMessage(), e);
-		} catch (CertificateEncodingException e) {
-			throw new RestTemplateCustomizerException(e.getMessage(), e);
-		}
 	}
 
 	public RestTemplate getEventEndpointRestTemplate() {
@@ -100,8 +76,6 @@ public class ApplicationConnectorRestTemplateBuilder {
 		char[] keyStorePassword = connection.getKeyStorePassword();
 
 		KeyStore clientCertificate = connection.getSslKey();
-
-		String certificateFingerprint = getCertificateFingerprint(clientCertificate);
 
 		try {
 			SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword)

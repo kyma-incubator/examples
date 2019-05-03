@@ -1,15 +1,12 @@
 package com.sap.demo.applicationconnector.client;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Principal;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -17,9 +14,17 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sap.demo.applicationconnector.client.CertificateService.CsrResult;
@@ -28,17 +33,6 @@ import com.sap.demo.applicationconnector.exception.ApplicationConnectorException
 import com.sap.demo.applicationconnector.exception.RestTemplateCustomizerException;
 import com.sap.demo.applicationconnector.repository.ConnectionRepository;
 import com.sap.demo.applicationconnector.util.ApplicationConnectorRestTemplateBuilder;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

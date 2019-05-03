@@ -7,16 +7,14 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.List;
-
-import com.sap.demo.applicationconnector.exception.ApplicationConnectorException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.sap.demo.applicationconnector.exception.ApplicationConnectorException;
 
 import lombok.AccessLevel;
 import lombok.Data;
