@@ -62,9 +62,6 @@ spec:
              ports:
               - containerPort: 8080
                 name: http
-              - containerPort: 8081
-                name: actuatorhttp
-      
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 
@@ -96,15 +93,10 @@ spec:
               - name: management_health_redis_enabled
                 value: "false"                      
              volumeMounts:
-              # - mountPath: /jks
-              #   name: jks-persistent
               - mountPath: /registration
                 name: registrationfile
                 readOnly: true
          volumes:
-          # - name: jks-persistent
-          #   persistentVolumeClaim:
-          #      claimName: personservice-pvc
           - name: registrationfile
             configMap:
               name: registrationfile 

@@ -44,6 +44,7 @@ public class Connection {
 	private URI renewCertUrl;
 	private URI revocationCertUrl;
 	private URI infoUrl;
+	private URI eventsUrl;
 	
 	private String certificateSubject;
 	private String certificateAlgorithm;
@@ -51,7 +52,6 @@ public class Connection {
 	// Instead of persisting the KeyStore object, the byte[] of it is stored
 	private byte[] sslKeyStream;
 	private char[] keyStorePassword;
-	private URI eventsUrl;
 	
 	/**
 	 * Returns the expiry date of the application certificate contained in the keystore 

@@ -52,7 +52,7 @@ public class RegistrationService {
 		try {
 			return FileUtils.readFileToString(new File(registrationFileLocation), "UTF-8");
 		} catch (IOException e) {
-			System.out.println(String.format("Error: %s", e.getMessage()));
+			logger.error(String.format("Error: %s", e.getMessage()));
 			throw new PersonServiceException(e.getMessage(), e);
 		}
 	}
@@ -134,7 +134,7 @@ public class RegistrationService {
 			return kymaRegistrations.getBody();
 		} catch (RestTemplateCustomizerException e) {
 			// No registrations available
-			System.out.println(String.format("Error: %s", e.getMessage()));
+			logger.error(String.format("Error: %s", e.getMessage()));
 			return null;
 		}
 	}

@@ -1,6 +1,5 @@
 package com.sap.demo;
 
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -14,9 +13,6 @@ import com.sap.demo.event.PersonChangeEvent;
 import com.sap.demo.event.PersonCreateEvent;
 import com.sap.demo.event.PersonDeleteEvent;
 
-
-
-
 @SpringBootApplication(exclude={
 	    org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class
 	})
@@ -28,7 +24,6 @@ public class MongoKubernetesMicroserviceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(MongoKubernetesMicroserviceApplication.class, args);
 	}		
-	
 	
 	@Bean
 	@Profile("!ApplicationConnector")

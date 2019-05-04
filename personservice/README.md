@@ -19,8 +19,8 @@
     - [About](#about)
     - [Create new Application Connector Instance on Kyma](#create-new-application-connector-instance-on-kyma)
     - [Pair Person Service with Kyma Application Connector](#pair-person-service-with-kyma-application-connector)
-    - [Manual Pairing with Kyma](#manual-pairing-with-kyma)
-    - [Automatic Pairing with Kyma](#automatic-pairing-with-kyma)
+    - [Option 1: Manual Pairing with Kyma](#option-1-manual-pairing-with-kyma)
+    - [Option 2: Automatic Pairing with Kyma](#option-2-automatic-pairing-with-kyma)
     - [Checks](#checks-1)
   - [Extend your Person Service](#extend-your-person-service)
     - [Intro](#intro)
@@ -52,6 +52,8 @@
     - [Intro](#intro-4)
     - [Testing Tracing](#testing-tracing)
     - [Testing Logging](#testing-logging)
+      - [Option 1: Loki Query via Terminal](#option-1-loki-query-via-terminal)
+      - [Option 2: Loki Query via UI](#option-2-loki-query-via-ui)
   - [Operate your Service: Metrics](#operate-your-service-metrics)
     - [Intro](#intro-5)
     - [Collecting Metrics in Prometheus](#collecting-metrics-in-prometheus)
@@ -303,7 +305,7 @@ To enable the Application Connector endpoints we reconfigure our service:
 Make sure the new pod is created (otherwise delete the old pod, Kubernetes will recreate one). To check whether your changes are active, issue the following command until you again have **exactly** 1 Pod of `personservice-*-*` in status running:  
 `kubectl get pods -n personservice`
 
-### Manual Pairing with Kyma
+### Option 1: Manual Pairing with Kyma
 This sub chapter describes how to manually issue the necessary requests and handle the certificates. This will allow you to fully understand the steps of how applications register to Kyma. At the end of this section we will manually upload the JKS to our "manual" endpoint.
 
 1. Click on `Connect Application` and **open the link in the popup box in another browser tab**.
@@ -335,7 +337,7 @@ openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekube
 
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON.
 
-### Automatic Pairing with Kyma
+### Option 2: Automatic Pairing with Kyma
 This section describes the "automatic" approach where the application takes care of the requests and certificates. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma "Connect URL" button into the JSON (see manual process step 1). The service will create the CSR itself, get the certificate from Kyma and store an object in the mongodb.
 
 ![Insert connect URL in POST body](images/applicationpairing_auto.png)
@@ -1183,24 +1185,36 @@ Under View Options we select Trace JSON. This will provide access to the trace I
 
 ![Getting the Log](images/gettingthelog2.png)
 
-For the pod we found we will issue the following kubectl command to print the logs into a text file: `kubectl logs -n personservice -l app=personservice -c personservice > logs.txt`
+For the pod we found we will issue the following kubectl command to print the logs into a text file:  
+`kubectl logs -n personservice -l app=personservice -c personservice > logs.txt`
 
 Based on the trace ID we can now search the logfile and see what happened inside the pod:
 
 ![Getting the Log](images/gettingthelog3.png) 
 
-To make this more simple, Kyma comes with OK Log and Logspout (https://kyma-project.io/docs/latest/components/logging). These tools help to aggregate logs within the cluster. To access OK Log:
+To make this more simple, Kyma comes with Loki and Promtail (https://kyma-project.io/docs/latest/components/logging). These tools help to aggregate logs within the cluster. We can use Loki in two ways via the terminal or UI.
 
-1. `kubectl port-forward -n kyma-system svc/logging-oklog 7650:7650`
-2. Open `http://localhost:7650/ui` in a browser and paste the extracted Trace ID
+**Be careful, log collection runs asynchronously and hence there might be a small delay.**
 
-Then you will have a ui to search the aggregated logs. 
+#### Option 1: Loki Query via Terminal  
+If you choose the terminal option, you directly query the logging service in Kyma.
+1. `kubectl port-forward -n kyma-system svc/logging 3100:3100`
+2. Then issue the following command with your trace ID to fetch the logs from Loki:  
+`curl -G 'http://localhost:3100/api/prom/query' --data-urlencode 'query={container_name="personservice"}' --data-urlencode 'limit=1000' --data-urlencode 'regexp=TRACE' | grep <traceID>`
+
+Then you will see which parts of the logs contain your trace ID.  
 
 ![Getting the Log](images/gettingthelog4.png)
 
-There is also a commandline client available under https://github.com/oklog/oklog/releases. This will allow you to query logs and pipe them into auxilliary tools: `./oklog-0.3.2-darwin-amd64 query -from 1h -to now -q "Person.*1d8db64fbbaf58ae" -regex` (`1d8db64fbbaf58ae1d8db64fbbaf58ae` must be replaced with traceID).
+#### Option 2: Loki Query via UI
+Kyma also provides an UI to query the Loki service in an easier way. Go to the Kyma home page and select "Logs" on the sidebar. There you can enter the following query to get all the traces:  
+`{app="personservice", container_name="personservice"} (TRACE)`  
 
-**Be careful, log collection runs asynchronously and hence there might be a small delay.**
+![Getting the Log](images/gettingthelog5.png)
+
+This gives you all the log entries on the level `TRACE`. You can now search within these in your browser:
+
+![Getting the Log](images/gettingthelog6.png)
 
 ## Operate your Service: Metrics
 

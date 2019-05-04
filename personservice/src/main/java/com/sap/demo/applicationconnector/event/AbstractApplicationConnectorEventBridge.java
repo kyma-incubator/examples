@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -29,6 +31,8 @@ public abstract class AbstractApplicationConnectorEventBridge {
 	private static final String CHANGE_EVENT = "person.changed";
 	private static final String VERSION = "v1";
 
+	Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	private ApplicationConnectorRestTemplateBuilder restTemplateBuilder;
 
 	@Autowired
@@ -57,8 +61,8 @@ public abstract class AbstractApplicationConnectorEventBridge {
 
 		ResponseEntity<String> response = restTemplate.exchange("/", HttpMethod.POST,
 				new HttpEntity<KymaEvent>(kymaEvent), String.class);
-		System.out.println("Eventid: " + event.getPersonId());
-		System.out.println("Wrote event: " + response.getStatusCode() + response.getHeaders().toString() + response.getBody().toString());
+
+		logger.debug("Writing event: " + kymaEvent.getEventType());
 		if (!response.getStatusCode().is2xxSuccessful()) {
 			throw new PersonServiceException("Event replication to Kyma unsuccessful");
 		}
