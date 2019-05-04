@@ -28,7 +28,6 @@ spec:
     app: personservice
     version: "0.0.3"
   type: NodePort
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -51,6 +50,7 @@ spec:
             version: "0.0.3"
          annotations:
             sidecar.istio.io/inject: "true"
+            traffic.sidecar.istio.io/includeInboundPorts: "8080"
       spec:    
          containers:
            - name: personservice
@@ -64,8 +64,7 @@ spec:
               - containerPort: 8080
                 name: http
               - containerPort: 8081
-                name: actuatorhttp                
-
+                name: actuatorhttp
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 
@@ -95,5 +94,4 @@ spec:
               - name: management_health_redis_enabled
                 value: "false" 
               - name: spring_profiles_active
-                value: Default 
-                             
+                value: Default

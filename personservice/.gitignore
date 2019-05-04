@@ -10,6 +10,9 @@
 .springBeans
 .sts4-cache
 
+### VS Code ###
+.vscode/**
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -30,6 +33,7 @@
 *.csr
 *.crt
 *.key
+*.pem
 mongo-kubernetes-configmap-playground.yaml
 mongo-kubernetes-playground.yaml
 mongo-kubernetes-api-playground.yaml
