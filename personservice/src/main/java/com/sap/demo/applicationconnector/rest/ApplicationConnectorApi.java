@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sap.demo.applicationconnector.client.PairingService;
 import com.sap.demo.applicationconnector.client.RegistrationService;
+import com.sap.demo.applicationconnector.entity.Connection;
 
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -80,18 +81,10 @@ public class ApplicationConnectorApi {
 	@PutMapping("/api/v1/applicationconnector/registration/renew")
 	@ApiOperation(value = "Renew certificate for Kyma Application registration", notes = "This Operation renews the certificate corresponding to an Application registration.")
 	public ResponseEntity<Map<String, String>> renewRegistrationCertificate(@RequestParam String keyStorePassword) {
-		//How to get the only connection? Maybe in the pairingService
-		//pairingService.getInfo(currentConnection);
-		//pairingService.renewCertificate(connectionURI);
+		Connection connection = pairingService.renewCertificate(keyStorePassword.toCharArray());
 
-		String registrationId = registrationService.registerWithKymaInstance();
-		
-		if (StringUtils.isNotBlank(registrationId)) {
-			return new ResponseEntity<Map<String, String>>(Collections.singletonMap("id", registrationId),
-					HttpStatus.OK);
-		} else {
-			return new ResponseEntity<Map<String, String>>(HttpStatus.valueOf(500));
-		}
+		return new ResponseEntity<Map<String, String>>(Collections.singletonMap("success", "Certificate successfully renewed."),
+				HttpStatus.OK);
 	}
 
 	@DeleteMapping("/api/v1/applicationconnector/registration")

@@ -47,11 +47,8 @@ public class PairingServiceConfiguration {
 	 */
 	@Bean("PairingTemplate")
 	public RestTemplate pairingRestTemplate() throws KeyStoreException, KeyManagementException, NoSuchAlgorithmException {
-
 	
-
 		return restTemplateBuilder.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(HttpClients.createDefault())).build();
-
 	}
 
 }

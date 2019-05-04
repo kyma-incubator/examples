@@ -50,6 +50,7 @@ spec:
             version: "0.0.3"
          annotations:
             sidecar.istio.io/inject: "true"
+            traffic.sidecar.istio.io/includeInboundPorts: "8080"
       spec:    
          containers:
            - name: personservice
@@ -62,6 +63,8 @@ spec:
              ports:
               - containerPort: 8080
                 name: http
+              - containerPort: 8081
+                name: actuatorhttp
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 

@@ -163,8 +163,6 @@ public class PairingService {
 	 * Kyma / Extension Factory and returns a new object {@link Connection} with
 	 * refreshed key store and password.
 	 * 
-	 * @param currentConnection   model containing all details for the current
-	 *                            connection
 	 * @param newKeyStorePassword password to be used for the refreshed keystore
 	 * @return {@link Connection} that contains updated connection details with
 	 *         refreshed keystore
@@ -194,6 +192,9 @@ public class PairingService {
 
 		result.setKeyStorePassword(newKeyStorePassword);
 		result.setSslKey(newKey);
+
+		connectionRepository.save(result);
+		System.out.println("New certificate expiration: " + result.getCertificateExpirationDate());
 
 		return result;
 	}
@@ -267,6 +268,7 @@ public class PairingService {
 		Connection connection = getInfo(connectInfo.getApi().getInfoUrl(), this.keyStorePassword.toCharArray(),
 				keyStore, connectInfo.getCertificate().getKeyAlgorithm(), connectInfo.getCertificate().getSubject());
 
+		System.out.println("Certificate expiration: " + connection.getCertificateExpirationDate());
 		connectionRepository.save(connection);
 
 		return connection;
