@@ -29,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sap.demo.applicationconnector.client.PairingService;
 import com.sap.demo.applicationconnector.client.RegistrationService;
-import com.sap.demo.applicationconnector.entity.Connection;
 import com.sap.demo.applicationconnector.exception.ApplicationConnectorException;
 
 import io.swagger.annotations.ApiModelProperty;
