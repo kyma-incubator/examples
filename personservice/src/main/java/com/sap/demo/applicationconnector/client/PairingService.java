@@ -170,7 +170,7 @@ public class PairingService {
 	 * @throws RestTemplateCustomizerException if anything fails with acquiring the
 	 *                                         {@link RestTemplate}
 	 */
-	public Connection renewCertificate(char[] newKeyStorePassword) {
+	public void renewCertificate(char[] newKeyStorePassword) {
 
 		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
 		
@@ -194,9 +194,6 @@ public class PairingService {
 		result.setSslKey(newKey);
 
 		connectionRepository.save(result);
-		System.out.println("New certificate expiration: " + result.getCertificateExpirationDate());
-
-		return result;
 	}
 
 	/**
@@ -255,7 +252,7 @@ public class PairingService {
 	 * @return {@link Connection} that contains all info related to the connection
 	 * @throws ApplicationConnectorException if anything fails
 	 */
-	public Connection executeInitialPairing(URI connectUri) {
+	public void executeInitialPairing(URI connectUri) {
 
 		ConnectInfo connectInfo = getConnectInfo(connectUri);
 
@@ -268,13 +265,10 @@ public class PairingService {
 		Connection connection = getInfo(connectInfo.getApi().getInfoUrl(), this.keyStorePassword.toCharArray(),
 				keyStore, connectInfo.getCertificate().getKeyAlgorithm(), connectInfo.getCertificate().getSubject());
 
-		System.out.println("Certificate expiration: " + connection.getCertificateExpirationDate());
 		connectionRepository.save(connection);
-
-		return connection;
 	}
 
-	public Connection executeManualPairing(URI infoUrl, KeyStore keyStore, String keyStorePassword) {
+	public void executeManualPairing(URI infoUrl, KeyStore keyStore, String keyStorePassword) {
 		try {
 			Enumeration<String> aliases = keyStore.aliases();
 			if (aliases.hasMoreElements()) {
@@ -288,8 +282,6 @@ public class PairingService {
 						certificateSubject);
 
 				connectionRepository.save(connection);
-
-				return connection;
 			} else {
 				throw new ApplicationConnectorException("KeyStore has no aliases");
 			}

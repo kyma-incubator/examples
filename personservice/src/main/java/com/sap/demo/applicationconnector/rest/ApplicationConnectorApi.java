@@ -1,6 +1,11 @@
 package com.sap.demo.applicationconnector.rest;
 
+import java.io.IOException;
 import java.net.URI;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.sap.demo.applicationconnector.client.PairingService;
 import com.sap.demo.applicationconnector.client.RegistrationService;
 import com.sap.demo.applicationconnector.entity.Connection;
+import com.sap.demo.applicationconnector.exception.ApplicationConnectorException;
 
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -68,6 +74,11 @@ public class ApplicationConnectorApi {
 	public ResponseEntity<Map<String, String>> createRegistrationManual(@RequestParam String infoUrl, @RequestParam String keyStorePassword, 
 			@ApiParam(name = "jksFile", value = "Upload the generated JKS file", required = true) @RequestParam("jksFile") MultipartFile jksFile) {
 
+		KeyStore keyStore = createKeyStoreFromFile(jksFile, keyStorePassword);	
+		URI info = URI.create(infoUrl);	
+
+		pairingService.executeManualPairing(info, keyStore, keyStorePassword);
+
 		String registrationId = registrationService.registerWithKymaInstance();
 
 		if (StringUtils.isNotBlank(registrationId)) {
@@ -81,7 +92,7 @@ public class ApplicationConnectorApi {
 	@PutMapping("/api/v1/applicationconnector/registration/renew")
 	@ApiOperation(value = "Renew certificate for Kyma Application registration", notes = "This Operation renews the certificate corresponding to an Application registration.")
 	public ResponseEntity<Map<String, String>> renewRegistrationCertificate(@RequestParam String keyStorePassword) {
-		Connection connection = pairingService.renewCertificate(keyStorePassword.toCharArray());
+		pairingService.renewCertificate(keyStorePassword.toCharArray());
 
 		return new ResponseEntity<Map<String, String>>(Collections.singletonMap("success", "Certificate successfully renewed."),
 				HttpStatus.OK);
@@ -105,6 +116,23 @@ public class ApplicationConnectorApi {
 				registrationService.getExistingRegistrations(), HttpStatus.OK);
 	}
 
+	private KeyStore createKeyStoreFromFile(MultipartFile file, String keyStorePassword) {	
+		try {	
+			KeyStore keyStore = KeyStore.getInstance("JKS");	
+
+ 			keyStore.load(file.getInputStream(), keyStorePassword.toCharArray());	
+
+ 			return keyStore;	
+		} catch (KeyStoreException e) {	
+			throw new ApplicationConnectorException(e.getMessage(), e);	
+		} catch (CertificateException e) {	
+			throw new ApplicationConnectorException(e.getMessage(), e);	
+		} catch (NoSuchAlgorithmException e) {	
+			throw new ApplicationConnectorException(e.getMessage(), e);	
+		} catch (IOException e) {	
+			throw new ApplicationConnectorException(e.getMessage(), e);	
+		}	
+	}
 	
 	// Model for Get Response
 	@Data
