@@ -63,11 +63,10 @@ _Note: The client is using `http://localhost:8080/callback` redirect URI. This d
 
 - If you see: **Origin authentication failed.** message, check isito-pilot logs for the following entries:
   `warn    Failed to fetch jwt public key from "http://ory-hydra-oauth2.kyma-system.svc.cluster.local/.well-known/jwks.json"`
-Istio-pilot sometimes has problems in accessing jwks endpoint to perform JWT verification. Restarting Istio-pilot helps. Note that after restart, not all envoy proxies are updated immediately. Retry for at least two minutes before giving up.
+  Istio-pilot sometimes has problems in accessing jwks endpoint to perform JWT verification. Try one of the following solutions:
 
-- If **Origin authentication failed.** message is still persistent, decode the Hydra JWT and ensure it's nonce is the same as the one you provided at the token request. Perhaps you're using an invalid token? Re-create the token and try again with a new one.
-
-- If **Origin authentication failed.** message is still persistent, inspect the Authentication Policy for the Lambda. The name of the policy matches the name of the lambda, and it's created in the same namespace as the lambda. Are the issuer and jwksUri fields valid? Try do delete the policy (backup it first). Can you call the lambda now? Re-create the policy and inspect istio-pilot logs.
-
-- If **Origin authentication failed.** message is still persistent, try to call the Hydra JWKS URI from within the cluster using a pod with bash and curl installed. Perhaps there's some networking issue not directly related to token validation.
+  - decode the Hydra JWT and ensure it's nonce is the same as the one you provided at the token request. Perhaps you're using an invalid token? Re-create the token and try again with a new one.
+  - inspect the Authentication Policy for the Lambda. The name of the policy matches the name of the lambda, and it's created in the same namespace as the lambda. Are the issuer and jwksUri fields valid? Try to re-create the policy (backup it first).
+  - restarting Istio-pilot. Note that after restart, not all envoy proxies are updated immediately. Retry for at least two minutes before giving up.
+  - try to call the Hydra JWKS URI from within the cluster using a pod with bash and curl installed. Perhaps there's some networking issue not directly related to token validation.
 
