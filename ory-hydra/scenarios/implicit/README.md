@@ -2,19 +2,19 @@
 
 ## Overview
 
-This example illustrates how to secure lambda functions with Hydra JWT tokens using two components of Kyma platform:
+This example illustrates how to secure lambda functions with Id Tokens from Hydra using two components of Kyma platform:
 - [Hydra](https://www.ory.sh/docs/hydra/) - OAuth 2.0 and OpenID Connect Server.
 - [Dex](https://github.com/dexidp/dex) - an identity service that uses OpenID Connect to drive authentication for other apps.
 
-In this scenario, Hydra Server is responsible for issuing JWT tokens and Dex is used as a login provider. Users can authenticate by any method that is configured in Dex.
+In this scenario, Hydra Server is responsible for issuing Id Tokens and Dex is used as a login provider. Users can authenticate by any method that is configured in Dex.
 
 The scenario consists of following steps:
 
 - Installation of Kyma with `ory`  and `hydra-dex` components.
 - Creating a Lambda function protected with Authn policy that points to the Hydra JWKS endpoint.
-- Creating a Hydra Oauth2 client with ability to perform Implicit Grant token requests with **openid** scope.
-- Fetching a JWT Token from Hydra with Dex as login provider.
-- Calling target Lambda with JWT token issued by Hydra.
+- Creating a Hydra Oauth2 client with ability to perform Implicit Grant requests with **openid** scope.
+- Fetching an Id Token from Hydra with Dex as login provider.
+- Calling target Lambda with the Id Token issued by Hydra.
 
 ## Prerequisites
 - cURL
@@ -44,7 +44,7 @@ The scenario consists of following steps:
 
 _Note: The client is using `http://localhost:8080/callback` redirect URI. This doesn't have to be an URL of any real application. Since OpenID Connect Implict flow is browser-based, it's only important to have a valid URL here. The final redirect of the flow contains the token. In case the application does not exist, the browser will report a non-existing address, but the token will be present in the address bar._
 
-### Fetch a JWT token
+### Fetch an Id Token
 * create an OpenID Connect token request: `echo "http://oauth2.$DOMAIN_NAME/oauth2/auth?client_id=implicit-client&response_type=id_token&scope=openid&state=8230b269ffa679e9c662cd10e1f1b145&redirect_uri=http://localhost:8080/callback&nonce=$(date | md5)"`
 * Copy the URL into your browser
 * Authenticate. After successful authentication, you should be redirected to the address that looks like this: `http://localhost:8080/callback#id_token=eyJ...&state=8230b269ffa679e9c662cd10e1f1b145`

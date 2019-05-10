@@ -4,10 +4,11 @@
 
 This chart bootstraps a [ORY Hydra](https://www.ory.sh/docs/hydra/) "login and consent" application capable of performing Dex-based logins on a [Kyma](https://kyma-project.io) cluster.
 
-ORY Hydra on it's own does not provide any user authentication features. This must be provided externally.
+ORY Hydra does not perform any user authentication by itself. This must be provided externally.
 Hydra offers REST-based extension points to integrate with an external login provider.
-This chart provides a sample login application that delegates login requests to the Dex running in a Kyma cluster.
-In this way, we can use Hydra JWT tokens issued for users authenticated by one of available Dex authentication methods.
+A small application that runs along with Hydra server and takes part in Hydra's login and consent flows is required.
+This chart provides such an application, it delegates login requests to the Dex running in a Kyma cluster.
+In this way, we can use Hydra to issue Id Tokens for users authenticated by one of the available Dex authentication methods.
 
 
 ## Prerequisites
