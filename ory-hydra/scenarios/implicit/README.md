@@ -25,17 +25,7 @@ The scenario consists of following steps:
 - read instructions from **chart/hydra-dex** chart.
 - Install the **chart/hydra-dex** chart.
 
-### Create a lambda function
-
-
- - get valid Hydra **Issuer**: `echo $(kubectl get deployments/ory-hydra-oauth2 -n kyma-system -o go-template='{{range (index .spec.template.spec.containers 0).env}}{{if eq .name "OAUTH2_ISSUER_URL"}}{{.value}}{{end}}{{end}}')`
- - the valid Hydra **JWKS URI** for in-cluster calls is:`http://ory-hydra-oauth2.kyma-system.svc.cluster.local/.well-known/jwks.json`
- - Create a lambda function and expose it as HTTPS service. Provide valid **Issuer** and **JWKS URI**. Pay attention to the **Issuer** value, it has to match exactly.
-
-
 ### Create OpenID Connect client
-
-
 
 * Replace `<domainName>` with the proper domain name of your ingress gateway for cluster installations or **kyma.local** for local installation.
   Run:  `export DOMAIN_NAME=<domainName>`
@@ -51,13 +41,22 @@ _Note: The client is using `http://localhost:8080/callback` redirect URI. This d
 * Copy the **id_token** value from the browser address bar. It is long!
 * `export JWT=<copied id_token value>`
 
+### Create a lambda function
+
+ - get valid Hydra **Issuer**: `echo $(kubectl get deployments/ory-hydra-oauth2 -n kyma-system -o go-template='{{range (index .spec.template.spec.containers 0).env}}{{if eq .name "OAUTH2_ISSUER_URL"}}{{.value}}{{end}}{{end}}')`
+ - the valid Hydra **JWKS URI** for in-cluster calls is:`http://ory-hydra-oauth2.kyma-system.svc.cluster.local/.well-known/jwks.json`
+ - Create a lambda function and expose it as HTTPS service. Provide valid **Issuer** and **JWKS URI**. Pay attention to the **Issuer** value, it has to match exactly.
+
+ _Note: Don't create a lambda before getting the token.
+  It's because the Hydra creates keys lazily. The key is generated when the first Id Token is issued.
+  If you create the Lambda before that, Istio can't find any keys at JWKS endpoint and the Labmda is inaccessible._
+
 ### Call the lambda with the token
 
 * Export the URL of your Lambda function.  You can copy the URL from the Kyma console. An example: `export LAMBDA_URL="https://demo-hydra-production.kyma.local/"`
 * Ensure Lambda host is added to your **/etc/hosts** for local installations
 * Call the lambda: `curl -ik -X GET "${LAMBDA_URL}/" -H "Authorization: Bearer ${JWT}"`
-
-
+* If the call to lambda is successful, try to change the Id Token by adding a random letter to it. Verify the call to the labda is failing now. This proves Id Token validation is working as expected.
 
 ## Troubleshooting
 
