@@ -20,7 +20,7 @@ To learn more about Oathkeeper's access rules, see the official [Oathkeeper docu
 - Kyma instance with the `ory` chart installed.
 - cURL
 
->**NOTE** To install ory chart with Kyma you need to add it to components list. Follow [this guide](https://kyma-project.io/docs/root/kyma/#installation-custom-component-installation-add-a-component) for further instructions.
+>**NOTE** The ory chart is already present in Kyma repository, to install it with Kyma you need to add it to components list. Follow [this guide](https://kyma-project.io/docs/root/kyma/#installation-custom-component-installation-add-a-component) for further instructions.
 ## Installation
 
 This section demonstrates how to set up an Oauth2 client with given scopes.
