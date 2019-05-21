@@ -51,11 +51,12 @@ spec:
             version: "0.0.3"
          annotations:
             sidecar.istio.io/inject: "true"
+            traffic.sidecar.istio.io/includeInboundPorts: "8080"
       spec:    
          containers:
            - name: personservice
 # changeme: Replace with pointer to your docker repository/container
-             image: "andy008/mongokubernetes:0.0.3"
+             image: "arifcrtsap/mongokubernetes:0.0.3"
              resources:
                 limits:
                    memory: 1Gi
@@ -65,8 +66,6 @@ spec:
                 name: http
               - containerPort: 8081
                 name: actuatorhttp
-                
-
              env:
               - name: spring_data_mongodb_host
                 valueFrom: 
@@ -97,4 +96,3 @@ spec:
                 value: "false" 
               - name: spring_profiles_active
                 value: Default 
-                             

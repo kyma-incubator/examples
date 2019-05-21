@@ -161,7 +161,7 @@ Before deploying the attached files you need to adapt `mongo-kubernetes-local1.y
 
 The below commands do this: 
 
-`kubectl apply -f mongo-kubernetes-configmap-local1.yaml -n personservice`  
+`kubectl apply -f mongo-kubernetes-configmap-local.yaml -n personservice`  
 `kubectl apply -f mongo-kubernetes-local1.yaml -n personservice`
 
 `mongo-kubernetes-local1.yaml` creates the following Kubernetes objects:
@@ -285,16 +285,7 @@ The [manual flow](#Manual-Pairing-with-Kyma) gives you full control of the steps
 
 First, you need to update the application to enable the Application Connector profile. This will show you the REST endpoints for the automatic and manual flow.
 
-We first create a configmap with the registrationfile that the Person Service posts against Kyma to register its API and events. If you are running on a "real" cluster, you **must** update the `targetUrl` field in the `api` block to point to your Person Service:
-
-```
-"api": {
-    "targetUrl": "#changeme",
-    "spec": {}    	
-  }
-```
-
-After that execute the following command from the `/registration` directory:  
+We first create a configmap with the registrationfile that the Person Service posts against Kyma to register its API and events. After that execute the following command from the `/registration` directory:  
 `kubectl create configmap registrationfile --from-file=registrationfile.json -n personservice`
 
 To enable the Application Connector endpoints we reconfigure our service:  
