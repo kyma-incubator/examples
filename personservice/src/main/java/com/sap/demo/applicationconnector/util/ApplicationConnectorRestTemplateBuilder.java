@@ -52,7 +52,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 		String baseUri = connection.getEventsUrl().toString();
 
 		RestTemplateBuilder builder = getRestTemplateBuilder(connection);
-		return builder.rootUri(baseUri).build();
+		return builder.rootUri(baseUri).additionalInterceptors(new RestTemplateUrlTrailingSlashRemover()).build();
 	}
 
 	// Returns a RestTemplate where the baseUrl is set to the metadata URL of the
