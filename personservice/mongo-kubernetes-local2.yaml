@@ -72,7 +72,6 @@ spec:
             sidecar.istio.io/inject: "true"
             traffic.sidecar.istio.io/includeInboundPorts: "8080"
       spec:    
-
          hostAliases:
 # changeme: Replace with Minikube IP (command sudo minikube ip)       
           - ip: 192.168.218.139

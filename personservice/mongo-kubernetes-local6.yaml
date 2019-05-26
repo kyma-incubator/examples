@@ -11,6 +11,25 @@ spec:
     name: personservice
     port: 8080
 ---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  labels:
+    app: personservice
+  name: personservice-internal
+spec:
+  hosts:
+  - personservice.personservice.svc.cluster.local
+  http:
+  - match:
+    - uri:
+        regex: /.*
+    route:
+    - destination:
+        host: personservice.personservice.svc.cluster.local
+        port:
+          number: 8080
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -28,7 +47,6 @@ spec:
     app: personservice
     version: "0.0.3"
   type: NodePort
-
 ---
 apiVersion: v1
 kind: Service
@@ -69,8 +87,8 @@ spec:
             version: "0.0.3"
          annotations:
             sidecar.istio.io/inject: "true"
+            traffic.sidecar.istio.io/includeInboundPorts: "8080"
       spec:    
-
          hostAliases:
 # changeme: Replace with Minikube IP (command sudo minikube ip)       
           - ip: 192.168.218.139
@@ -130,11 +148,6 @@ spec:
                    configMapKeyRef:
                       name: mongo-kubernetes-config
                       key: mongodb_username
-              - name: personservicekubernetes_applicationconnector_baseurl
-                valueFrom: 
-                   configMapKeyRef:
-                      name: mongo-kubernetes-config
-                      key: connector_baseurl
               - name: spring_profiles_active
                 value: "ApplicationConnector,Actuator"  
               - name: management_health_redis_enabled
@@ -147,9 +160,6 @@ spec:
               - mountPath: /registration
                 name: registrationfile
                 readOnly: true
-              - mountPath: /security
-                name: kyma-certificate
-                readOnly: true
          volumes:
           - name: registrationfile
             configMap:
@@ -157,7 +167,3 @@ spec:
               items:
                - key: registrationfile.json
                  path: registrationfile.json
-          - name: kyma-certificate
-            secret:
-              secretName: kyma-certificate
-                             
