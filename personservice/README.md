@@ -1070,9 +1070,9 @@ Events:
   Type     Reason     Age               From                           Message
   ----     ------     ----              ----                           -------
   Warning  Unhealthy  26s (x6 over 1h)  kubelet, k8s-agent-27799012-2  Liveness probe failed: HTTP probe failed with statuscode: 503
-  Normal   Pulling    22s (x3 over 1h)  kubelet, k8s-agent-27799012-2  pulling image "andy008/mongokubernetes:0.0.3"
+  Normal   Pulling    22s (x3 over 1h)  kubelet, k8s-agent-27799012-2  pulling image "personservice/mongokubernetes:0.0.3"
   Normal   Killing    22s (x2 over 1h)  kubelet, k8s-agent-27799012-2  Killing container with id docker://personservice:Container failed liveness probe.. Container will be killed and recreated.
-  Normal   Pulled     21s (x3 over 1h)  kubelet, k8s-agent-27799012-2  Successfully pulled image "andy008/mongokubernetes:0.0.3"
+  Normal   Pulled     21s (x3 over 1h)  kubelet, k8s-agent-27799012-2  Successfully pulled image "personservice/mongokubernetes:0.0.3"
   Normal   Created    21s (x3 over 1h)  kubelet, k8s-agent-27799012-2  Created container
   Normal   Started    21s (x3 over 1h)  kubelet, k8s-agent-27799012-2  Started container
 ```

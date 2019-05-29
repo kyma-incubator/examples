@@ -73,11 +73,11 @@ spec:
       spec:    
          containers:
            - name: personservice
-           # changeme
-             image: "arifcrtsap/mongokubernetes:0.0.3"
+# changeme: Replace with pointer to your docker repository/container
+             image: "personservice/mongokubernetes:0.0.3"
              resources:
                 limits:
-                   memory: 1Gi
+                   memory: 512Mi
              imagePullPolicy: Always
              ports:
               - containerPort: 8080

@@ -80,7 +80,7 @@ spec:
          containers:
            - name: personservice
 # changeme: Replace with pointer to your docker repository/container
-             image: "andy008/mongokubernetes:0.0.3"
+             image: "personservice/mongokubernetes:0.0.3"
              resources:
                 limits:
                    memory: 512Mi
