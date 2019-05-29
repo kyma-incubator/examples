@@ -59,7 +59,7 @@ spec:
              image: "arifcrtsap/mongokubernetes:0.0.3"
              resources:
                 limits:
-                   memory: 1Gi
+                   memory: 512Mi
              imagePullPolicy: Always              
              ports:
               - containerPort: 8080
