@@ -11,11 +11,15 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,6 +55,12 @@ import lombok.Data;
 @Service
 public class PairingService {
 
+	private final Pattern CERT_PATTERN = Pattern.compile(
+            "-+BEGIN\\s+.*CERTIFICATE[^-]*-+(?:\\s|\\r|\\n)+" + // Header
+                    "([a-z0-9+/=\\r\\n]+)" +                    // Base64 text
+                    "-+END\\s+.*CERTIFICATE[^-]*-+",            // Footer
+			Pattern.CASE_INSENSITIVE);
+			
 	private RestTemplate pairingTemplate;
 	private CertificateService certService;
 	private ApplicationConnectorRestTemplateBuilder restTemplateBuilder;
@@ -110,6 +120,23 @@ public class PairingService {
 		}
 	}
 
+	private List<String> matchCertificates(String certsString) {
+		
+		Matcher m = CERT_PATTERN.matcher(certsString);
+		
+		List<String> result = new ArrayList<String>();
+		
+		while (m.find()) {
+			result.add(m.group());
+		}
+		
+		if (result.size() > 0) {
+			return result;
+		} else {
+			throw new ApplicationConnectorException("No certificates contained in parsed string:\n " + certsString);
+		}
+   }
+
 	private KeyStore getCertificateInternal(RestTemplate restTemplate, char[] keyStorePassword, URI csrUrl, byte[] csr,
 			KeyPair keyPair) {
 		String encodedCsr = String.format(
@@ -129,20 +156,24 @@ public class PairingService {
 
 			KeyStore ks = KeyStore.getInstance("JKS");
 
-			Certificate[] certificateChain = new X509Certificate[2];
-
+			List<String> certs = matchCertificates(new String(
+					 		base64Decoder.decode(response.getBody().getCrt())));
+			
+			Certificate[] certificateChain = new X509Certificate[certs.size()];
+			
 			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-
-			certificateChain[0] = cf.generateCertificate(
-					new ByteArrayInputStream(base64Decoder.decode(response.getBody().getClientCrt())));
-
-			certificateChain[1] = cf
-					.generateCertificate(new ByteArrayInputStream(base64Decoder.decode(response.getBody().getCaCrt())));
-
+				
+			for (int counter = 0; counter < certs.size(); counter++) {
+				certificateChain[counter] = cf.generateCertificate(
+												new ByteArrayInputStream(certs.get(counter).getBytes()));
+			}
+			
 			ks.load(null, keyStorePassword);
-
-			ks.setKeyEntry("extension-factory-key", keyPair.getPrivate(), keyStorePassword, certificateChain);
-
+			
+			ks.setKeyEntry("extension-factory-key", 
+					keyPair.getPrivate(), 
+					keyStorePassword, 
+					certificateChain);
 			return ks;
 
 		} catch (RestClientException e) {
@@ -236,6 +267,7 @@ public class PairingService {
 			result.setSslKey(keyStore);
 			result.setCertificateAlgorithm(certificateAlgorithm);
 			result.setCertificateSubject(certificateSubject);
+			result.setEventsInfoUrl(response.getBody().getUrls().getEventsInfoUrl());
 			result.setEventsUrl(response.getBody().getUrls().getEventsUrl());
 
 			return result;
@@ -353,7 +385,7 @@ public class PairingService {
 		private URI metadataUrl;
 		private URI renewCertUrl;
 		private URI revocationCertUrl;
-
+		private URI eventsInfoUrl;
 	}
 
 }

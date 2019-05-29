@@ -44,6 +44,7 @@ public class Connection {
 	private URI renewCertUrl;
 	private URI revocationCertUrl;
 	private URI infoUrl;
+	private URI eventsInfoUrl;
 	private URI eventsUrl;
 	
 	private String certificateSubject;
