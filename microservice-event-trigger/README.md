@@ -4,7 +4,7 @@ This is an end-to-end guide that demonstrates how to set up an Event trigger for
 
 The guide uses:
 
-* [**HTTP DB service**](https://github.com/kyma-project/examples/tree/master/http-db-service) as a reference microservice that is deployed in the `demo-event-service-trigger` Namespace. In this guide, you configure it to consume the `order.created` Event from the Application.
+* [**HTTP DB service**](https://github.com/kyma-project/examples/tree/master/http-db-service) as a reference microservice that is deployed in the `demo-event-service-trigger` Namespace. In this guide, you configure it to consume the **order.created** Event from the Application.
 * [**Commerce mock**](https://github.com/SAP/xf-application-mocks/tree/master/commerce-mock) as a reference enterprise solution that connects to Kyma. In this guide, this Application sends the Event that triggers the microservice in Kyma.
 
 ## Set up the commerce mock
@@ -81,6 +81,7 @@ By creating a Kyma Subscription, you configure an **order.created** Event trigge
     ![](./assets/deploy-subscription.png)
 	
 > **TIP:** Refer to [custom resource parameters](https://github.com/kyma-project/kyma/blob/master/docs/event-bus/06-01-subscription.md#custom-resource-parameters) for details on all parameters. 
+
 The main parameter is **endpoint** which takes the value in the `http://{service-name}.{namespace-in-which-service-is-deployed}:{service-port}/{uri-path-to-handle-events}` format.
 
 ```yaml
@@ -102,7 +103,7 @@ spec:
 
 ## Send an Event and verify it
 
-1. Send the Event from the commerce mock UI. It is accessible at `https://commerce.{CLUSTER_DOMAIN}` .
+1. Send the Event from the commerce mock UI. It is accessible at `https://commerce.{CLUSTER_DOMAIN}`.
 
     * Go to `SAP Commerce Cloud - Events` under **Remote APIs**. 
     * Send the **order.created.v1** Event.
