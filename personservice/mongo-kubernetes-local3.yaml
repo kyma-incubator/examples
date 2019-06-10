@@ -35,7 +35,7 @@ kind: Service
 metadata:
   labels:    
      app: personservice
-     version: "0.0.3"
+     version: "1.0.0"
   annotations:
      auth.istio.io/80: NONE
   name: personservice
@@ -45,7 +45,7 @@ spec:
     port: 8080
   selector:
     app: personservice
-    version: "0.0.3"
+    version: "1.0.0"
   type: NodePort
 ---
 apiVersion: apps/v1
@@ -66,21 +66,21 @@ spec:
       metadata:
          labels:    
             app: personservice
-            version: "0.0.3"
+            version: "1.0.0"
          annotations:
             sidecar.istio.io/inject: "true"
             traffic.sidecar.istio.io/includeInboundPorts: "8080"
       spec:    
          hostAliases:
 # changeme: Replace with Minikube IP (command sudo minikube ip)       
-          - ip: 192.168.218.139
+          - ip: 10.181.62.254
             hostnames:
              - "gateway.kyma.local"
              - "connector-service.kyma.local"  
          containers:
            - name: personservice
 # changeme: Replace with pointer to your docker repository/container
-             image: "personservice/mongokubernetes:0.0.3"
+             image: "personservice/mongokubernetes:1.0.0"
              resources:
                 limits:
                    memory: 512Mi

@@ -70,7 +70,7 @@ This sample application was created to give you a running end to end sample appl
 This application runs on [Kyma](https://kyma-project.io). Therefore, to try out this example on your local machine you need to [install Kyma](https://kyma-project.io/docs/latest/root/kyma#getting-started-local-kyma-installation) first, or have access to Kyma cluster.  
 
 **![alt text](images/kyma_symbol_text.svg "Logo Title Text 1")  
-This example is tested and based on [Kyma 1.0.0](https://github.com/kyma-project/kyma/releases/tag/1.0.0). Compatibility with other versions is not guaranteed.**
+This example is tested and based on [Kyma 1.1.0](https://github.com/kyma-project/kyma/releases/tag/1.1.0). Compatibility with other versions is not guaranteed.**
 
 ## Deploy the application
 
@@ -1070,9 +1070,9 @@ Events:
   Type     Reason     Age               From                           Message
   ----     ------     ----              ----                           -------
   Warning  Unhealthy  26s (x6 over 1h)  kubelet, k8s-agent-27799012-2  Liveness probe failed: HTTP probe failed with statuscode: 503
-  Normal   Pulling    22s (x3 over 1h)  kubelet, k8s-agent-27799012-2  pulling image "personservice/mongokubernetes:0.0.3"
+  Normal   Pulling    22s (x3 over 1h)  kubelet, k8s-agent-27799012-2  pulling image "personservice/mongokubernetes:1.0.0"
   Normal   Killing    22s (x2 over 1h)  kubelet, k8s-agent-27799012-2  Killing container with id docker://personservice:Container failed liveness probe.. Container will be killed and recreated.
-  Normal   Pulled     21s (x3 over 1h)  kubelet, k8s-agent-27799012-2  Successfully pulled image "personservice/mongokubernetes:0.0.3"
+  Normal   Pulled     21s (x3 over 1h)  kubelet, k8s-agent-27799012-2  Successfully pulled image "personservice/mongokubernetes:1.0.0"
   Normal   Created    21s (x3 over 1h)  kubelet, k8s-agent-27799012-2  Created container
   Normal   Started    21s (x3 over 1h)  kubelet, k8s-agent-27799012-2  Started container
 ```
@@ -1244,7 +1244,7 @@ kind: Service
 metadata:
   labels:    
      app: personservice
-     version: "0.0.3"
+     version: "1.0.0"
   annotations:
      auth.istio.io/80: NONE
   name: personservice-actuator
@@ -1254,7 +1254,7 @@ spec:
     port: 8081
   selector:
     app: personservice
-    version: "0.0.3"
+    version: "1.0.0"
   type: ClusterIP
 ```
 Deploy them using   
