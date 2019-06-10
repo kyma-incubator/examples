@@ -27,13 +27,13 @@ Let's implement and deploy our example. I will use:
 - KNative eventing and NATS as a messaging middleware to decouple Wordpress from my extension
 - Istio service mesh together with Prometheus, Grafana and Jaeger to get monitoring and tracing
 - Kubeless as serverless engine for my code
-- Service Catalog and Azure Service Broker to enable Azure Text Analytics services in my Kubernetes cluster
 - Grafana Loki for keeping logs
-- Wordpress Connector for Kyma and Kyma Application Broker to bind Wordpress API and Events to my code
+- Service Catalog, Wordpress Connector for Kyma and Kyma Application Broker to bind Wordpress API and Events to my code
 
 # Installation
 From the list above you can expect long installation process, but I will use Kyma operator from GCP Marketplace that starts GKE cluster and installs all the tools with one click. All you need before is Google Account and GCP Project. If you don't have one you can create it and additionally Google will give you $300 credit for running your cluster.
-Go to Marketplace, create the cluster and deploy Kyma on it. Piece of cake!
+
+Go to [Marketplace](https://console.cloud.google.com/marketplace/details/sap-public/kyma), click the configure button, then create the cluster and deploy Kyma on it. Piece of cake!
 
 When it is ready (about 15-20 min) you should see Kyma info and Next Steps panel. Default Kyma installation generates self-signed TLS certificate, and your browser will complain if you try to hit console URL. The base64 decoded certificate is displayed in Kyma info panel. You need to make it trusted in your system. To do this in OSX, copy the certificate string, run:
 ```
@@ -43,18 +43,37 @@ Remember to replace `certificate_string` with the value copied from Kyma info pa
 
 Then you can open the URL from Address field in your browser. In my case it is: `https://console.35.193.85.37.xip.io`. You can log in to Kyma console using user and password provided in Kyma application details.
 
+## Upgrade
+At the moment of writing the newest available Kyma verion on GCP Marketplace is 1.0.0. This version has a small bug that prevents Lambda editor to show Event triggers if Kyma is deployed with self-signed certificate. The easiest way to get rid of this problem is to upgrade Kyma to the 1.1.0 version. All you need to do is to edit kyma-installer deployment and label kyma installation custom resource to trigger the upgrade process.
+
+```sh
+# Update kyma installer image to 1.1.0
+kubectl -n kyma-installer \
+  patch deployment kyma-installer --type=json \
+  -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "eu.gcr.io/kyma-project/kyma-installer:1.1.0"}]'
+# Start the installation 
+kubectl label installations/kyma-installation action=install
+```
+
+
 ## Wordpress installation
 If you already have wordpress installed you can go to the next step. If not you can easily deploy wordpress with few clicks in Kyma console.
-First, create namespace for wordpress.  Then download the wordpress deployment file: [wordpress-deployment.yaml](wordpress-deployment.yaml) (it is recommended to change the `mysql-pass` secret). Then go to the namespace wordpress and click `+ Deploy new resource to the namespace` link, and select wordpress-deployment.yaml file from your disk.
+First, create namespace for wordpress.  Then download the wordpress deployment file: [wordpress-deployment.yaml](wordpress-deployment.yaml) (it is recommended to change the `mysql-pass` secret). Then go to the namespace wordpress and click **Deploy new resource to the namespace** link, and select wordpress-deployment.yaml file from your disk.
 
 If you prefer you can do the same from command line (assuming that your current Kubernetes context is set to the Kyma cluster):
-```
+```sh
+# Create namespace
 kubectl create namespace wordpress
+
+# Deploy wordpress (master)
 kubectl -n wordpress apply -f https://raw.githubusercontent.com/kyma-incubator/examples/master/wordpress/wordpress-deployment.yaml
+
+# Deploy wordpress (Pull Request):
+kubectl -n wordpress apply -f https://raw.githubusercontent.com/kyma-incubator/examples/cb06d5f2a5133ac6d3f1fc63bf1ee14e4c9765c8/wordpress/wordpress-deployment.yaml
 ```
 Wait few seconds until wordpress starts. You can check the status in Deployments section:
 
-When all deployments are in the running state navigate to https://wordpress.35.193.85.37.xip.io (replace IP with the one for your cluster), and finish installation wizard. 
+When all deployments are in the running state navigate to [https://wordpress.35.193.85.37.xip.io]() (replace IP with the one for your cluster), and finish installation wizard. 
 
 ## Kyma plugin for Wordpress
 
@@ -65,7 +84,6 @@ Now download and install (Plugins -> Add new -> Upload plugin), and activate the
 
 Go to Settings -> Kyma Connector, uncheck Verify SSL option (you need it because default Kyma installation uses self-signed certificates), and provide username and password you created during installation, and save changes. 
 
-
 # Connect Wordpress to Kyma
 
 In this step you will establish trusted connection between Wordpress instance and your Kubernetes cluster. You will also register Wordpress API and Wordpress Events in Service Catalog, and enable both in selected namespace.
@@ -74,21 +92,30 @@ In Kyma console navigate back to home and go to Applications, and create new one
 
 Open it and press Connect Application link. Copy connection token URL to the clipboard. Go to wordpress Kyma Connector Settings, and paste token URL in Kyma Connection field, and press Connect button. You should see the success message in wordpress and you should see new entry inside Provided Services & Events section of worpdress application in Kyma.
 
-# Diasable SSL for Kyma->Wordpress
+## Diasable SSL for Kyma->Wordpress
 
-Wordpress installed in cluster also uses self-signed SSL certificate. Kyma default settings will not allow for such connection. You need to turn it on by:
+Wordpress installed in cluster also uses self-signed SSL certificate. Kyma default settings will not allow for such connection. You need to turn it on explicitly:
 
   1. Edit the `wordpress-application-gateway` Deployment in the `kyma-integration` Namespace. Run:
-    ```
-    kubectl -n kyma-integration edit deployment wordpress-application-gateway
-    ```
+      ```
+      kubectl -n kyma-integration edit deployment wordpress-application-gateway
+      ```
   2. Edit the Deployment in Vim. Select `i` to start editing.
   3. Find the **skipVerify** parameter and change its value to `true`.
   4. Select `esc`, type `:wq`, and select `enter` to write and quit.
 
+One command to do it:
+```sh
+# Update kyma installer image to 1.1.0
+kubectl -n kyma-integration \
+  patch deployment wordpress-application-gateway --type=json \
+  -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/args/6", "value": "--skipVerify=true"}]'
+```
+*Be careful! The command assumes that skipVerify is the argument with index 6 (0-based).*
+
 # Enable Wordpress Events and APIs in selected namespace
 
-Application connector can expose APIs and Events (Async API) of the application in Service Catalog. To show Wordpress in the Service Catalog you need to first bind application to selected namespace. In the wordpress application create binding and select namespace stage. Now you can go to namespace stage and open Catalog - you should see Wordpress API there. Open it and have a look at API console and Events specification. We will react on `comment.post.v1` event and will interact with `/wp/v2/comments/{id}` API. To make them available in the stage namespace click Add button and create instance of wordpress Service Class. Application Connector behind the scenes creates application gateway (kind of proxy) that is forwarding requests from bounded services or functions to the Wordpress instance. 
+Application connector can expose APIs and Events (Async API) of the application in Service Catalog. To show Wordpress in the Service Catalog you need to first bind application to selected namespace. In the wordpress application create binding and select namespace stage. Now you can go to namespace stage and open Catalog - you should see Wordpress API in the Services tab. Open it and have a look at API console and Events specification. We will react on `comment.post.v1` event and will interact with `/wp/v2/comments/{id}` API. To make them available in the stage namespace click **Add once** button and create instance of wordpress Service Class. Application Connector behind the scenes creates application gateway (kind of proxy) that is forwarding requests from bounded services or functions to the Wordpress instance. 
 
 # Write your code
 You did the wiring, so lets write some code. In the namespace stage create new Lambda named local-review and paste in the editor following code:
@@ -97,16 +124,18 @@ const Sentiment = require('sentiment');
 const sentiment = new Sentiment();
 const axios = require("axios");
 
-function isPositive(txt) {
-    let result = sentiment.analyze(txt);
-    return result.comparative>0.2;
-}
-
-async function setCommentStatus(id, status) {
-    let commentUrl = `${process.env.WP_GATEWAY_URL}/wp/v2/comments/${id}?status=${status}`;
-    const update = await axios.post(commentUrl);
-    return update;
-}
+module.exports = {
+    main: async function (event, context) {
+        let status = "hold";
+        let comment = await getComment(event.data.commentId);
+        let result = sentiment.analyze(comment.content.raw);
+        let score = result.comparative;
+        if (score>0.2) {
+            status = "approved"
+        } 
+        updateComment(comment.id, status, comment.content.raw, score);
+    }
+};
 
 async function getComment(id) {
     let commentUrl = `${process.env.WP_GATEWAY_URL}/wp/v2/comments/${id}?context=edit`
@@ -114,21 +143,15 @@ async function getComment(id) {
     return response.data;
 }
 
-module.exports = {
-    main: async function (event, context) {
-        let status = "hold";
-        let comment = await getComment(event.data.commentId);
-        let positive = await isPositive(comment.content.raw);
-        if (positive) {
-            status = "approved"
-        } 
-        setCommentStatus(comment.id, status);
-    }
-};
+async function updateComment(id, status, comment, score) {
+    let commentUrl = `${process.env.WP_GATEWAY_URL}/wp/v2/comments/${id}`;
+    const update = await axios.post(commentUrl,{status:status, content:comment+"\n--\nscore:"+score});
+    return update;
+}
 ```
 
 In the dependencies section add:
-```
+```json
 {
   "dependencies": {
     "axios": "^0.19.0",
@@ -136,11 +159,12 @@ In the dependencies section add:
   }
 }
 ```
+Select trigger for your function - event `comment.post`, and save the function (the trigger is available because you have Wordpress Service Instance in the stage namespace)
 
 # Binding
-TODO:
-- Create Wordpress instance
-- Bind it to Lambda (use prefix WP_)
+
+Go to Service Management -> Instances, open wordpress instance in the Services tab. Click *Bind Application*, select *local-review* function, set namespace prefix to `WP_`, and confirm.
+You can now open again local-review lambda and check if there is a new entry in Service Bindings section with WP_GATEWAY_URL environment variable.
 
 # Test it
 TODO
@@ -165,3 +189,52 @@ TODO
 # Summary
 Why should you try Kyma? If you start a new project on Kubernetes, you will get carefully selected, best tools from Cloud Native landscape, already configured and integrated. If you want to move only part of your project to the cloud and you have to keep legacy application around, Kyma will help you to build extension for them using modern tools on top of Kuberbetes.
 Please remember that Kyma is actively developed open source project (~80 contributors and ~600 github stars) with the support from such big company as SAP. 
+
+# Command line mode
+
+## Prepare the GKE cluster with Kyma
+
+```sh
+export KYMA_VERSION=1.2.0-rc1
+export CLUSTER_NAME={CLUSTER_NAME_YOU_WANT}
+export GCP_PROJECT={YOUR_GCP_PROJECT}
+export GCP_ZONE={GCP_ZONE_TO_DEPLOY_TO}
+
+gcloud container --project "$GCP_PROJECT" clusters \
+create "$CLUSTER_NAME" --zone "$GCP_ZONE" \
+--cluster-version "1.12" --machine-type "n1-standard-4" \
+--addons HorizontalPodAutoscaling,HttpLoadBalancing
+
+gcloud container clusters get-credentials $CLUSTER_NAME --zone $GCP_ZONE --project $GCP_PROJECT
+
+kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
+
+kubectl apply -f https://raw.githubusercontent.com/kyma-project/kyma/$KYMA_VERSION/installation/resources/tiller.yaml
+
+kubectl apply -f https://github.com/kyma-project/kyma/releases/download/$KYMA_VERSION/kyma-installer-cluster.yaml
+
+while true; do \
+  kubectl -n default get installation/kyma-installation -o jsonpath="{'Status: '}{.status.state}{', description: '}{.status.description}"; echo; \
+  sleep 5; \
+done
+```
+
+## Access Kyma
+
+```sh
+# After the installation, add Kyma self-signed certificate to the trusted certificates (MacOS):
+tmpfile=$(mktemp /tmp/temp-cert.XXXXXX) \
+&& kubectl get configmap net-global-overrides -n kyma-installer -o jsonpath='{.data.global\.ingress\.tlsCrt}' | base64 --decode > $tmpfile \
+&& sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain $tmpfile \
+&& rm $tmpfile
+
+echo 'Kyma Console Url:'
+echo `kubectl get virtualservice core-console -n kyma-system -o jsonpath='{ .spec.hosts[0] }'`
+
+echo 'User admin@kyma.cx, password:'
+echo `kubectl get secret admin-user -n kyma-system -o jsonpath="{.data.password}" | base64 --decode`
+```
+
+## Install wordpress
+
+kubectl -n wordpress apply -f https://raw.githubusercontent.com/kyma-incubator/examples/cb06d5f2a5133ac6d3f1fc63bf1ee14e4c9765c8/wordpress/wordpress-deployment.yaml
