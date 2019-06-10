@@ -21,6 +21,8 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
@@ -68,6 +70,8 @@ public class PairingService {
 
 	// Just for educational purposes. Don't do this in production environments!
 	private String keyStorePassword = "kyma-project";
+
+	Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
 	public void setConnectionRepository(ConnectionRepository connectionRepository) {
@@ -154,6 +158,8 @@ public class PairingService {
 						response.getStatusCode().value(), response.getStatusCode().getReasonPhrase()));
 			}
 
+			logger.debug("Received client certificate");
+
 			KeyStore ks = KeyStore.getInstance("JKS");
 
 			List<String> certs = matchCertificates(new String(
@@ -225,6 +231,8 @@ public class PairingService {
 		result.setSslKey(newKey);
 
 		connectionRepository.save(result);
+
+		logger.debug("Renewed certificate successfully");
 	}
 
 	/**
@@ -298,6 +306,8 @@ public class PairingService {
 				keyStore, connectInfo.getCertificate().getKeyAlgorithm(), connectInfo.getCertificate().getSubject());
 
 		connectionRepository.save(connection);
+
+		logger.debug("Connected successfully");
 	}
 
 	public void executeManualPairing(URI infoUrl, KeyStore keyStore, String keyStorePassword) {
@@ -314,6 +324,8 @@ public class PairingService {
 						certificateSubject);
 
 				connectionRepository.save(connection);
+
+				logger.debug("Connected successfully");
 			} else {
 				throw new ApplicationConnectorException("KeyStore has no aliases");
 			}

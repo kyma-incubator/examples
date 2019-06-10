@@ -9,8 +9,13 @@ import java.util.Iterator;
 
 import javax.net.ssl.SSLContext;
 
+import com.sap.demo.applicationconnector.entity.Connection;
+import com.sap.demo.applicationconnector.exception.RestTemplateCustomizerException;
+import com.sap.demo.applicationconnector.repository.ConnectionRepository;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +24,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import com.sap.demo.applicationconnector.entity.Connection;
-import com.sap.demo.applicationconnector.exception.RestTemplateCustomizerException;
-import com.sap.demo.applicationconnector.repository.ConnectionRepository;
 
 @Profile("ApplicationConnector")
 @Service
@@ -78,8 +79,9 @@ public class ApplicationConnectorRestTemplateBuilder {
 		KeyStore clientCertificate = connection.getSslKey();
 
 		try {
-			SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword)
-					.build();
+			SSLContextBuilder builder = new SSLContextBuilder();
+			// we trust self-signed certificates just to enable Minikube development --> don't use in production!
+			SSLContext sslContext = builder.loadTrustMaterial(null, new TrustSelfSignedStrategy()).loadKeyMaterial(clientCertificate, keyStorePassword).build();	
 
 			SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
 
@@ -98,8 +100,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 		}
 	}
 
-	// Returns a RestTemplate from the Connection object saved in the database (or
-	// from the cache)
+	// Returns a RestTemplate from the Connection object saved in the database
 	public RestTemplate applicationConnectorRestTemplate() {
 		Iterator<Connection> connectionRegistrations = connectionRepository.findAll().iterator();
 
@@ -115,8 +116,9 @@ public class ApplicationConnectorRestTemplateBuilder {
 		RestTemplate result;
 
 		try {
-			SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword)
-					.build();
+			SSLContextBuilder builder = new SSLContextBuilder();
+			// we trust self-signed certificates just to enable Minikube development --> don't use in production!
+			SSLContext sslContext = builder.loadTrustMaterial(null, new TrustSelfSignedStrategy()).loadKeyMaterial(clientCertificate, keyStorePassword).build();
 
 			SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
 
@@ -142,23 +144,18 @@ public class ApplicationConnectorRestTemplateBuilder {
 	// Returns a RestTemplate from the KeyStore object (or from cache)
 	public RestTemplate applicationConnectorRestTemplate(KeyStore clientCertificate, char[] keyStorePassword) {
 		RestTemplate result;
-
 		try {
-			SSLContext sslContext = SSLContextBuilder.create().loadKeyMaterial(clientCertificate, keyStorePassword)
-					.build();
+			SSLContextBuilder builder = new SSLContextBuilder();
+			SSLContext sslContext = builder.loadTrustMaterial(null, new TrustSelfSignedStrategy()).loadKeyMaterial(clientCertificate, keyStorePassword).build();	
 
-			SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
+ 			SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);	
+			HttpClient client = HttpClients.custom().setSSLSocketFactory(socketFactory).build();	
+		
+			return restTemplateBuilder.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client)).build();
 
-			HttpClient client = HttpClients.custom().setSSLSocketFactory(socketFactory).build();
-
-			result = restTemplateBuilder.requestFactory(() -> new HttpComponentsClientHttpRequestFactory(client))
-					.build();
-
-			return result;
-
-		} catch (KeyManagementException e) {
-			throw new RestTemplateCustomizerException(e.getMessage(), e);
 		} catch (UnrecoverableKeyException e) {
+			throw new RestTemplateCustomizerException(e.getMessage(), e);
+		} catch (KeyManagementException e) {
 			throw new RestTemplateCustomizerException(e.getMessage(), e);
 		} catch (NoSuchAlgorithmException e) {
 			throw new RestTemplateCustomizerException(e.getMessage(), e);
