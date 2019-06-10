@@ -5,8 +5,11 @@ const axios = require("axios");
 module.exports = {
     main: async function (event, context) {
         let status = "hold";
+        console.log("Event data: %s",JSON.stringify(event.data));
         let comment = await getComment(event.data.commentId);
+        console.log("Comment: %s",comment.content.raw);
         let result = sentiment.analyze(comment.content.raw);
+        console.log("Sentiment: %s",JSON.stringify(result));
         let score = result.comparative;
         if (score>0.2) {
             status = "approved"
