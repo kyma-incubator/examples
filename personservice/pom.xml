@@ -5,7 +5,7 @@
 
 	<groupId>com.sap.demo.d046471</groupId>
 	<artifactId>MongoKubernetesMicroservice</artifactId>
-	<version>0.0.3</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 	<name>MongoKubernetesMicroservice</name>
 	<description>Kubernetes Service using Mongo DB</description>
@@ -21,9 +21,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<project.version>0.0.3</project.version>
+		<project.version>1.0.0</project.version>
 		<jib.version>1.0.2</jib.version>
-		<docker.repositoryname>arifcrtsap</docker.repositoryname>
+		<!-- change this with your repository and credentialhelper  -->
+		<docker.repositoryname>personservice</docker.repositoryname>
 		<jib.credentialhelper>wincred</jib.credentialhelper>
 		<springfox.version>2.9.2</springfox.version>
 		<commons-io.version>2.6</commons-io.version>
