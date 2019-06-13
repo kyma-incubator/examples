@@ -883,7 +883,7 @@ kubectl delete pod -n personservice -l app=personservice
 
 ```
 
-After that again issue a POST against `/api/v1/applicationconnector/registration`. Before doing so, acquire a new JWT Token as described before and supply it in an Authorization header. Now your registration should be updated and all lambda calls will acquire a token from the service and supply it for the outbound calls. 
+After that issue a POST against `/api/v1/applicationconnector/registration/automatic` with a new "Connect URL". For details refer to [automatic flow](#Automatic-Pairing-with-Kyma). Unlike before this needs to be executed in Postman (or any other REST client) as the URL is secured now. Before doing so, acquire a new JWT Token as described before and supply it in an Authorization header. Now your registration should be updated and all lambda calls will acquire a token from the service and supply it for the outbound calls. 
 
 ### Test the Service
 
@@ -978,7 +978,7 @@ kubectl delete pod -n personservice -l app=personservice
 
 ```
 
-After that again issue a POST against `/api/v1/applicationconnector/registration`.
+After that issue a POST against `/api/v1/applicationconnector/registration/automatic` with a new "Connect URL". For details refer to [automatic flow](#Automatic-Pairing-with-Kyma). This can now be executed from the swagger-ui again as described (OAuth2 is already removed).
 
 
 ### Determining whether your service is alive 
