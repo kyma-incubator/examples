@@ -883,7 +883,7 @@ kubectl delete pod -n personservice -l app=personservice
 
 ```
 
-After that issue a POST against `/api/v1/applicationconnector/registration/automatic` with a new "Connect URL". For details refer to [automatic flow](#Automatic-Pairing-with-Kyma). Unlike before this needs to be executed in Postman (or any other REST client) as the URL is secured now. Before doing so, acquire a new JWT Token as described before and supply it in an Authorization header. Now your registration should be updated and all lambda calls will acquire a token from the service and supply it for the outbound calls. 
+After that issue a POST against `/api/v1/applicationconnector/registration/automatic` with a new "Connect URL". For details refer to [automatic flow](#option-2-automatic-pairing-with-kyma). Unlike before this needs to be executed in Postman (or any other REST client) as the URL is secured now. Before doing so, acquire a new JWT Token as described before and supply it in an Authorization header. Now your registration should be updated and all lambda calls will acquire a token from the service and supply it for the outbound calls. 
 
 ### Test the Service
 
@@ -978,7 +978,7 @@ kubectl delete pod -n personservice -l app=personservice
 
 ```
 
-After that issue a POST against `/api/v1/applicationconnector/registration/automatic` with a new "Connect URL". For details refer to [automatic flow](#Automatic-Pairing-with-Kyma). This can now be executed from the swagger-ui again as described (OAuth2 is already removed).
+After that issue a POST against `/api/v1/applicationconnector/registration/automatic` with a new "Connect URL". For details refer to [automatic flow](#option-2-automatic-pairing-with-kyma). This can now be executed from the swagger-ui again as described (OAuth2 is already removed).
 
 
 ### Determining whether your service is alive 
@@ -1136,6 +1136,13 @@ In our Spring app logging uses SLF4J and is mainly based on the `LoggingAspect.j
 
 To test the tracing you need to launch the Jaeger UI. Details can be found under https://kyma-project.io/docs/latest/components/tracing. You can access the Jaeger UI either locally at `https://jaeger.kyma.local` or on a cluster at `https://jaeger.{domain-of-kyma-cluster}`.
 
+In Kyma tracing is driven out of the Istio Service Mesh. By default only a small percentage of the requests are traced. This is to reduce the performance impact of observability on the overall application. In the following exercise this is not helpful. Hence we will change the sampling rate to 100%. To do so issue `kubectl -n istio-system edit deploy istio-pilot` and adapt the `PILOT_TRACE_SAMPLING` environment varibale as shown below:
+
+```
+        - name: PILOT_TRACE_SAMPLING
+          value: "100"
+```
+
 Now we send a simple GET to /api/v1/person. In Jaeger we will make the following selections:
 
 * Service: personservice
@@ -1206,6 +1213,8 @@ Kyma also provides an UI to query the Loki service in an easier way. Go to the K
 This gives you all the log entries on the level `TRACE`. You can now search within these in your browser:
 
 ![Getting the Log](images/gettingthelog6.png)
+
+After finishing you can revert trace sampling back to the previous value as shown in the tracing section.
 
 ## Operate your Service: Metrics
 
