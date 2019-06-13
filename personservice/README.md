@@ -1293,6 +1293,29 @@ spec:
     path: "/actuator/prometheus" # enpoint of spring metrics actuator
 ```
 
+As this is not part of the standard roles assigned to users with kyma-admin cluster role, you might have to expand your permissions. If your user is `admin@kyma.cx`, go to `Global Permissions` and create an new `Cluster Role Binding` to the cluster role `prometheus-operator`. 
+
+![Prometheus](images/rolebinding.png)
+
+Alternatively you can apply the following manifest:
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin@kyma.cx-prometheus-operator-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-operator
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: admin@kyma.cx
+```
+
+To do so, issue: `kubectl apply -f prometheus-role-binding.yaml`
+
 To create this resource issue: `kubectl apply -f service-monitor.yaml -n kyma-system`
 
 Now you can check whether it is working in Prometheus. To do so you need to expose prometheus on your localhost using `kubectl port-forward -n kyma-system svc/prometheus-operated 9090:9090`. Now you can open http://localhost:9090/targets in a browser. You should find a target like in the screenshot below:
