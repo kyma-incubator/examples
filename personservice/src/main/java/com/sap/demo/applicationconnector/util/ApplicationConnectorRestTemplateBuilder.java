@@ -143,7 +143,7 @@ public class ApplicationConnectorRestTemplateBuilder {
 
 	// Returns a RestTemplate from the KeyStore object (or from cache)
 	public RestTemplate applicationConnectorRestTemplate(KeyStore clientCertificate, char[] keyStorePassword) {
-		RestTemplate result;
+
 		try {
 			SSLContextBuilder builder = new SSLContextBuilder();
 			SSLContext sslContext = builder.loadTrustMaterial(null, new TrustSelfSignedStrategy()).loadKeyMaterial(clientCertificate, keyStorePassword).build();	
