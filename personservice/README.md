@@ -1316,7 +1316,7 @@ subjects:
 
 To do so, issue: `kubectl apply -f prometheus-role-binding.yaml`
 
-To create this resource issue: `kubectl apply -f service-monitor.yaml -n kyma-system`
+To create the ServiceMonitor issue: `kubectl apply -f service-monitor.yaml -n kyma-system`. Note that this requires the previously outlined permissions.
 
 Now you can check whether it is working in Prometheus. To do so you need to expose prometheus on your localhost using `kubectl port-forward -n kyma-system svc/prometheus-operated 9090:9090`. Now you can open http://localhost:9090/targets in a browser. You should find a target like in the screenshot below:
 
