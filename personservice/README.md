@@ -852,7 +852,7 @@ After that (it might take a while to reflect in the system) you should get an `O
 
 **If you are running this locally you will have issues with failed DNS lookups of the lambda function. There are probably ways to fix this, but they are not described here. If you are running on a cluster where APIs have public DNS entries, you can continue.**
 
-When you create a new person, your Lambda will fail. To fix it, we need to adapt the registration file. Specifically we need to provide the OAuth2 configuration:
+When you create a new person, your Lambda will fail. To fix it, we need to adapt the registration file (..../kyma/examples/personservice/registration/registrationfile.json). Specifically we need to provide the OAuth2 configuration:
 
 ```
 "api": {
