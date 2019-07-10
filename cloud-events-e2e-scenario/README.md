@@ -103,14 +103,19 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 ## Publish the event
 
 ```go
-# using httpie
 package main
 
 import (
     "context"
-    "github.com/cloudevents/sdk-go"
-    "github.com/google/uuid"
+    "crypto/tls"
+    "crypto/x509"
+    "io/ioutil"
+    "log"
+    "net/http"
     "time"
+
+    cloudevents "github.com/cloudevents/sdk-go"
+    "github.com/google/uuid"
 )
 
 func main() {
@@ -124,13 +129,35 @@ func main() {
     event.SetDataContentType("application/json")
     event.SetData(23)
 
+    // Add path to client certificate and key
+    cert, err := tls.LoadX509KeyPair("generated.crt", "generated.key")
+    if err != nil {
+        log.Fatalln("Unable to load cert", err)
+    }
+    clientCACert, err := ioutil.ReadFile("generated.crt")
+    if err != nil {
+        log.Fatal("Unable to open cert", err)
+    }
+
+    clientCertPool := x509.NewCertPool()
+    clientCertPool.AppendCertsFromPEM(clientCACert)
+
+    tlsConfig := &tls.Config{
+        Certificates:       []tls.Certificate{cert},
+        RootCAs:            clientCertPool,
+        InsecureSkipVerify: true,
+    }
+
+    tlsConfig.BuildNameToCertificate()
+
+    client := &http.Client{
+        Transport: &http.Transport{TLSClientConfig: tlsConfig},
+    }
     t, err := cloudevents.NewHTTPTransport(
         cloudevents.WithTarget("https://gateway.kyma.local/sample-external-solution/v2/events"),
-        cloudevents.WithStructuredEncoding(),
-    )
-    if err != nil {
-        panic("failed to create transport, " + err.Error())
-    }
+        cloudevents.WithStructuredEncoding())
+
+    t.Client = client
     c, err := cloudevents.NewClient(t)
     if err != nil {
         panic("unable to create cloudevent client: " + err.Error())
