@@ -86,16 +86,16 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 ## Add events and APIs to the Kyma Namespace
 
 * Navigate to Service Catalog for Kyma namespace `workshop`
+* Click on `Services`
 
 * You should see the registered events available.
 * Click on the details
-* Add to your namespace
-* Check under `Service Instances` if it appears
+* Add to your namespace by clicking the `Add once` button"
+* Check under `Service Instances` --> `Services` tab if it appears
 
 ## Create Lambda
 
-* Create the lambda definition in `lambda ui` using [lambda.js](./lambda.js)
-  * Add label `app:<name-of-the-lambda>`
+* Create the lambda definition in lambda ui using [lambda.js](./lambda.js) in the workshop namespace
 * Press `Select Function trigger` button to create an event trigger, then choose `order.created`
 
 # Runtime
