@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -48,8 +49,9 @@ func main() {
 	client := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: tlsConfig},
 	}
+	target := "https://gateway.kyma.local/sample-external-solution/v2/events"
 	t, err := cloudevents.NewHTTPTransport(
-		cloudevents.WithTarget("https://gateway.kyma.local/sample-external-solution/v2/events"),
+		cloudevents.WithTarget(target),
 		cloudevents.WithStructuredEncoding())
 
 	t.Client = client
@@ -61,4 +63,5 @@ func main() {
 	if err != nil {
 		panic("failed to send cloudevent: " + err.Error())
 	}
+	fmt.Printf("Successfully sent a new event to: %s", target)
 }
