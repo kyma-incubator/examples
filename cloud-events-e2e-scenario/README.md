@@ -75,12 +75,12 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
     ```
 
 * Verify
-  * Navigate to Administration --> Applications --> sample-external-solution
+  * Navigate to Integration --> Applications --> sample-external-solution
   * You should see the registered events.
 
 ## Bind Application
 
-* Navigate to Administration --> Applications --> sample-external-solution
+* Navigate to Integration --> Applications --> sample-external-solution
 * Create a binding with the Kyma namespace `workshop`.
 
 ## Add events and APIs to the Kyma Namespace
@@ -102,7 +102,10 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 
 ## Publish the event
 
+* Using the generated certificate from the `./one-click-integration.sh`, send a Cloud Event to the gateway using any HTTP client e.g curl, httpie, postman etc. or a CloudEvents SDK 
+
 ```go
+# Go Example
 package main
 
 import (
