@@ -19,7 +19,7 @@ The runtime flow involves following steps:
 
 ## Start Kyma locally
 
-* Refer these [instructions](https://github.com/kyma-project/kyma/blob/master/docs/kyma/docs/030-inst-local-installation-from-release.md)
+* Refer these [instructions](https://github.com/kyma-project/kyma/blob/master/docs/kyma/04-02-local-installation.md)
 
 ## Create Kyma namespace
 
@@ -28,14 +28,14 @@ The runtime flow involves following steps:
 
 ## Create Application
 
-* Under `Integration`, create Application.
+* Create an application at `Integration` --> `Application` --> `Create Application`
 * Name it `sample-external-solution`.
 
 ## Establish secure connection between external solution and Kyma
 
 We will set up the secure connectivity between the mock external solution and the Kyma application `sample-external-solution`.
 
-Here we will use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/docs/010-architecture-connector-service.md) to secure the communication.
+Here we will use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/02-02-connector-service.md) to secure the communication.
 
 * Clone this [repository](https://github.com/janmedrek/one-click-integration-script).
 
@@ -52,7 +52,7 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 
   This will generate a `generated.pem` file. This contains the signed certificate and key that we will use for subsequent communications.
 
-  > **NOTE** The token is short-lived. So either hurry up or regenrate the token
+  > **NOTE** The token is short-lived. So either hurry up or regenerate the token
 
   ```bash
   export NODE_PORT=$(kubectl get svc -n kyma-system application-connector-ingress-nginx-ingress-controller -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
@@ -96,81 +96,13 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 
 * Create the lambda definition in `lambda ui` using [lambda.js](./lambda.js)
   * Add label `app:<name-of-the-lambda>`
-* Select function trigger as event trigger, then choose `order.created`
+* Press `Select Function trigger` button to create an event trigger, then choose `order.created`
 
 # Runtime
 
 ## Publish the event
 
-* Using the generated certificate from the `./one-click-integration.sh`, send a Cloud Event to the gateway using any HTTP client e.g curl, httpie, postman etc. or a CloudEvents SDK 
-
-```go
-# Go Example
-package main
-
-import (
-    "context"
-    "crypto/tls"
-    "crypto/x509"
-    "io/ioutil"
-    "log"
-    "net/http"
-    "time"
-
-    cloudevents "github.com/cloudevents/sdk-go"
-    "github.com/google/uuid"
-)
-
-func main() {
-    event := cloudevents.NewEvent()
-    event.Context = cloudevents.EventContextV03{}.AsV03()
-    event.SetID(uuid.New().String())
-    event.SetType("order.created")
-    event.SetSource("external-application")
-    event.SetTime(time.Now())
-    event.SetExtension("eventtypeversion", "v1")
-    event.SetDataContentType("application/json")
-    event.SetData(23)
-
-    // Add path to client certificate and key
-    cert, err := tls.LoadX509KeyPair("generated.crt", "generated.key")
-    if err != nil {
-        log.Fatalln("Unable to load cert", err)
-    }
-    clientCACert, err := ioutil.ReadFile("generated.crt")
-    if err != nil {
-        log.Fatal("Unable to open cert", err)
-    }
-
-    clientCertPool := x509.NewCertPool()
-    clientCertPool.AppendCertsFromPEM(clientCACert)
-
-    tlsConfig := &tls.Config{
-        Certificates:       []tls.Certificate{cert},
-        RootCAs:            clientCertPool,
-        InsecureSkipVerify: true,
-    }
-
-    tlsConfig.BuildNameToCertificate()
-
-    client := &http.Client{
-        Transport: &http.Transport{TLSClientConfig: tlsConfig},
-    }
-    t, err := cloudevents.NewHTTPTransport(
-        cloudevents.WithTarget("https://gateway.kyma.local/sample-external-solution/v2/events"),
-        cloudevents.WithStructuredEncoding())
-
-    t.Client = client
-    c, err := cloudevents.NewClient(t)
-    if err != nil {
-        panic("unable to create cloudevent client: " + err.Error())
-    }
-    _, err = c.Send(context.Background(), event)
-    if err != nil {
-        panic("failed to send cloudevent: " + err.Error())
-    }
-}
-```
+* Using the generated certificate from the `./one-click-integration.sh`, send a Cloud Event to the gateway using any HTTP client e.g curl, httpie, postman etc. or a CloudEvents SDK, check this example in Go [example.go](./example.go)
 
 # Verification
 
