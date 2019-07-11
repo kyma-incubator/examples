@@ -47,7 +47,7 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 * Use the one-click-generation [helper script](https://github.com/janmedrek/one-click-integration-script) to generate the certificate
 
   ```bash
-  ./one-click-integration.sh -u <paste token here>
+  ./one-click-integration.sh -u <paste URL here>
   ```
 
   This will generate a `generated.pem` file. This contains the signed certificate and key that we will use for subsequent communications.
