@@ -109,6 +109,10 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 * **Lambda was triggered**
   * Inspect the pod logs for lambda in `workshop` namespace
 
+    ```bash
+    kubectl -n work logs lambdaname-xxx-xxxx -c lambdaname -f
+    ```
+
 # Tracing
 
 * Traces are available under <https://jaeger.kyma.local/>
