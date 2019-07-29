@@ -54,10 +54,6 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 
   > **NOTE** The token is short-lived. So either hurry up or regenerate the token
 
-  ```bash
-  export NODE_PORT=$(kubectl get svc -n kyma-system application-connector-ingress-nginx-ingress-controller -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
-  ```
-
 ## Mock External solution
 
 * Calls from external solution to kyma
