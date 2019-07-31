@@ -260,33 +260,3 @@ curl -ik -X GET https://oathkeeper-api-server.$DOMAIN/rules
 curl -ik -X POST "https://oauth2-admin.$DOMAIN/oauth2/introspect" -F "token=<ACCESS_TOKEN>"
 ```
 
-### JWT Rule (To be moved to another document!)
-
-```
-cat <<EOF | kubectl apply -f -
-apiVersion: oathkeeper.ory.sh/v1alpha1
-kind: Rule
-metadata:
-  name: httpbin-jwt
-  namespace: default
-spec:
-  description: httpbin access with JWT
-  upstream:
-    url: http://httpbin.default.svc.cluster.local:8000
-  match:
-    methods: ["GET"]
-    url: <http|https>://httpbin-proxy.$DOMAIN/headers<.*>
-  authenticators:
-    - handler: jwt
-      config:
-        trusted_issuers:
-        - https://dex.kyma.local
-        required_scope:
-        - admin*
-  authorizer:
-    handler: allow
-EOF
-```
-
-issuer: https://dex.kyma.local
-jwksUri: http://dex-service.kyma-system.svc.cluster.local:5556/keys
