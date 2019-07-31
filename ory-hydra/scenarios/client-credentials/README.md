@@ -179,7 +179,7 @@ If the token is not present an expected response would be `401 Unauthorized` and
 kubectl apply -f lambda.yaml
 ```
 
-2. Create a virtual service. Make sure to replace the `{DOMAIN}` placeholder with your Kyma domain:
+2. Create a virtual service.
 ```
 cat <<EOF | kubectl apply -f -
 apiVersion: networking.istio.io/v1alpha3
@@ -191,7 +191,7 @@ spec:
   gateways:
   - kyma-gateway
   hosts:
-  - lambda-proxy.{DOMAIN}
+  - lambda-proxy.$DOMAIN
   http:
   - match:
     - uri:
@@ -200,7 +200,7 @@ spec:
     - destination:
         host: ory-oathkeeper-proxy
         port:
-          number: 80
+          number: 4455
 EOF
 ```
 If you have installed Kyma on minikube, add folowing line to minikube ip in `/etc/hosts` file:
@@ -210,7 +210,25 @@ lambda-proxy.kyma.local
 
 3. Create the following routing rule:
 ```
-curl -ik -X POST https://oathkeeper-api-server.$DOMAIN/rules -H "Content-type: application/json" -d '{"id":"lambda","description":"","match":{"methods":["GET"],"url":"http://lambda-proxy.'$DOMAIN'/lambda"},"authenticators":[{"handler":"oauth2_introspection","config":{"required_scope": ["read"]}}],"authorizer":{"handler":"allow","config":null},"credentials_issuer":{"handler":"noop","config":null},"upstream":{"preserve_host":false,"strip_path":"","url":"http://lambda.stage.svc.cluster.local:8080/"}}'
+cat <<EOF | kubectl apply -f -
+apiVersion: oathkeeper.ory.sh/v1alpha1
+kind: Rule
+metadata:
+  name: lambda-read
+  namespace: default
+spec:
+  description: lambda access with "read" scope
+  upstream:
+    url: http://lambda.stage.svc.cluster.local:8080
+  match:
+    methods: ["GET"]
+    url: http://lambda-proxy.$DOMAIN/lambda
+  authenticators:
+    - handler: oauth2_introspection
+      config:
+        required_scope: ["read"]
+  authorizer:
+    handler: allow
 ```
 
 4. Call the function
