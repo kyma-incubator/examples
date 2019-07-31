@@ -136,22 +136,22 @@ metadata:
   name: httpbin-write
   namespace: default
 spec:
-    description: httpbin access with "write" scope
-    upstream:
-      url: http://httpbin.default.svc.cluster.local:8000
-    match:
-      methods: ["POST"]
-      url: <http|https>://httpbin-proxy.$DOMAIN/post
-    authenticators:
-      - handler: oauth2_introspection
-        config:
-          required_scope: ["write"]
-    authorizer:
-      handler: allow
+  description: httpbin access with "write" scope
+  upstream:
+    url: http://httpbin.default.svc.cluster.local:8000
+  match:
+    methods: ["POST"]
+    url: <http|https>://httpbin-proxy.$DOMAIN/post
+  authenticators:
+    - handler: oauth2_introspection
+      config:
+        required_scope: ["write"]
+  authorizer:
+    handler: allow
 EOF
 ```
 
-4. Call the `HTTPbin` service through Oathkeeper reverse proxy using the authorization token:
+4. Call the `HttpBin` service through Oathkeeper reverse proxy using the authorization token:
 
 - Read scope
 ```
@@ -242,7 +242,7 @@ curl -ik -X GET https://oathkeeper-api-server.$DOMAIN/rules
 curl -ik -X POST "https://oauth2-admin.$DOMAIN/oauth2/introspect" -F "token=<ACCESS_TOKEN>"
 ```
 
-### JWT Rule
+### JWT Rule (To be moved to another document!)
 
 ```
 cat <<EOF | kubectl apply -f -
