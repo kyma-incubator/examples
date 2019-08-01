@@ -2,66 +2,61 @@
 
 This is an example scenario which demonstrates how Kyma can receive Cloud Events from an external solution. To make it easier for the developers, this scenario uses a  **local Kyma installation**.
 
-The external solution provides events which is mocked in this example scenario.
+This scenario uses a mocked external solution. You can mock the sending of Events using an HTTP client. 
+You can also use other mocked or real solutions.
 
-* Sending of events is mocked by using a HTTP Client.
 
-You can use any other real solutions or mocks that you want to try.
 
 The runtime flow involves following steps:
 
-* External solution sends an `order.created` event.
-* The event is accepted by Kyma.
-* Event triggers the deployed lambda.
-* Lambda prints the CE context attributes
+1. The external solution sends an `order.created` Event.
+2. The Event is accepted by Kyma.
+* The Event triggers the deployed lambda.
+* The lambda prints out CE context attributes.
 
 # Set up
 
-## Start Kyma locally
+### Install Kyma locally
 
-* Refer these [instructions](https://github.com/kyma-project/kyma/blob/master/docs/kyma/04-02-local-installation.md)
+Use these [instructions](https://github.com/kyma-project/kyma/blob/master/docs/kyma/04-02-local-installation.md) to install and configure Kyma locally.
 
-## Create Kyma namespace
+### Create a Namespace
 
-* Throughout this workshop we use `workshop` namespace so please create it first.
-* If you desire to use a different namespace then change each `workshop` here with your desired namespace name.
+Create a Namespace called `workshop`. You can choose a different name, but remember to use it when calling the commands.
 
-## Create Application
+### Create Application
 
-* Create an application at `Integration` --> `Application` --> `Create Application`
-* Name it `sample-external-solution`.
+1. In the Kyma Console, go to **Integration** > **Application** > **Create Application**.
+2. Enter the Application name: sample-external-solution. 
 
-## Establish secure connection between external solution and Kyma
+### Establish secure connection 
 
-We will set up the secure connectivity between the mock external solution and the Kyma application `sample-external-solution`.
+Use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/02-02-connector-service.md) to establish a secure connection between the mocked external solution and your application.
 
-Here we will use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/02-02-connector-service.md) to secure the communication.
+Follow these steps connect an external solution to Kyma:
+1. Clone [this repository](https://github.com/janmedrek/one-click-integration-script).
 
-* Clone this [repository](https://github.com/janmedrek/one-click-integration-script).
-
-* Copy the token
-  * Navigate to the `Integration --> Applications --> sample-external-solution`
-  * `Connect Application`
-  * Copy the token to the clipboard
+2. In the Kyma Console, navigate to **Integration** > **Applications** > **sample-external-solution**.
+3. Click **Connect Application**.
+4. Copy the token.
   
-* Use the one-click-generation [helper script](https://github.com/janmedrek/one-click-integration-script) to generate the certificate
+5. Use the one-click-generation [helper script](https://github.com/janmedrek/one-click-integration-script) to generate the certificate:
 
   ```bash
   ./one-click-integration.sh -u <paste URL here>
   ```
 
-  This will generate a `generated.pem` file. This contains the signed certificate and key that we will use for subsequent communications.
+ This script generates a `generated.pem` file. It contains the signed certificate and key that you will use for subsequent communications.
 
-  > **NOTE** The token is short-lived. So either hurry up or regenerate the token
+  > **NOTE** The token expires quickly, so use it right away or generate a new one.
 
-## Mock External solution
+### Mock an external solution
 
-* Calls from external solution to kyma
-  * Use any http client e.g curl, httpie, postman etc.
+Use any HTTP client, such as curl or postman, to send a request from the mocked external solution to Kyma.
 
-## Register Events
+### Register Events
 
-* Register events via the metadata api using [register-events.json](./register-events.json)
+1. Register Events via the metadata API using [`register-events.json`](./register-events.json):
 
     ```bash
     # Using httpie
@@ -70,40 +65,36 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
     curl -X POST -H "Content-Type: application/json" -d @./register-events.json https://gateway.kyma.local/sample-external-solution/v1/metadata/services --cert generated.pem -k
     ```
 
-* Verify
-  * Navigate to Integration --> Applications --> sample-external-solution
-  * You should see the registered events.
+To verify the Event flow, navigate to **Integration** > **Applications** > **sample-external-solution**. You can see the registered Events.
 
 ## Bind Application
 
-* Navigate to Integration --> Applications --> sample-external-solution
-* Create a binding with the Kyma namespace `workshop`.
+1. Navigate to **Integration** > **Applications** > **sample-external-solution**
+2. Create a binding with the `workshop` Namespace.
 
-## Add events and APIs to the Kyma Namespace
+### Add Events and APIs to the Namespace
 
-* Navigate to Service Catalog for Kyma namespace `workshop`
-* Click on `Services`
+1. Select the `workshop` Namespace and go to **Service Management** > **Catalog**.
+2. Click **Services** to see the registered Events.
 
-* You should see the registered events available.
-* Click on the details
-* Add to your namespace by clicking the `Add once` button"
-* Check under `Service Instances` --> `Services` tab if it appears
+3. Click on the Event entry to reveal details. 
+4. Click **Add once** button to add Events to your Namespace.
+5. Go to **Service Instances** > **Services** tab to see if the Events are available.
 
-## Create Lambda
+### Create lambda
 
 * Create the lambda definition in lambda ui using [lambda.js](./lambda.js) in the workshop namespace
-* Press `Select Function trigger` button to create an event trigger, then choose `order.created`
+2. Click **Select Function trigger** button to select an Event trigger, then choose **order.created**.
 
-# Runtime
+## Runtime
 
-## Publish the event
+### Publish the Event
 
-* Using the generated certificate from the `./one-click-integration.sh`, send a Cloud Event to the gateway using any HTTP client e.g curl, httpie, postman etc. or a CloudEvents SDK, check this example in Go [example.go](./example.go)
+Use the certificate generated by the `./one-click-integration.sh` script to send a Cloud Event to the gateway using any HTTP client, such as curl, httpie, or postman. You can also use CloudEvents SDK. For details, see [this example](./example.go)
 
-# Verification
+## Verification
 
-* **Lambda was triggered**
-  * Inspect the pod logs for lambda in `workshop` namespace
+To check if the lambda function was triggered properly, inspect the Pod logs in the `workshop` Namespace:
 
     ```bash
     kubectl -n work logs lambdaname-xxx-xxxx -c lambdaname -f
@@ -111,4 +102,4 @@ Here we will use the [connector service](https://github.com/kyma-project/kyma/bl
 
 # Tracing
 
-* Traces are available under <https://jaeger.kyma.local/>
+Traces are available under `https://jaeger.kyma.local/`.
