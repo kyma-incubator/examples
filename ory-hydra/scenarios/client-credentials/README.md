@@ -250,11 +250,6 @@ In case of problems, make sure that:
 curl -ik -X GET "https://oauth2-admin.$DOMAIN/clients"
 ```
 
-- The access rules have been consumed by the Oathkeeper's api-server:
-```
-curl -ik -X GET https://oathkeeper-api-server.$DOMAIN/rules
-```
-
 - Your request contains a valid access token:
 ```
 curl -ik -X POST "https://oauth2-admin.$DOMAIN/oauth2/introspect" -F "token=<ACCESS_TOKEN>"
