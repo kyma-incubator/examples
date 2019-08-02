@@ -2,9 +2,10 @@
 
 ## Overview
 
-This example illustrates how to secure resources and lambda functions using two [ORY](https://www.ory.sh/) frameworks:
+This example illustrates how to secure resources and lambda functions using the following [ORY](https://www.ory.sh/) components:
 - [Hydra](https://www.ory.sh/docs/hydra/) - OAuth 2.0 and OpenID Connect Server.
 - [Oathkeeper](https://www.ory.sh/docs/oathkeeper/) - Identity and Access Proxy.
+- [Maester](https://github.com/ory/oathkeeper-k8s-controller) - A Kubernetes Controller that manages Oathkeeper rules using Custom Resources.
 
 In this scenario, ORY environment is responsible for handling incoming HTTP requests based on a set of user-specified access rules. Every request is processed in the following manner:
 
@@ -17,10 +18,9 @@ To learn more about Oathkeeper's access rules, see the official [Oathkeeper docu
 
 ## Prerequisites
 
-- Kyma instance with the `ory` chart installed.
+- Kyma instance with the `ory` component installed.
 - cURL
 
->**NOTE** The ory chart is already present in Kyma repository, to install it with Kyma you need to add it to components list. Follow [this guide](https://kyma-project.io/docs/root/kyma/#installation-custom-component-installation-add-a-component) for further instructions.
 ## Installation
 
 This section demonstrates how to set up an Oauth2 client with given scopes.
@@ -31,7 +31,7 @@ This section demonstrates how to set up an Oauth2 client with given scopes.
 
 ```
 export CLIENT_ID=<YOUR_CLIENT_ID>
-export CLIENT_SECRET=<YOUR_CLIENT_SECRET> 
+export CLIENT_SECRET=<YOUR_CLIENT_SECRET>
 export DOMAIN=<YOUR_DOMAIN>
 curl -ik -X POST "https://oauth2-admin.$DOMAIN/clients" -d '{"grant_types":["client_credentials"], "client_id":"'$CLIENT_ID'", "client_secret":"'$CLIENT_SECRET'", "scope":"read write"}'
 ```
@@ -64,15 +64,15 @@ export ACCESS_TOKEN_WRITE=<WRITE_ACCESS_TOKEN>
 
   <details>
   <summary>
-  Secure sample HTTPbin endpoints
+  Secure sample HttpBin endpoints
   </summary>
-  
-1. Create an HTTPbin instance:
+
+1. Create an HttpBin instance:
 ```
-kc apply -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
 ```
 
-2. Create a virtual service. Make sure to replace the `{DOMAIN}` placeholder with your Kyma domain:
+2. Create a virtual service.
 ```
 cat <<EOF | kubectl apply -f -
 apiVersion: networking.istio.io/v1alpha3
@@ -84,7 +84,7 @@ spec:
   gateways:
   - kyma-gateway
   hosts:
-  - httpbin-proxy.{DOMAIN}
+  - httpbin-proxy.$DOMAIN
   http:
   - match:
     - uri:
@@ -93,57 +93,93 @@ spec:
     - destination:
         host: ory-oathkeeper-proxy
         port:
-          number: 80
+          number: 4455
 EOF
-``` 
-If you have installed Kyma on minikube, add folowing line to minikube ip in `/etc/hosts` file:
+```
+If you have installed Kyma on minikube, add folowing name to an entry with minikube ip in `/etc/hosts` file:
 ```
 httpbin-proxy.kyma.local
 ```
 
-3. Create the following routing rules:
-   
-- Read scope for entire application
+3. Create the following rules:
+
+- Read scope for GET requests in entire application
 ```
-curl -ik -X POST https://oathkeeper-api-server.$DOMAIN/rules -H "Content-type: application/json" -d '{"id":"httpbin-read","description":"","match":{"methods":["GET"],"url":"<http|https>://httpbin-proxy.'$DOMAIN'/<.*>"},"authenticators":[{"handler":"oauth2_introspection","config":{"required_scope": ["read"]}}],"authorizer":{"handler":"allow","config":null},"credentials_issuer":{"handler":"noop","config":null},"upstream":{"preserve_host":false,"strip_path":"","url":"http://httpbin.default.svc.cluster.local:8000"}}'
+cat <<EOF | kubectl apply -f -
+apiVersion: oathkeeper.ory.sh/v1alpha1
+kind: Rule
+metadata:
+  name: httpbin-read
+  namespace: default
+spec:
+  description: httpbin access with "read" scope
+  upstream:
+    url: http://httpbin.default.svc.cluster.local:8000
+  match:
+    methods: ["GET"]
+    url: <http|https>://httpbin-proxy.$DOMAIN/<.*>
+  authenticators:
+    - handler: oauth2_introspection
+      config:
+        required_scope: ["read"]
+  authorizer:
+    handler: allow
+EOF
 ```
 
-- Write scope for `/post` endpoint
+- Write scope for POST requests to `/post` endpoint
 ```
-curl -ik -X POST https://oathkeeper-api-server.$DOMAIN/rules -H "Content-type: application/json" -d '{"id":"httpbin-write","description":"","match":{"methods":["POST"],"url":"<http|https>://httpbin-proxy.'$DOMAIN'/post"},"authenticators":[{"handler":"oauth2_introspection","config":{"required_scope": ["write"]}}],"authorizer":{"handler":"allow","config":null},"credentials_issuer":{"handler":"noop","config":null},"upstream":{"preserve_host":false,"strip_path":"","url":"http://httpbin.default.svc.cluster.local:8000"}}'
+cat <<EOF | kubectl apply -f -
+apiVersion: oathkeeper.ory.sh/v1alpha1
+kind: Rule
+metadata:
+  name: httpbin-write
+  namespace: default
+spec:
+  description: httpbin access with "write" scope
+  upstream:
+    url: http://httpbin.default.svc.cluster.local:8000
+  match:
+    methods: ["POST"]
+    url: <http|https>://httpbin-proxy.$DOMAIN/post
+  authenticators:
+    - handler: oauth2_introspection
+      config:
+        required_scope: ["write"]
+  authorizer:
+    handler: allow
+EOF
 ```
 
-
-
-4. Call the `HTTPbin` service through Oathkeeper reverse proxy using the authorization token:
+4. Call the `HttpBin` service through Oathkeeper reverse proxy using the authorization token:
 
 - Read scope
 ```
-curl -ik -X GET https://httpbin-proxy.$DOMAIN/headers -H "Authorization: bearer ${ACCESS_TOKEN_READ}"
+curl -ik -X GET https://httpbin-proxy.$DOMAIN/headers -H "Authorization: Bearer $ACCESS_TOKEN_READ"
 ```
 Expected response: `200 OK`
 
 - Write scope
 ```
-curl -ik -X POST https://httpbin-proxy.$DOMAIN/post -d "test data" -H "Authorization: bearer ${ACCESS_TOKEN_WRITE}"
+curl -ik -X POST https://httpbin-proxy.$DOMAIN/post -d "test data" -H "Authorization: bearer $ACCESS_TOKEN_WRITE"
 ```
 Expected response: `200 OK`
 
-If the token is not present an expected response would be `401 Unauthorized` or if the token has been issued for invalid scope an expected response would be `403 Forbidden: Access credentials are not sufficient to access this resource`.
-  
+If the token is not present an expected response would be `401 Unauthorized` and if the token has been issued for invalid scope an expected response would be `403 Forbidden: Access credentials are not sufficient to access this resource`.
+
   </details>
-  
+
   <details>
   <summary>
   Secure a lambda function
   </summary>
-  
+
 1. Create a sample function:
 ```
-kc apply -f lambda.yaml
-``` 
+kubectl apply -f lambda.yaml
+```
 
-2. Create a virtual service. Make sure to replace the `{DOMAIN}` placeholder with your Kyma domain:
+2. Create a virtual service.
 ```
 cat <<EOF | kubectl apply -f -
 apiVersion: networking.istio.io/v1alpha3
@@ -155,7 +191,7 @@ spec:
   gateways:
   - kyma-gateway
   hosts:
-  - lambda-proxy.{DOMAIN}
+  - lambda-proxy.$DOMAIN
   http:
   - match:
     - uri:
@@ -164,7 +200,7 @@ spec:
     - destination:
         host: ory-oathkeeper-proxy
         port:
-          number: 80
+          number: 4455
 EOF
 ```
 If you have installed Kyma on minikube, add folowing line to minikube ip in `/etc/hosts` file:
@@ -174,12 +210,30 @@ lambda-proxy.kyma.local
 
 3. Create the following routing rule:
 ```
-curl -ik -X POST https://oathkeeper-api-server.$DOMAIN/rules -H "Content-type: application/json" -d '{"id":"lambda","description":"","match":{"methods":["GET"],"url":"http://lambda-proxy.'$DOMAIN'/lambda"},"authenticators":[{"handler":"oauth2_introspection","config":{"required_scope": ["read"]}}],"authorizer":{"handler":"allow","config":null},"credentials_issuer":{"handler":"noop","config":null},"upstream":{"preserve_host":false,"strip_path":"","url":"http://lambda.stage.svc.cluster.local:8080/"}}'
+cat <<EOF | kubectl apply -f -
+apiVersion: oathkeeper.ory.sh/v1alpha1
+kind: Rule
+metadata:
+  name: lambda-read
+  namespace: default
+spec:
+  description: lambda access with "read" scope
+  upstream:
+    url: http://lambda.stage.svc.cluster.local:8080
+  match:
+    methods: ["GET"]
+    url: http://lambda-proxy.$DOMAIN/lambda
+  authenticators:
+    - handler: oauth2_introspection
+      config:
+        required_scope: ["read"]
+  authorizer:
+    handler: allow
 ```
 
 4. Call the function
 ```
-curl -ik https://lambda-proxy.$DOMAIN/lambda -H "Authorization: bearer ${ACCESS_TOKEN_READ}"
+curl -ik https://lambda-proxy.$DOMAIN/lambda -H "Authorization: bearer $ACCESS_TOKEN_READ"
 ```
 Expected response: 200 OK
 
@@ -189,19 +243,15 @@ If the token is not present an expected response would be `401 Unauthorized` or 
 
 ## Troubleshooting
 
-In case of problems, make sure that: 
+In case of problems, make sure that:
 
 - Oauth2 client has been successfully created:
 ```
 curl -ik -X GET "https://oauth2-admin.$DOMAIN/clients"
 ```
 
-- The access rules have been consumed by the Oathkeeper's api-server:
-```
-curl -ik -X GET https://oathkeeper-api-server.$DOMAIN/rules
-```
-
 - Your request contains a valid access token:
 ```
 curl -ik -X POST "https://oauth2-admin.$DOMAIN/oauth2/introspect" -F "token=<ACCESS_TOKEN>"
 ```
+
