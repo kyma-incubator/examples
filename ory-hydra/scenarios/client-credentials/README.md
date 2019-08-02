@@ -222,13 +222,14 @@ spec:
     url: http://lambda.stage.svc.cluster.local:8080
   match:
     methods: ["GET"]
-    url: http://lambda-proxy.$DOMAIN/lambda
+    url: <http|https>://lambda-proxy.$DOMAIN/lambda
   authenticators:
     - handler: oauth2_introspection
       config:
         required_scope: ["read"]
   authorizer:
     handler: allow
+EOF
 ```
 
 4. Call the function
