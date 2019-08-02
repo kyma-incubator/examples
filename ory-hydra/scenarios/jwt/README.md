@@ -1,4 +1,4 @@
-# Dex JWT Token example
+# Example for Oathkeeper JWT Authentication with Dex ID Token
 
 ## Overview
 
