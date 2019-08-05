@@ -1,4 +1,4 @@
-# Description
+# Receive Cloud Events from an external solution
 
 This is an example scenario which demonstrates how Kyma can receive Cloud Events from an external solution. To make things easier, this scenario uses a  **local Kyma installation**.
 
