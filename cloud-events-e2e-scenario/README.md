@@ -4,7 +4,6 @@ This is an example scenario which demonstrates how Kyma can receive Cloud Events
 
 This scenario uses a mocked external solution. You can mock the sending of Events using an HTTP client.
 You can also use other mocked or real solutions.
-
 The runtime flow involves following steps:
 
 1. The external solution sends an `order.created` Event.
@@ -76,8 +75,7 @@ To verify the Event flow, navigate to **Integration** > **Applications** > **sam
 
 1. Select the `workshop` Namespace and go to **Service Management** > **Catalog**.
 2. Click **Services** to see the registered Events.
-
-3. Click on the Event entry to reveal details. 
+3. Click on the Event entry to reveal details.
 4. Click **Add once** button to add Events to your Namespace.
 5. Go to **Service Instances** > **Services** tab to see if the Events are available.
 
