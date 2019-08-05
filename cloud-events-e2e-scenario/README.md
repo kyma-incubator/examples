@@ -1,6 +1,6 @@
 # Description
 
-This is an example scenario which demonstrates how Kyma can receive Cloud Events from an external solution. To make it easier for the developers, this scenario uses a  **local Kyma installation**.
+This is an example scenario which demonstrates how Kyma can receive Cloud Events from an external solution. To make things easier, this scenario uses a  **local Kyma installation**.
 
 This scenario uses a mocked external solution. You can mock the sending of Events using an HTTP client. 
 You can also use other mocked or real solutions.
@@ -11,10 +11,10 @@ The runtime flow involves following steps:
 
 1. The external solution sends an `order.created` Event.
 2. The Event is accepted by Kyma.
-* The Event triggers the deployed lambda.
-* The lambda prints out CE context attributes.
+3. The Event triggers the deployed lambda.
+4. The lambda prints out CE context attributes.
 
-# Set up
+## Prerequisites
 
 ### Install Kyma locally
 
@@ -22,13 +22,13 @@ Use these [instructions](https://github.com/kyma-project/kyma/blob/master/docs/k
 
 ### Create a Namespace
 
-Create a Namespace called `workshop`. You can choose a different name, but remember to use it when calling the commands.
+Create a Namespace called `workshop`. You can choose a different name, but remember to use it in the commands.
 
 ### Create Application
 
 1. In the Kyma Console, go to **Integration** > **Application** > **Create Application**.
 2. Enter the Application name: sample-external-solution. 
-
+## Installation
 ### Establish secure connection 
 
 Use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/02-02-connector-service.md) to establish a secure connection between the mocked external solution and your application.
@@ -67,7 +67,7 @@ Use any HTTP client, such as curl or postman, to send a request from the mocked 
 
 To verify the Event flow, navigate to **Integration** > **Applications** > **sample-external-solution**. You can see the registered Events.
 
-## Bind Application
+### Bind Application
 
 1. Navigate to **Integration** > **Applications** > **sample-external-solution**
 2. Create a binding with the `workshop` Namespace.
@@ -100,6 +100,5 @@ To check if the lambda function was triggered properly, inspect the Pod logs in 
     kubectl -n work logs lambdaname-xxx-xxxx -c lambdaname -f
     ```
 
-# Tracing
 
-Traces are available under `https://jaeger.kyma.local/`.
+You can also find traces under `https://jaeger.kyma.local/`.
