@@ -27,8 +27,8 @@ To learn more about Oathkeeper's access rules, see the official [Oathkeeper docu
 You'll need an Id Token (JWT) issued by Dex in your Kyma installation.
 
 ```
-export DOMAIN=<YOUR_DOMAIN>
-export JWT=<YOUR_DEX_JWT>
+export DOMAIN={YOUR_DOMAIN}
+export JWT={YOUR_DEX_JWT}
 ```
 
 2. Create a sample function:
@@ -61,6 +61,7 @@ spec:
           number: 4455
 EOF
 ```
+
 If you have installed Kyma on minikube, add folowing line to minikube ip in `/etc/hosts` file:
 ```
 jwt-lambda-proxy.kyma.local
@@ -86,7 +87,7 @@ spec:
     - handler: jwt
       config:
         trusted_issuers:
-        - https://dex.kyma.local
+        - https://dex.$DOMAIN
   authorizer:
     handler: allow
 EOF
