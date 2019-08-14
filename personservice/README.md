@@ -548,6 +548,16 @@ To create a service instance you need to go to the service catalog in your Kyma 
 
 ![Service Provisioning Screenshot](images/serviceprovisioning1.png)
 
+Should you not find a Redis instance in your catalog, navigate back to the main screen ad go to Add-Ons Config -> Add new configuration:
+
+![Add-On Configuration Screenshot](images/helm_broker.png)
+
+Add `https://github.com/kyma-project/addons/releases/download/0.7.0/index-testing.yaml`. 
+
+![Add-On Configuration Screenshot](images/helm_broker2.png)
+
+Now you can return to the beginning and try adding a Redis Instance again.
+
 Add and configure a new instance to your namespace:
 
 ![Service Provisioning Screenshot](images/serviceprovisioning2.png)
