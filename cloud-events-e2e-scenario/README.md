@@ -1,44 +1,39 @@
 # Receive Cloud Events from an external solution
 
-This is an example scenario which demonstrates how Kyma can receive Cloud Events from an external solution. To make things easier, this scenario uses a  **local Kyma installation**.
+## Overview
 
-This scenario uses a mocked external solution. You can mock the sending of Events using an HTTP client.
-You can also use other mocked or real solutions.
-The runtime flow involves following steps:
+This example shows how Kyma can receive Cloud Events from an external solution on a local Kyma installation. In this case, the external solution and sending of Events are mocked, but you can also use real solutions.
 
-1. The external solution sends an `order.created` Event.
+The example involves following steps:
+
+1. The external solution sends an **order.created** Event.
 2. The Event is accepted by Kyma.
 3. The Event triggers the deployed lambda.
 4. The lambda prints out CE context attributes.
 
 ## Prerequisites
 
-### Install Kyma locally
-
-Use these [instructions](https://github.com/kyma-project/kyma/blob/master/docs/kyma/04-02-local-installation.md) to install and configure Kyma locally.
-
-### Create a Namespace
-
-Create a Namespace called `workshop`. You can choose a different name, but remember to use it in the commands.
-
-### Create Application
-
-1. In the Kyma Console, go to **Integration** > **Application** > **Create Application**.
-2. Enter the Application name: sample-external-solution. 
+* A local Kyma [installation](https://github.com/kyma-project/kyma/blob/master/docs/kyma/04-02-local-installation.md). 
 
 ## Installation
+
+### Create Application 
+
+1. Open the Kyma console and choose or create the Namespace where you want to deploy the example.
+2. In the Kyma Console, go to **Integration** > **Application** > **Create Application**.
+3. Choose a name for your application - henceforth referred to as **{application}**.
 
 ### Establish secure connection
 
 Use the [connector service](https://github.com/kyma-project/kyma/blob/master/docs/application-connector/02-02-connector-service.md) to establish a secure connection between the mocked external solution and your application.
 
-Follow these steps connect an external solution to Kyma:
-1. Clone [this repository](https://github.com/janmedrek/one-click-integration-script).
+### Connect external solution 
 
-2. In the Kyma Console, navigate to **Integration** > **Applications** > **sample-external-solution**.
+Follow these steps to connect an external solution to Kyma:
+1. Clone [this repository](https://github.com/janmedrek/one-click-integration-script).
+2. In the Kyma Console, navigate to **Integration** > **Applications** > **{application}**.
 3. Click **Connect Application**.
 4. Copy the token.
-  
 5. Use the one-click-generation [helper script](https://github.com/janmedrek/one-click-integration-script) to generate the certificate:
 
   ```bash
@@ -47,7 +42,7 @@ Follow these steps connect an external solution to Kyma:
 
  This script generates a `generated.pem` file. It contains the signed certificate and key that you will use for subsequent communications.
 
-  > **NOTE** The token expires quickly, so use it right away or generate a new one.
+  > **NOTE**: The token expires quickly, so use it right away or generate a new one.
 
 ### Mock an external solution
 
@@ -55,25 +50,25 @@ Use any HTTP client, such as curl or postman, to send a request from the mocked 
 
 ### Register Events
 
-1. Register Events via the metadata API using [`register-events.json`](./register-events.json):
+Register Events via the metadata API using [`register-events.json`](./register-events.json):
 
     ```bash
     # Using httpie
-    http POST https://gateway.kyma.local/sample-external-solution/v1/metadata/services --cert=generated.pem --verify=no < register-events.json
+    http POST https://gateway.kyma.local/{application}/v1/metadata/services --cert=generated.pem --verify=no < register-events.json
     # Using curl
-    curl -X POST -H "Content-Type: application/json" -d @./register-events.json https://gateway.kyma.local/sample-external-solution/v1/metadata/services --cert generated.pem -k
+    curl -X POST -H "Content-Type: application/json" -d @./register-events.json https://gateway.kyma.local/{application}/v1/metadata/services --cert generated.pem -k
     ```
 
-To verify the Event flow, navigate to **Integration** > **Applications** > **sample-external-solution**. You can see the registered Events.
+To verify the Event flow, navigate to **Integration** > **Applications** > **{application}**. You can see the registered Events.
 
 ### Bind Application
 
-1. Navigate to **Integration** > **Applications** > **sample-external-solution**
-2. Create a binding with the `workshop` Namespace.
+1. Navigate to **Integration** > **Applications** > **{application}**.
+2. Create a binding with your Namespace.
 
 ### Add Events and APIs to the Namespace
 
-1. Select the `workshop` Namespace and go to **Service Management** > **Catalog**.
+1. Select your Namespace and go to **Service Management** > **Catalog**.
 2. Click **Services** to see the registered Events.
 3. Click on the Event entry to reveal details.
 4. Click **Add once** button to add Events to your Namespace.
@@ -81,20 +76,17 @@ To verify the Event flow, navigate to **Integration** > **Applications** > **sam
 
 ### Create lambda
 
-1. Create the lambda definition in lambda ui using [lambda.js](./lambda.js) in the workshop namespace
-
+1. Create the lambda definition in lambda ui using [lambda.js](./lambda.js) in your Namespace
 2. Click **Select Function trigger** button to select an Event trigger, then choose
 **order.created**.
-
-## Runtime
 
 ### Publish the Event
 
 Use the certificate generated by the `./one-click-integration.sh` script to send a Cloud Event to the gateway using any HTTP client, such as curl, httpie, or postman. You can also use CloudEvents SDK. For details, see [this example](./example.go)
 
-## Verification
+### Test lambda   
 
-To check if the lambda function was triggered properly, inspect the Pod logs in the `workshop` Namespace:
+To check if the lambda function was triggered properly, inspect the Pod logs in your Namespace:
 
 ```bash
   kubectl -n work logs lambdaname-xxx-xxxx -c lambdaname -f
