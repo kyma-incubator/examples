@@ -1,85 +1,47 @@
-# Trigger a Microservice with an Event
+# Trigger a microservice with an Event
 
-This is an end-to-end guide that demonstrates how to set up an Event trigger for a microservice deployed in Kyma. It serves as a reference for developers who wish to configure their microservices with an Event trigger.
+## Overview 
 
-The guide uses:
+This example shows how to set up an Event trigger for a microservice deployed in Kyma. It uses the [HTTP DB service](https://github.com/kyma-project/examples/tree/master/http-db-service) as a sample microservice and the [Commerce mock](https://github.com/SAP/xf-application-mocks/tree/master/commerce-mock) to mock the sending of an Event trigger. You may use your own microservices and Applications in their place. 
 
-* [**HTTP DB service**](https://github.com/kyma-project/examples/tree/master/http-db-service) as a reference microservice that is deployed in the `demo-event-service-trigger` Namespace. In this guide, you configure it to consume the **order.created** Event from the Application.
-* [**Commerce mock**](https://github.com/SAP/xf-application-mocks/tree/master/commerce-mock) as a reference enterprise solution that connects to Kyma. In this guide, this Application sends the Event that triggers the microservice in Kyma.
+## Prerequisites
 
-## Set up the commerce mock
+* Kyma as the target deployment environment 
 
-This section explains how to:
+## Installation
 
-* Deploy the commerce mock Application in Kyma.
+### Set up the commerce mock
 
-* Expose the commerce mock URL.
+1. Open the Kyma console and choose or create the Namespace where you want to deploy the example.
+2. Click on **Deploy new resource to the namespace** and upload the [commerce mock](https://raw.githubusercontent.com/SAP/xf-application-mocks/master/commerce-mock/deployment/xf.yaml).
+3. Go to **Integration** > **Application** > **Create Application** to create a new Application. In this example it is referred to as **{application}**.
+4. Copy the URL.
+5. Access the commerce mock at `https://commerce.{CLUSTER_DOMAIN}`.
 
-* Establish a secure connection using the Kyma Application Connector.
+Once you are in the commerce mock UI:
 
-* Register the Events that can be sent from the commerce mock Application to Kyma.
+1. Connect the Application to the commerce mock.
+2. Register `SAP Commerce Cloud - Events`. After registration, it appears under the **Remote APIs** tab.
 
+### Expose Events from the Application to a Namespace in Kyma
 
-1. Create a `mocks` Namespace in the Kyma Console UI.
+After the Application registers the Events, you need to make them accessible to various serverless workloads running inside Kyma, such as lambdas and microservices. Since multiple applications can connect to Kyma, each Kyma Namespace is declaratively bound to an Application. The Events are then made accessible by adding the Event catalog to the Namespace.
 
-    ![](./assets/create-ns.png)
+1. Create a Namespace for the Application. In this example, the Namespace is called `demo-event-service-trigger`.
+2. Bind the Application to the Namespace.
+3. `SAP Commerce Cloud - Events` should be available in the Service Catalog under Services. Click on **Add once** to enable serverless workloads to consume Events.
 
-1. Deploy the [commerce mock](https://raw.githubusercontent.com/SAP/xf-application-mocks/master/commerce-mock/deployment/xf.yaml).
+### Deploy the service
 
-    ![](./assets/deplo-commerc-mock.png)
+1. Navigate to the `demo-event-service-trigger` Namespace.
+2. Click on **Deploy new resource to the namespace** and upload the [HTTP DB service](https://raw.githubusercontent.com/kyma-project/examples/master/http-db-service/deployment/deployment.yaml). It exposes the `/events/order/created` endpoint to handle the **order.created** Event.
 
-1. Create a new `sample-enterprise` Application.
+### Create the Kyma subscription
 
-    ![](./assets/create-application.png)
+By creating a Kyma Subscription, you configure an **order.created** Event trigger for the microservice. This deploys whenever the Application sends an **order.created** Event. The Event gets delivered as an HTTP **POST** request to the endpoint of the microservice.
 
-1. Copy the URL to connect the Application.
+Create the [Kyma subscription](./assets/event-trigger-subscription.yaml) by either deploying the Kyma Subscription custom resource from the Console UI or using the kubectl command.
 
-    ![](./assets/connect-application.png)
-
-1. Access the commerce mock at `https://commerce.{CLUSTER_DOMAIN}`.
-
-Complete these steps in the commerce mock UI:
-
-1. Connect `sample-enterprise` to the commerce mock.
-
-    ![](./assets/connect-mock-app.png)
-    
-1. Register `SAP Commerce Cloud - Events`. After registration, it appears under the **Remote APIs** tab.
-
-    ![](./assets/register-events.png)
-
-## Expose Events from the Application to a Namespace in Kyma
-
-After the Application registered the Events that it can send to Kyma, you need to make them accessible to various serverless workloads running inside Kyma, such as lambdas and microservices. Since multiple applications can connect to Kyma, each Kyma Namespace is declaratively bound to an Application and then the Events are made accessible by adding the Event catalog to the Namespace.
-
-1. Create the `demo-event-service-trigger` Namespace.
-
-    ![](./assets/create-ns-demo.png)
-
-1. Bind the Application to the Namespace.
-
-    ![](./assets/bind-app-ns.png)
-
-1. `SAP Commerce Cloud - Events` is available in the Catalog. Add it once to enable serverless workloads to consume Events.
-
-    ![](./assets/events-in-service-catalog.png)
-    
-    ![](./assets/add-once.png)
-
-## Deploy the service
-
-Deploy the [HTTP DB service](https://raw.githubusercontent.com/kyma-project/examples/master/http-db-service/deployment/deployment.yaml). It exposes the `/events/order/created` endpoint to handle the **order.created** Event.
-
-   ![](./assets/deploy-http-db-service.png)
-    
-## Create the Kyma subscription
-
-By creating a Kyma Subscription, you configure an **order.created** Event trigger for the microservice. This implies whenever the Application sends an **order.created** Event. The Event gets delivered as an HTTP **POST** request to the endpoint of the microservice.
-
-1. Create the [Kyma subscription](./assets/event-trigger-subscription.yaml) by either deploying the Kyma Subscription custom resource from the Console UI or using the kubectl command.
-
-    ![](./assets/deploy-subscription.png)
-	
 > **TIP:** Refer to [custom resource parameters](https://github.com/kyma-project/kyma/blob/master/docs/event-bus/06-01-subscription.md#custom-resource-parameters) for details on all parameters. 
 
 The main parameter is **endpoint** which takes the value in the `http://{service-name}.{namespace-in-which-service-is-deployed}:{service-port}/{uri-path-to-handle-events}` format.
@@ -98,18 +60,14 @@ spec:
   push_request_timeout_ms: 60
   event_type: order.created
   event_type_version: v1
-  source_id: sample-enterprise
+  source_id: {application}
 ```
 
-## Send an Event and verify it
+### Send an Event and verify it
 
 1. Send the Event from the commerce mock UI. It is accessible at `https://commerce.{CLUSTER_DOMAIN}`.
 
     * Go to `SAP Commerce Cloud - Events` under **Remote APIs**. 
-    * Send the **order.created.v1** Event.
+    * Select the **order.created.v1** Event from the dropdown and click on **Send Event**.
     
-        ![](./assets/send-event.png) 
-
-2. Access the logs and verify them.
-
-    ![](./assets/verify-logs.png)
+2. Go to **Diagnostics** > **Logs** and verify the logs.
