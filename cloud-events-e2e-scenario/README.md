@@ -77,8 +77,7 @@ To verify the Event flow, navigate to **Integration** > **Applications** > **{ap
 ### Create lambda
 
 1. Create the lambda definition in lambda ui using [lambda.js](./lambda.js) in your Namespace
-2. Click **Select Function trigger** button to select an Event trigger, then choose
-**order.created**.
+2. Click **Select Function trigger** button to select an Event trigger, then choose **order.created**.
 
 ### Publish the Event
 
