@@ -316,7 +316,7 @@ Send a `GET` request with a token with the "read" scope to the lambda function:
   curl -ik https://lambda-proxy.$DOMAIN/lambda -H "Authorization: bearer $ACCESS_TOKEN_READ"
   ```
 
-This call returns a code `200` response. If you call the service without a token, you get a code `401` response. If you call the lambda function with a token with the wrong scope, you get the code `403` response.
+This call returns a code `200` response. If you call the lambda function without a token, you get a code `401` response. If you call the lambda function with a token with the wrong scope, you get the code `403` response.
 
   </details>
 </div>
