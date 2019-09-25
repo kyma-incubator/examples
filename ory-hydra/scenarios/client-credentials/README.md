@@ -96,13 +96,13 @@ Every request to resources secured with Oathkeeper rules is processed in the fol
   Token with "write" scope
   </summary>
 
-    1. Get the token:
+  1. Get the token:
 
       ```
       curl -ik -X POST "https://oauth2.$DOMAIN/oauth2/token" -H "Authorization: Basic $ENCODED_CREDENTIALS" -F "grant_type=client_credentials" -F "scope=write"
       ```
 
-    2. Export the issued token as an environment variable:
+  2. Export the issued token as an environment variable:
 
       ```
       export ACCESS_TOKEN_WRITE={ISSUED_WRITE_TOKEN}
