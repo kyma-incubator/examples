@@ -61,7 +61,7 @@ Every request to resources secured with Oathkeeper rules is processed in the fol
 
   ```
   export CLIENT_ID="$(kubectl get secret -n $CLIENT_NAMESPACE $CLIENT_NAME -o jsonpath='{.data.client_id}' | base64 --decode)"
-  export CLIENT_SECRET="$(kubectl get secret -n CLIENT_NAMESPACE $CLIENT_NAME -o jsonpath='{.data.client_secret}' | base64 --decode)"
+  export CLIENT_SECRET="$(kubectl get secret -n $CLIENT_NAMESPACE $CLIENT_NAME -o jsonpath='{.data.client_secret}' | base64 --decode)"
   ```
 
 4. Encode your client credentials and export them as an environment variable:
@@ -98,15 +98,15 @@ Every request to resources secured with Oathkeeper rules is processed in the fol
 
     1. Get the token:
 
-        ```
-        curl -ik -X POST "https://oauth2.$DOMAIN/oauth2/token" -H "Authorization: Basic $ENCODED_CREDENTIALS" -F "grant_type=client_credentials" -F "scope=write"
-        ```
+      ```
+      curl -ik -X POST "https://oauth2.$DOMAIN/oauth2/token" -H "Authorization: Basic $ENCODED_CREDENTIALS" -F "grant_type=client_credentials" -F "scope=write"
+      ```
 
     2. Export the issued token as an environment variable:
 
-        ```
-        export ACCESS_TOKEN_WRITE={ISSUED_WRITE_TOKEN}
-        ```
+      ```
+      export ACCESS_TOKEN_WRITE={ISSUED_WRITE_TOKEN}
+      ```
 
    </details>
 </div>
