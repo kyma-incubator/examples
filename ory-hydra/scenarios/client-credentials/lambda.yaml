@@ -4,7 +4,7 @@ metadata:
   annotations:
     function-size: S
   name: lambda
-  namespace: stage
+  namespace: default
 spec:
   checksum: ""
   deployment:
