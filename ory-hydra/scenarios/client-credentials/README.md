@@ -272,7 +272,7 @@ Follow the instructions in the tabs to deploy an instance of the HttpBin service
     authorizer:
       handler: allow
   EOF
-```
+  ```
 
 
   </details>
