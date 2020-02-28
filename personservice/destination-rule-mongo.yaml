@@ -4,6 +4,9 @@ metadata:
   name: mongo-db-connection
 spec:
   host: first-mongo-mongodb.personservice.svc.cluster.local
+  trafficPolicy:
+    tls:
+       mode: DISABLE
   ports:
   - name:  mongo-db
     port:  27017
