@@ -1,0 +1,10 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: mongo-db-connection
+spec:
+  host: first-mongo-mongodb.personservice.svc.cluster.local
+  ports:
+  - name:  mongo-db
+    port:  27017
+    protocol: TCP
