@@ -586,9 +586,7 @@
                      "properties": {
                         "personid": {
                            "type": "string",
-                           "example": {
-                              "personid": "1bf8b88a-7bb8-4b92-90bc-d1fa34a60a57"
-                           },
+                           "example": "1bf8b88a-7bb8-4b92-90bc-d1fa34a60a57",
                            "properties": null,
                            "description": "ID of the Person's database record'",
                            "title": "ID"
@@ -608,9 +606,7 @@
                      "properties": {
                         "personid": {
                            "type": "string",
-                           "example": {
-                              "personid": "1bf8b88a-7bb8-4b92-90bc-d1fa34a60a57"
-                           },
+                           "example": "1bf8b88a-7bb8-4b92-90bc-d1fa34a60a57",
                            "properties": null,
                            "description": "ID of the Person's database record'",
                            "title": "ID"
@@ -630,9 +626,7 @@
                      "properties": {
                         "personid": {
                            "type": "string",
-                           "example": {
-                              "personid": "1bf8b88a-7bb8-4b92-90bc-d1fa34a60a57"
-                           },
+                           "example": "1bf8b88a-7bb8-4b92-90bc-d1fa34a60a57",
                            "properties": null,
                            "description": "ID of the Person's database record'",
                            "title": "ID"

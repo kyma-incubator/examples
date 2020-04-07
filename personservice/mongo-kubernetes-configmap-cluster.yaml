@@ -6,6 +6,8 @@ metadata:
      app: personservice
      version: "1.0.0"
 data:
+  #changeme: Replace "{clusterdomain}" with your cluster's domain
+  service_host: personservice.{clusterdomain}
   mongodb_host: first-mongo-mongodb.personservice.svc.cluster.local
   mongodb_database: kubernetes-dummy
   authentication_database: admin
