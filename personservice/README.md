@@ -401,7 +401,7 @@ Make sure the new pod is created (otherwise delete the old pod, Kubernetes will 
 This sub chapter describes how to manually issue the necessary requests and handle the certificates. This will allow you to fully understand the steps of how applications register to Kyma. At the end of this section we will manually upload the JKS to our "manual" endpoint.
 
 1. Click on `Connect Application` and **open the link in the popup box in another browser tab**.
-![Connect Remote Environment Screenshot](images/applicationpairing.png)
+![Connect Application Screenshot](images/applicationpairing.png)
 
 2. Copy the `csrUrl` address and make sure to save the `infoUrl` somewhere. We will need it for the REST request in the last step.
 ![Connect Remote Environment Response Screenshot](images/remoteenvironmentpairing2.png)
@@ -430,7 +430,12 @@ openssl req -new -sha256 -out personservicekubernetes.csr -key personservicekube
 To test your deployed application connector instance you can also import the personservicekubernetes.p12 file into your Browser and call the url depicted as metadataUrl in the initial pairing response JSON.
 
 ### Option 2: Automatic Pairing with Kyma
-This section describes the "automatic" approach where the application takes care of the requests and certificates. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma "Connect URL" button into the JSON (see manual process step 1). The service will create the CSR itself, get the certificate from Kyma and store an object in the mongodb.
+This section describes the "automatic" approach where the application takes care of the requests and certificates. 
+
+1. Click on `Connect Application` and **copy the link in the popup box**.
+![Connect Application Screenshot](images/applicationpairing.png)
+
+1. You can use the POST `/applicationconnector/registration/automatic` endpoint of the personservice where you insert the URL created from the Kyma `Connect Application` button into the JSON 
 
 ![Insert connect URL in POST body](images/applicationpairing_auto.png)
 
