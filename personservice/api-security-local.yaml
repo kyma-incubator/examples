@@ -1,0 +1,71 @@
+apiVersion: gateway.kyma-project.io/v1alpha1
+kind: APIRule
+metadata:
+  name: personservice
+spec:
+  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  rules:
+
+# Requires no Authentication / Authorization
+  - accessStrategies:
+    - handler: noop
+    methods:
+    - GET
+    path: /swagger-ui.html
+  - accessStrategies:
+    - handler: noop
+    methods:
+    - GET
+    path: /swagger-resources.*
+  - accessStrategies:
+    - handler: noop
+    methods:
+    - GET
+    path: /webjars/.*
+  - accessStrategies:
+    - handler: noop
+    methods:
+    - GET
+    path: /v2/api-docs.*
+
+
+# Requires admin scope and hence Authentication / Authorization
+  - accessStrategies:
+    - handler: oauth2_introspection
+      config:
+        required_scope: ["admin"]
+    methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    path: /api/v1/environment.*
+  - accessStrategies:
+    - handler: oauth2_introspection
+      config:
+        required_scope: ["admin"]
+    methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    path: /api/v1/applicationconnector.*
+
+# Requires admin scope and hence Authentication / Authorization
+  - accessStrategies:
+    - handler: oauth2_introspection
+      config:
+        required_scope: ["api"]
+    methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    path: /api/v1/person.*
+  service:
+    host: personservice.kyma.local
+    name: personservice
+    port: 8080

@@ -1,13 +1,21 @@
-
-apiVersion: gateway.kyma-project.io/v1alpha2
-kind: Api
+apiVersion: gateway.kyma-project.io/v1alpha1
+kind: APIRule
 metadata:
   name: personservice
-  labels:
-     app: personservice
 spec:
-  hostname: personservice
+  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  rules:
+  - accessStrategies:
+    - handler: noop
+    methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - PATCH
+    path: /.*
   service:
+    host: personservice.kyma.local
     name: personservice
     port: 8080
 ---
@@ -35,7 +43,7 @@ kind: Service
 metadata:
   labels:    
      app: personservice
-     version: "1.0.0"
+     version: "1.11.0"
   annotations:
      auth.istio.io/80: NONE
   name: personservice
@@ -45,7 +53,7 @@ spec:
     port: 8080
   selector:
     app: personservice
-    version: "1.0.0"
+    version: "1.11.0"
   type: NodePort
 ---
 apiVersion: apps/v1
@@ -66,7 +74,7 @@ spec:
       metadata:
          labels:    
             app: personservice
-            version: "1.0.0"
+            version: "1.11.0"
          annotations:
             sidecar.istio.io/inject: "true"
             traffic.sidecar.istio.io/includeInboundPorts: "8080"
@@ -80,7 +88,7 @@ spec:
          containers:
            - name: personservice
 # changeme: Replace with pointer to your docker repository/container
-             image: "personservice/mongokubernetes:1.0.0"
+             image: "personservice/mongokubernetes:1.11.0"
              resources:
                 limits:
                    memory: 512Mi
@@ -116,6 +124,11 @@ spec:
                    configMapKeyRef:
                       name: mongo-kubernetes-config
                       key: mongodb_username
+              - name: personservicekubernetes_swagger_host
+                valueFrom: 
+                   configMapKeyRef:
+                      name: mongo-kubernetes-config
+                      key: service_host                          
               - name: spring_profiles_active
                 value: "ApplicationConnector,Cache"
               - name: logging_level_com_sap_demo_service

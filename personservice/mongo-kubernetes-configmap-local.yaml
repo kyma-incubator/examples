@@ -6,6 +6,7 @@ metadata:
      app: personservice
      version: "1.0.0"
 data:
+  service_host: personservice.kyma.local
   mongodb_host: first-mongo-mongodb.personservice.svc.cluster.local
   mongodb_database: kubernetes-dummy
   authentication_database: admin

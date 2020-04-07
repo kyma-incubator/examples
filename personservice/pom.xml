@@ -5,7 +5,7 @@
 
 	<groupId>com.sap.demo.d046471</groupId>
 	<artifactId>MongoKubernetesMicroservice</artifactId>
-	<version>1.0.0</version>
+	<version>1.11.0</version>
 	<packaging>jar</packaging>
 	<name>MongoKubernetesMicroservice</name>
 	<description>Kubernetes Service using Mongo DB</description>
@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.8.RELEASE</version>
+		<version>2.2.6.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
@@ -22,15 +22,14 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 		<project.version>1.0.0</project.version>
-		<jib.version>1.0.2</jib.version>
+		<jib.version>2.1.0</jib.version>
+		<bouncycaste.version>1.64</bouncycaste.version>
 		<!-- change this with your repository and credentialhelper  -->
 		<docker.repositoryname>personservice</docker.repositoryname>
-		<jib.credentialhelper>wincred</jib.credentialhelper>
+		<jib.credentialhelper>osxkeychain</jib.credentialhelper>
 		<springfox.version>2.9.2</springfox.version>
 		<commons-io.version>2.6</commons-io.version>
 		<commons.lang.version>3.7</commons.lang.version>
-		<oauth.version>2.3.6.RELEASE</oauth.version>
-		<jwt.version>1.0.10.RELEASE</jwt.version>
 	</properties>
 	
 	<dependencyManagement>
@@ -90,16 +89,6 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.security.oauth</groupId>
-			<artifactId>spring-security-oauth2</artifactId>
-			<version>${oauth.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-jwt</artifactId>
-			<version>${jwt.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 		</dependency>
@@ -116,12 +105,12 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.61</version>
+			<version>${bouncycaste.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk15on</artifactId>
-			<version>1.61</version>
+			<version>${bouncycaste.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>

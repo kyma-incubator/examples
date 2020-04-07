@@ -1,0 +1,9 @@
+apiVersion: hydra.ory.sh/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: personservice-client-admin
+spec:
+  grantTypes:
+    - "client_credentials"
+  scope: "api admin"
+  secretName: personservice-client-admin

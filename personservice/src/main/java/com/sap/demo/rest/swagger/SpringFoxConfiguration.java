@@ -3,6 +3,7 @@ package com.sap.demo.rest.swagger;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,15 +21,21 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @Configuration
 @EnableSwagger2
 public class SpringFoxConfiguration {
+
 	
-// Begin Swagger Documentation
-    
+	@Value("${personservicekubernetes.swagger.host}")
+	private String hostName;
+		
+
     @Bean
-    @Profile("!Security")
-    public Docket api() {     	
+    @Profile("!Security2")
+    public Docket api() {   
+    	
+   
     	
         return new Docket(DocumentationType.SWAGGER_2)
           .apiInfo(apiInfo())
+          .host(hostName)
           .useDefaultResponseMessages(false)
           .select()                                  
           .apis(RequestHandlerSelectors.basePackage("com.sap.demo"))              
@@ -37,16 +44,19 @@ public class SpringFoxConfiguration {
     }
     
     
+    
+    
     @Bean
-    @Profile("Security")
-    public Docket secureApi() { 
+    @Profile("Security2")
+    public Docket secureApi2() { 
     	
     	return new Docket(DocumentationType.SWAGGER_2)
     	          .apiInfo(apiInfo())
+    	          .host(hostName)
     	          .globalOperationParameters(Arrays.asList(
     	        		  new ParameterBuilder()
     	        		  .name("Authorization")
-    	                  .description("Place for your JWT Token")
+    	                  .description("Place for your OAuth2 Token")
     	                  .modelRef(new ModelRef("string"))
     	                  .parameterType("header")
     	                  .required(true)

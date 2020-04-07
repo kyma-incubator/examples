@@ -13,9 +13,7 @@ import com.sap.demo.event.PersonChangeEvent;
 import com.sap.demo.event.PersonCreateEvent;
 import com.sap.demo.event.PersonDeleteEvent;
 
-@SpringBootApplication(exclude={
-	    org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class
-	})
+@SpringBootApplication
 @Configuration
 @EnableCaching
 @EnableMongoRepositories(basePackages = "com.sap.demo")

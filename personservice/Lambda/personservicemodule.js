@@ -14,7 +14,7 @@ const logger = winston.createLogger({
     ]
 });
 
-//Extract Itro trace information to propagate it further ==> see https://istio.io/docs/tasks/telemetry/distributed-tracing/
+//Extract Istio trace information to propagate it further ==> see https://istio.io/docs/tasks/telemetry/distributed-tracing/
 const traceHeaders = ['x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid',
     'x-b3-sampled', 'x-b3-Flags', 'x-ot-span-context'];
 
