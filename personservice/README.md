@@ -9,6 +9,7 @@
   - [Deploy the application](#deploy-the-application)
     - [Tools required](#tools-required)
     - [Connect to your Kyma Instance](#connect-to-your-kyma-instance)
+    - [Finding your Clusterdomain](#finding-your-clusterdomain)
     - [Namespace Setup](#namespace-setup)
     - [Mongo DB](#mongo-db)
       - [Helm Template](#helm-template)
@@ -40,25 +41,23 @@
     - [Test the Service](#test-the-service)
   - [Protect the Service](#protect-the-service)
     - [Intro](#intro-2)
-  - [Protect the Service (old)](#protect-the-service-old)
-    - [Intro](#intro-3)
     - [Register an OAuth2 Client](#register-an-oauth2-client)
     - [Add Authentication/Authorization to the exposed API](#add-authenticationauthorization-to-the-exposed-api)
-    - [Security For Lambdas (Not on Minikube)](#security-for-lambdas-not-on-minikube)
+    - [Security For Lambdas](#security-for-lambdas)
     - [Test the Service](#test-the-service-1)
   - [Operate your Service: Make it Self-Healing](#operate-your-service-make-it-self-healing)
-    - [Intro](#intro-4)
+    - [Intro](#intro-3)
     - [Preparation](#preparation)
     - [Determining whether your service is alive](#determining-whether-your-service-is-alive)
     - [Determining whether your service is ready to serve traffic](#determining-whether-your-service-is-ready-to-serve-traffic)
     - [Deploying to Kyma](#deploying-to-kyma)
     - [Testing](#testing)
   - [Operate your Service: Traces and Logs](#operate-your-service-traces-and-logs)
-    - [Intro](#intro-5)
+    - [Intro](#intro-4)
     - [Testing Tracing](#testing-tracing)
     - [Testing Logging](#testing-logging)
   - [Operate your Service: Metrics](#operate-your-service-metrics)
-    - [Intro](#intro-6)
+    - [Intro](#intro-5)
     - [Collecting Metrics in Prometheus](#collecting-metrics-in-prometheus)
     - [Creating a Dashboard](#creating-a-dashboard)
   - [Known Issues](#known-issues)
@@ -77,6 +76,8 @@ This application runs on [Kyma](https://kyma-project.io). Therefore, to try out 
 **![alt text](images/kyma_symbol_text.svg "Logo Title Text 1")  
 This example is tested and based on [Kyma 1.11.0](https://github.com/kyma-project/kyma/releases/tag/1.11.0). Compatibility with other versions is not guaranteed.**
 
+Although minikube is provided as an option, it is not recommended. It is at your own risk and some steps will not work.
+
 ## Deploy the application
 
 ### Tools required
@@ -89,11 +90,15 @@ In order to work with this example, the following installations are required on 
    2. [Install Guide](https://v2-14-0.helm.sh/docs/using_helm/#installing-helm)
 3. Node.Js 8
 4. [CURL](https://curl.haxx.se/download.html)
-5. Java Tools and how to set them up:
+5. [JQ](https://stedolan.github.io/jq/)
+6. Java Tools and how to set them up:
    1. Java JDK
    2. [Maven](http://maven.apache.org/install.html)
    3. [Java IDE](#java-build)
    4. [Docker Credential Helper](#docker-credential-helper-setup)
+
+
+The following CLI command 
 
 ### Connect to your Kyma Instance
 
@@ -115,9 +120,21 @@ Now you need to point your kubernetes cli /kubectl to the downloaded kubeconfig.
 
 The conftained file expires after some time. So periodically download a new file, especially when you experience error messages like: `error you must be logged in ...`
 
-
-
 A detailed description of how to do this is provided [in the official documentation](https://kyma-project.io/docs/#tutorials-sample-service-deployment-on-a-cluster-get-the-kubeconfig-file-and-configure-the-cli).
+
+### Finding your Clusterdomain
+
+When you install kyma on a cluster (not minikube) you will have a so called clusterdomain. The clusterdomain will be used throughout this guide, so make sure you remember the one of your cluster. 
+
+When accessing the Kyma UI, the url looks similar to https://console.mycluster.mydomain.com/. In this example the clusterdomain would be `mycluster.mydomain.com`. 
+
+The following cli command helps to get the clusterdomain (given you are authorized):
+
+```
+export KYMA_CONSOLE=$(kubectl get virtualservice core-console -n kyma-system -o jsonpath='{ .spec.hosts[0] }')
+echo "Your Clusterdomain is: ${KYMA_CONSOLE#console.}"
+```
+
 
 ### Namespace Setup
 
@@ -236,9 +253,10 @@ To read a set of credentials:
 
 Deploying Kyma requires to upload a configmap and also a kubernetes deployment and a service.
 
-Before deploying the provided files, you **can** adapt them to your environment. Fields can be changed are flagged with `#changeme:`. The following changes are highlighted in `mongo-kubernetes-local1.yaml`:
+Before deploying the provided files, you **can** adapt them to your environment. Fields that can be changed are flagged with `#changeme:`. The following changes are highlighted in `mongo-kubernetes-local1.yaml`:
 
 * You can adapt the deployment's pod spec to use your own docker image. To do so, search for the `image: "personservice/mongokubernetes:1.11.0"` instruction flagged with `#changeme:`  and replace the (working) standard image with your own.
+
 
 To get the initial setup running, issue the following commands.  
 
@@ -263,7 +281,7 @@ Deployment to kyma requires to upload a configmap and also a kubernetes deployme
 
 Before deploying the provided files, you need to adapt them to your environment. Fields that require changes are flagged with `#changeme:`. The following changes are highlighted in `mongo-kubernetes-cluster1.yaml`:
 
-* You have to adjust the [APIRule](https://kyma-project.io/docs/components/api-gateway-v2/#custom-resource-api-rule) to reflect your clusterhost. To do so, search for the `host: personservice.{clusterdomain}` instruction flagged with `#changeme:` and replace the `{clusterdomain}` with your own cluster's domain.
+* You have to adjust the [APIRule](https://kyma-project.io/docs/components/api-gateway-v2/#custom-resource-api-rule) to reflect your clusterdomain. To do so, search for the `host: personservice.{clusterdomain}` instruction flagged with `#changeme:` and replace the `{clusterdomain}` with your own cluster's domain.
 * You can adapt the deployment's pod spec to use your own docker image. To do so, search for the `image: "personservice/mongokubernetes:1.11.0"` instruction flagged with `#changeme:`  and replace the (working) standard image with your own.
 
 The following change is highlighted in `mongo-kubernetes-configmap-cluster.yaml`:
@@ -296,7 +314,7 @@ Wait until all pods are in `running` state.
 ### Try out on Kyma
 
 After deployyment you can access and try out the swagger documentation under  
-`https://personservice.{clusterhost}/swagger-ui.html`
+`https://personservice.{clusterdomain}/swagger-ui.html` or if you are running on minikube `https://personservice.kyma.local/swagger-ui.html`.
 
 If you don't like Open API (fka. Swagger) here is some other documentation:  
 
@@ -580,7 +598,7 @@ As nothing is happening, you should only see the periodic health checks:
 ::ffff:127.0.0.1 - - [28/Aug/2018:14:38:23 +0000] "GET /healthz HTTP/1.1" 200 2 "-" "curl/7.38.0"
 ```
 
-On the UI, inspecting the logs is a little more comfortable. The below screnshots show where to find them:
+On the UI, inspecting the logs is a little more comfortable. However this functionality is **not available on minikube**. The below screnshots show where to find them:
 
 ![Lambda Logs](images/lambda_logs.png)
 ![Lambda Logs](images/lambda_logs2.png)
@@ -673,7 +691,7 @@ Then it will move to `Running` state.
 
 ![Service Provisioning Screenshot](images/serviceprovisioning5.png)
 
-After provisioning the service instance, you can bind itt to the personservice deployment. To do that, you can remain in the instances view (if you haveb't clicked anywhere ;-)). If you have follow the below navigation.
+After provisioning the service instance, you can bind itt to the personservice deployment. To do that, you can remain in the instances view (if you haven't clicked anywhere ;-)). If you have, follow the below navigation.
 
 ![Service Binding Screenshot](images/servicebinding1.png)
 
@@ -759,7 +777,7 @@ Alternatively you can go to the UI and display the pod logs there:
 
 Now invoke GET /api/v1/person/{personid}. During the first call you should see something along the lines of the below example. All subsequent calls will not appear as they will be directly fetched from the cache.
 
-**UI**
+**UI (not on minikube)**
 
 ![Cache Logs](images/cache_logs2.png)
 
@@ -778,12 +796,6 @@ Exiting PersonServiceCache.findPerson(..) with result: Person(id=5b8560dd4b2eaa0
 ### Intro
 
 Kyma's [API Gateway](https://kyma-project.io/docs/components/api-gateway-v2/) can do much more than just expose services outside of the cluster. Through the contained OAuth2 Server it can also handle authentication and simple authorization tasks. As a developer this lets you focus on the application logic without implementing security concerns inside of your service. To secure our service we need to create an OAuth2 Client and then secure the API endpoint of our Personservice. Lastly we need to update the application connector to also leverage the new OAuth credentials.
-
-## Protect the Service (old)
-
-### Intro
-
-Kyma (through Istio Authentication Policies) allows to add JWT protection to your API. This gives you the chance to offload offline JWT validation to Kyma and focus on processing the authorizations in your application. In this section we are going to setup a Dummy OAuth2 Authorization Server for issuing the tokens we need, enhance our person service to authorize users using Spring Security, make the Kyma API Check for Authorizations and update the Application Registration in the Apllication Connector to also supply OAuth2 tokens.
 
 
 ### Register an OAuth2 Client
@@ -911,9 +923,11 @@ spec:
 ```
 
 
-To deploy this, adapt `api-security.yaml` to your cluster. You need to replace the `{clusterdomain}` value in the `host` field with your own cluster's domain as always. Again it is flagged with  `#changeme`
+If you are running on a cluster, adapt `api-security.yaml` to your cluster. You need to replace the `{clusterdomain}` value in the `host` field with your own cluster's domain as always. Again it is flagged with  `#changeme`.
 
 Then you can apply it with the following command: `kubectl apply -f api-security.yaml -n personservice`. 
+
+If you run on minikube you can diirectly apply `kubectl apply -f api-security-local.yaml -n personservice`
 
 Now you can reload the swagger ui (location `https://personservice.{clusterdomain}/swagger-ui.html`). This will load normally. However when you invoke the `/api/v1/person` endpoint you will get an HTTP 401 - Unauthorized response.
 
@@ -931,7 +945,7 @@ Now you can reload the swagger ui (location `https://personservice.{clusterdomai
 
 As the current swagger ui does not allow us to enter authentication data, we need to update the application as well. This is only for demo purposes. A normal application could be used as is.
 
-If you work with your own docker image, you can again replace it in `mongo-kubernetes-cluster4.yaml` or `mongo-kubernetes-local4.yaml`. Otherwise the file is ready to be deployed:
+If you work with your own docker image, you can again replace it in `mongo-kubernetes-cluster4.yaml` or `mongo-kubernetes-local4.yaml`. Otherwise the file is ready to be deployed (remember to address respective `changeme` field before):
 
 * Local: `kubectl apply -n personservice -f mongo-kubernetes-local4.yaml`
 * Cluster: `kubectl apply -n personservice -f mongo-kubernetes-cluster4.yaml`
@@ -978,9 +992,9 @@ Now you can use this token to make a successful call to the API (/api/v1/applica
 ![Client Credentials](images/token_test3.png).
 
 
-### Security For Lambdas (Not on Minikube)
+### Security For Lambdas 
 
-**If you are running this locally you will have issues with failed DNS lookups of the lambda function. There are probably ways to fix this, but they are not described here. If you are running on a cluster where APIs have public DNS entries, you can continue.**
+**If you are running this locally you will have issues with failed DNS lookups of the lambda function. There are ways to fix this, but they are not described here (use internal services instead). If you are running on a cluster where APIs have public DNS entries, you can continue.**
 
 When you create a new person, your Lambda will fail. To fix it, we need to adapt the registration file (`/registration/registrationfile.json`). Specifically we need to provide the OAuth2 configuration:
 
@@ -1052,7 +1066,7 @@ Kubernetes (which Kyma is based on) is built around the assumption that you as a
 
 In order to free-up resources in your cluster, we need to change a couple of things. Basically we need to go back to an older version of our deployment which does not require a redis cache anymore or authentication and authorization. 
 
-If you did follow the steps outlined in [Security For Lambdas (Not on Minikube)](#security-for-lambdas-not-on-minikube) you need to reverse them. Basically you need to reverse the changes made to the [registration/registrationfile.json](registration/registrationfile.json) by removing the credentials section and replacing the target url:
+If you did follow the steps outlined in [Security For Lambdas](#security-for-lambdas) you need to reverse them. Basically you need to reverse the changes made to the [registration/registrationfile.json](registration/registrationfile.json) by removing the credentials section and replacing the target url:
 
 ```
 
@@ -1072,7 +1086,7 @@ kubectl delete configmap -n personservice registrationfile
 kubectl create configmap -n personservice registrationfile --from-file=registration/registrationfile.json -n personservice
 ```
 
-Now go to your service catalog and unbind your redis service instance from personservice and then delete the service instance. 
+Now go to your service instances  and unbind your redis service instance from personservice and then delete the service instance. 
 
 To make personservice work again, you also need to roll-back the kubernetes deployment to the state used in [Extend your Person service](#extend-your-person-service). To do that simply issue the following command:
 
@@ -1222,6 +1236,8 @@ Also all API calls to `/api/v1/person` endpoint (GET) will have the same value f
 
 ## Operate your Service: Traces and Logs
 
+**This will not work on minikube**
+
 ### Intro
 Kyma comes with tracing and logging support through Kubernetes, Istio and Jaeger. Tracing is mainly influenced by Istio (https://istio.io/docs/tasks/telemetry/distributed-tracing/) and Jaeger (https://www.jaegertracing.io/). Tracing enables you to corelate requests as they travel from service to service. All you need to do is propagate a set of tracing headers. The rest is taken care of by Istio and Jaeger.
 
@@ -1335,6 +1351,8 @@ If you know the exact pod reference you can also display logs in the context of 
 After finishing you can revert trace sampling back to the previous value as shown in the tracing section.
 
 ## Operate your Service: Metrics
+
+**This will not work on minikube**
 
 ### Intro
 
@@ -1486,7 +1504,7 @@ As you can see this time the lambda is exposed without authentication via https.
 
 ![Lambda Creation Screenshot](workarounds/oauth/lambda3.png)
 
-This url is then put as oauth url into the registration file mentioned in [Security For Lambdas](#security-for-lambdas-not-on-minikube) and essentially the procedure is executed again.
+This url is then put as oauth url into the registration file mentioned in [Security For Lambdas](#security-for-lambdas) and essentially the procedure is executed again.
 
 ```
 "api": {

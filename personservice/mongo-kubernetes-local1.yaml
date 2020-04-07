@@ -13,6 +13,7 @@ spec:
     - POST
     - PUT
     - DELETE
+    - PATCH
     path: /.*
   service:
     host: personservice.kyma.local
@@ -100,9 +101,12 @@ spec:
                    configMapKeyRef:
                       name: mongo-kubernetes-config
                       key: mongodb_username
+              - name: personservicekubernetes_swagger_host
+                valueFrom: 
+                   configMapKeyRef:
+                      name: mongo-kubernetes-config
+                      key: service_host    
               - name: management_health_redis_enabled
                 value: "false" 
               - name: spring_profiles_active
                 value: Default 
-              - name: spring_profiles_active
-                value: "ApplicationConnector" 

@@ -25,15 +25,10 @@ public class SpringFoxConfiguration {
 	
 	@Value("${personservicekubernetes.swagger.host}")
 	private String hostName;
-	
-
-	@Value("${personservicekubernetes.swagger.tokenurl}")
-	private String tokenURL;
-// Begin Swagger Documentation
-	
+		
 
     @Bean
-    @Profile("!Security && !Security2")
+    @Profile("!Security2")
     public Docket api() {   
     	
    
@@ -49,27 +44,7 @@ public class SpringFoxConfiguration {
     }
     
     
-    @Bean
-    @Profile("Security")
-    public Docket secureApi() { 
-    	
-    	return new Docket(DocumentationType.SWAGGER_2)
-    	          .apiInfo(apiInfo())
-    	          .host(hostName)
-    	          .globalOperationParameters(Arrays.asList(
-    	        		  new ParameterBuilder()
-    	        		  .name("Authorization")
-    	                  .description("Place for your JWT Token")
-    	                  .modelRef(new ModelRef("string"))
-    	                  .parameterType("header")
-    	                  .required(true)
-    	                  .build()))
-    	          .useDefaultResponseMessages(false)
-    	          .select()                                  
-    	          .apis(RequestHandlerSelectors.basePackage("com.sap.demo"))              
-    	          .paths(PathSelectors.any())
-    	          .build();      	
-    }
+    
     
     @Bean
     @Profile("Security2")
@@ -78,14 +53,6 @@ public class SpringFoxConfiguration {
     	return new Docket(DocumentationType.SWAGGER_2)
     	          .apiInfo(apiInfo())
     	          .host(hostName)
-    	          /*.securitySchemes(Arrays.asList(
-    	        		  new OAuthBuilder()
-    	        	          .name("Kyma API Gateway")
-    	        	          .grantTypes(Arrays.asList(
-    	        	        		  new ClientCredentialsGrant(tokenURL))
-    	        	        		  )
-    	        	          .build()
-    	        	          ))*/
     	          .globalOperationParameters(Arrays.asList(
     	        		  new ParameterBuilder()
     	        		  .name("Authorization")

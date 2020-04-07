@@ -1,16 +1,4 @@
 
-apiVersion: gateway.kyma-project.io/v1alpha2
-kind: Api
-metadata:
-  name: personservice
-  labels:
-     app: personservice
-spec:
-  hostname: personservice
-  service:
-    name: personservice
-    port: 8080
----
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -77,6 +65,7 @@ spec:
             hostnames:
              - "gateway.kyma.local"
              - "connector-service.kyma.local"
+             - "personservice.kyma.local" 
          containers:
            - name: personservice
 # changeme: Replace with pointer to your docker repository/container
@@ -116,6 +105,11 @@ spec:
                    configMapKeyRef:
                       name: mongo-kubernetes-config
                       key: mongodb_username
+              - name: personservicekubernetes_swagger_host
+                valueFrom: 
+                   configMapKeyRef:
+                      name: mongo-kubernetes-config
+                      key: service_host                        
               - name: spring_profiles_active
                 value: "ApplicationConnector,Cache,Security2"
               - name: logging_level_com_sap_demo_service
