@@ -76,3 +76,23 @@ spec:
       containers:
       - name: python
         image: dapriosamples/hello-k8s-python:edge
+---
+apiVersion: gateway.kyma-project.io/v1alpha1
+kind: APIRule
+metadata:
+  labels:
+    app: node
+  name: nodeapp
+  namespace: dapr-demo
+spec:
+  service:
+    host: nodeapp
+    name: nodeapp
+    port: 3000
+  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  rules:
+    - path: /.*
+      methods: ["GET"]
+      accessStrategies:
+        - handler: allow
+      mutators: []
