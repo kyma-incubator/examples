@@ -5,7 +5,7 @@ This example is the result of a POC showing how to have [Dapr](https://dapr.io/)
 ## Goal
 - Create a sample application, using dapr for inter-cluster communication
 - Use darp mTLS for dapr related communication (clients to control plane, client to client)
-- Expose the application using Istio mechanisms
+- Expose the application using kyma API Gateway
 - Use Istio mTLS for istio related communication (user to gateway, gateway to service)
 
 ## Requirements
@@ -25,7 +25,7 @@ kubectl apply -f ./manifests/dapr-system.yaml
 helm install dapr dapr/dapr --namespace dapr-system
 ```
 
-### Setup Darp StateStore (Redis)
+### Setup Dapr StateStore (Redis)
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
@@ -129,4 +129,3 @@ EOF
 
 curl -ik https://dapr-demo.kyma.local/order
 ```
-
