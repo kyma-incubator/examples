@@ -91,8 +91,8 @@ List of ports used by dapr, that need to be excluded from istio:
 
 | Port | Used by | Explanation | 
 | :---: | :---: | :--- | 
-| 80 | `dapr` | The `dapr-api` service is exposed on port `80`. The `daprd` sidecar communicates with the api using this port. As this is a very commonly used port, this may cause conflicts in some cases. |
-| 3500 | `dapr` | The `dapr` sidecar uses this port for application <-> sidecar communication |
-| 50001 | `dapr` | API gRPC server port |
-| 50002 | `dapr` | internal gRPC server |
-| 6379 | `redis` | Port exposed by Redis statestore. Required if applications uses the statestore, may vary depending on statestore used. |
+| `80` | `dapr` | The `dapr-api` service is exposed on port `80`. The `daprd` sidecar communicates with the api using this port. As this is a very commonly used port, this may cause conflicts in some cases. |
+| `3500` | `dapr` | The `dapr` sidecar uses this port for application <-> sidecar communication |
+| `50001` | `dapr` | API gRPC server port |
+| `50002` | `dapr` | internal gRPC server |
+| `6379` | `redis` | Port exposed by Redis statestore. Required if applications uses the statestore, may vary depending on statestore used. |
