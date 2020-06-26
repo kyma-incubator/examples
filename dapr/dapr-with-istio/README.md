@@ -32,38 +32,6 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
 helm install redis bitnami/redis --namespace dapr-redis
-
-# Get the generated Redis password, and inject into the components
-REDIT_PASS=$(kubectl get secret --namespace dapr-redis redis -o jsonpath="{.data.redis-password}" | base64 --decode)
-
-cat <<EOF | kubectl apply -f -
----
-apiVersion: dapr.io/v1alpha1
-kind: Component
-metadata:
-  name: statestore
-  namespace: dapr-redis
-spec:
-  type: state.redis
-  metadata:
-  - name: redisHost
-    value: redis-master.dapr-redis:6379
-  - name: redisPassword
-    value: $(echo ${REDIT_PASS})
----
-apiVersion: dapr.io/v1alpha1
-kind: Component
-metadata:
-  name: messagebus
-  namespace: dapr-redis
-spec:
-  type: pubsub.redis
-  metadata:
-  - name: redisHost
-    value: redis-master.dapr-redis:6379
-  - name: redisPassword
-    value: $(echo ${REDIT_PASS})
-EOF
 ```
 
 ### Update the injector image
