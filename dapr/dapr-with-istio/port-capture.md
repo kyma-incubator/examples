@@ -4,6 +4,7 @@ This setup focuses on having Dapr and Istio side-by-side without resigning from 
 ## Application setup
 
 ![Architecture](./assets/dapr-port-capture.png)
+
 This diagram illustrates the connections between user applications (`Node` and `Python`) and both sidecars deployed within Pods:
 - All communication between both applications is done using the `daprd` proxy, which uses the Dapr Control Plane for service discovery and routing.
 - External communication (client to application) is done by the Istio Service Mesh and the `istio-proxy` sidecar.
@@ -69,7 +70,7 @@ kubectl get pods -n dapr-demo
 ## Access the app
 ```bash
 KYMA_DOMAIN=$(kubectl get cm -n kyma-installer net-global-overrides -o jsonpath='{.data.global\.ingress\.domainName}')
-curl -ik https://nodeapp.kyma.local/order
+curl -ik https://nodeapp.${KYMA_DOMAIN}/order
 # HTTP/2 200
 # x-powered-by: Express
 # content-type: text/html; charset=utf-8
