@@ -46,7 +46,7 @@ spec:
     spec:
       containers:
       - name: node
-        image: dapriosamples/hello-k8s-node:edge
+        image: dapriosamples/hello-k8s-node:0.8.0
         ports:
         - containerPort: 3000
         imagePullPolicy: Always
@@ -75,7 +75,7 @@ spec:
     spec:
       containers:
       - name: python
-        image: dapriosamples/hello-k8s-python:edge
+        image: dapriosamples/hello-k8s-python:0.8.0
 ---
 apiVersion: gateway.kyma-project.io/v1alpha1
 kind: APIRule

@@ -70,7 +70,7 @@ kubectl get pods -n dapr-demo
 ## Access the app
 ```bash
 KYMA_DOMAIN=$(kubectl get cm -n kyma-installer net-global-overrides -o jsonpath='{.data.global\.ingress\.domainName}')
-curl -ik https://nodeapp.${KYMA_DOMAIN}/order
+curl -ik https://nodeapp.$KYMA_DOMAIN/order
 
 # Example expected output
 
