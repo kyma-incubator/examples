@@ -19,7 +19,7 @@ Create exit node in Kyma cluster:
 export TOKEN="thesecretpasswordrequiredtoaccessthetunnel" 
 export NAMESPACE=test
 export PROXY_NAME=proxy
-export CHART=https://raw.githubusercontent.com/kyma-project/examples/master/tunnel/inlets-0.1.0.tgz
+export CHART=https://raw.githubusercontent.com/kyma-incubator/examples/master/tunnel/inlets-0.1.0.tgz
 
 kubectl create ns $NAMESPACE
 helm install $PROXY_NAME $CHART -n $NAMESPACE --set token=$TOKEN
