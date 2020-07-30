@@ -8,7 +8,7 @@ This example illustrates how to connect application runnig on local machine to K
 
 - [Kyma](https://kyma-project.io/docs/) as the target deployment environment
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) configured to your Kyma cluster
-- [Helm](https://helm.sh/docs/intro/install/)
+- [Helm 3](https://helm.sh/docs/intro/install/)
 - [inlets](https://github.com/inlets/inlets#install-the-cli) as a reverse proxy and websocket tunnel
 
 
