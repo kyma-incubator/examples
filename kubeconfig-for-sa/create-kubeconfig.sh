@@ -4,8 +4,9 @@ SA=${1:-default}
 NAMESPACE=${2:-default}
 
 
-# your server name goes here
-API_SERVER_URL="https://api.$(kubectl get cm shoot-info -n kube-system -ojsonpath='{.data.domain}')"
+# API server URL is api.KYMA_CLUSTER_DOMAIN
+API_SERVER_URL="https://api.$(kubectl config current-context)"
+
 # the name of the secret containing the service account token goes here
 SECRET_NAME=$(kubectl get sa -n ${NAMESPACE} ${SA} -ojsonpath='{.secrets[0].name}')
 
