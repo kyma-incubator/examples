@@ -28,7 +28,7 @@
 		<docker.repositoryname>personservice</docker.repositoryname>
 		<jib.credentialhelper>osxkeychain</jib.credentialhelper>
 		<springfox.version>2.9.2</springfox.version>
-		<commons-io.version>2.6</commons-io.version>
+		<commons-io.version>2.7</commons-io.version>
 		<commons.lang.version>3.7</commons.lang.version>
 	</properties>
 	
