@@ -23,7 +23,7 @@
 		<java.version>1.8</java.version>
 		<project.version>1.0.0</project.version>
 		<jib.version>2.1.0</jib.version>
-		<bouncycaste.version>1.64</bouncycaste.version>
+		<bouncycaste.version>1.67</bouncycaste.version>
 		<!-- change this with your repository and credentialhelper  -->
 		<docker.repositoryname>personservice</docker.repositoryname>
 		<jib.credentialhelper>osxkeychain</jib.credentialhelper>
