@@ -9,19 +9,16 @@ To run this example, you need the following tools:
 
 ## Steps```
 
-
 1. Create a Config Map and a Service Account that can read the Config Map in the `test` Namespace:
 ```bash
 kubectl create ns test
 kubectl apply -f example-sa.yaml -n test
-
 ```
 
 2. Create a kubeconfig file for `test-service-account` in the `test` Namespace:
 ```
 ./create-kubeconfig.sh test-service-account test >test-kubeconfig.yaml
 ```
-
 
 3. Use the kubeconfig file to list and view the Config Map in the test Namespace. 
 ```
