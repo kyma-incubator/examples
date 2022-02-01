@@ -7,7 +7,7 @@ To run this example, you need the following tools:
 - [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) configured with your Kubernetes cluster
 - [jq](https://stedolan.github.io/jq/)
 
-## Steps```
+## Steps
 
 1. Create a Config Map and a Service Account that can read the Config Map in the `test` Namespace:
 ```bash
@@ -25,6 +25,6 @@ kubectl apply -f example-sa.yaml -n test
 kubectl --kubeconfig test-kubeconfig.yaml get cm -n test test-config-map -oyaml
 ```
 > **NOTE:** All other actions should be forbidden. For example, the following command to list pods should fail:
-```
-kubectl --kubeconfig test-kubeconfig.yaml get pod -n test
-```
+> ```
+> kubectl --kubeconfig test-kubeconfig.yaml get pod -n test
+> ```
