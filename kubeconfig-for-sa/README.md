@@ -1,24 +1,30 @@
-# How to get kubeconfig for the service account
+# Get a kubeconfig file for your service account
 
+## Prerequisites
 
-| This example works with Gardener. If you want to use it with other kubernetes cluster you need to provide API_SERVER_URL in [create-kubeconfig.sh](create-kubeconfig.sh) script.|
-|---|
+To run this example, you need the following tools:
 
-Create config map and service account that can read the config map in the `test` namespace:
-```
+- [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) configured with your Kubernetes cluster
+- [jq](https://stedolan.github.io/jq/)
+
+## Steps
+
+1. Create a Config Map and a Service Account that can read the Config Map in the `test` Namespace:
+```bash
 kubectl create ns test
 kubectl apply -f example-sa.yaml -n test
-
 ```
-Create kubeconfig for `test-service-account` in `test` namespace:
 
+2. Create a kubeconfig file for `test-service-account` in the `test` Namespace:
 ```
 ./create-kubeconfig.sh test-service-account test >test-kubeconfig.yaml
 ```
 
-In another terminal session switch kubeconfig and use it to list and view config maps in test namespace. All other actions should be forbidden:
+3. Use the kubeconfig file to list and view the Config Map in the test Namespace. 
 ```
-export KUBECONFIG=./test-kubeconfig.yaml
-kubectl get cm -n test test-config-map -oyaml
+kubectl --kubeconfig test-kubeconfig.yaml get cm -n test test-config-map -oyaml
 ```
-
+> **NOTE:** All other actions should be forbidden. For example, the following command to list pods should fail:
+> ```
+> kubectl --kubeconfig test-kubeconfig.yaml get pod -n test
+> ```
